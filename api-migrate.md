@@ -14,7 +14,7 @@ All API classes have been moved to a new package structure:
 
 |0.x                       |2.x                 |
 |:------------------------:|:------------------:|
-|com.radiusnetworks.ibeacon|org.altbeacon.beacon|
+|com.radiusnetworks.ibeacon|com.connecthings.altbeacon.beacon|
 
 
 ## Class changes
@@ -93,8 +93,8 @@ switcher.
 
 |0.x                       |2.x                 |
 |:------------------------:|:------------------:|
-|N/A (pro library)|org.altbeacon.powersave.BackgroundPowerSaver|
-|N/A (pro library)|org.altbeacon.startup.RegionBootstrap|
+|N/A (pro library)|com.connecthings.altbeacon.powersave.BackgroundPowerSaver|
+|N/A (pro library)|com.connecthings.altbeacon.startup.RegionBootstrap|
 
 
 ## Ranging API 2.x code sample

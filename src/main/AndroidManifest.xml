@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.altbeacon.beacon"
+    package="com.connecthings.altbeacon.beacon"
     >
 
     <uses-permission android:name="android.permission.BLUETOOTH"/>
@@ -8,7 +8,7 @@
     <uses-permission-sdk-23 android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <application>
-        <receiver android:name="org.altbeacon.beacon.startup.StartupBroadcastReceiver">
+        <receiver android:name="com.connecthings.altbeacon.beacon.startup.StartupBroadcastReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED"/>
@@ -20,10 +20,10 @@
             android:exported="false"
             android:isolatedProcess="false"
             android:label="beacon"
-            android:name=".service.BeaconService"
+            android:name="com.connecthings.altbeacon.beacon.service.BeaconService"
             />
 
-        <service android:name=".BeaconIntentProcessor"
+        <service android:name="com.connecthings.altbeacon.beacon.BeaconIntentProcessor"
             android:enabled="true"
             android:exported="false"
             />

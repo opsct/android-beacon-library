@@ -48,7 +48,7 @@ to use the JCenter Repository
 ```groovy
 dependencies {
     ...
-    compile 'org.altbeacon:android-beacon-library:${altbeacon.version}'
+    compile 'com.connecthings.altbeacon:android-beacon-library:${altbeacon.version}'
     ...
 }
 ```

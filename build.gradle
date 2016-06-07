@@ -13,7 +13,7 @@ ext {
  * Gets the version name from the latest Git tag
  */
 def getVersionName = {
-    return "2.8.1-CT"
+    return "2.8.1-CT2"
 }
 
 buildscript {

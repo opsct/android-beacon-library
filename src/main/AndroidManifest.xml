@@ -17,8 +17,9 @@
         </receiver>
 
         <service android:enabled="true"
-            android:exported="false"
-            android:isolatedProcess="false"
+            android:exported="true"
+            android:isolatedProcess="true"
+            android:process="org.altbeacon.beacon.service"
             android:label="beacon"
             android:name=".service.BeaconService"
             />

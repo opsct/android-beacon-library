@@ -35,6 +35,7 @@ import android.content.pm.ApplicationInfo;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -145,9 +146,10 @@ public class BeaconService extends Service {
         @Override
         public void handleMessage(Message msg) {
             BeaconService service = mService.get();
-            StartRMData startRMData = (StartRMData) msg.obj;
-
-            if (service != null) {
+            Bundle bundle = (Bundle) msg.obj;
+            bundle.setClassLoader(StartRMData.class.getClassLoader());
+            StartRMData startRMData = bundle.getParcelable(StartRMData.TAG);
+            if (service != null && startRMData != null) {
                 switch (msg.what) {
                     case MSG_START_RANGING:
                         LogManager.i(TAG, "start ranging received");
@@ -226,7 +228,8 @@ public class BeaconService extends Service {
                         :
                         "starting with intent " + intent.toString()
         );
-        return super.onStartCommand(intent, flags, startId);
+        super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     /**

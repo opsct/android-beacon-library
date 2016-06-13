@@ -30,6 +30,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
@@ -103,7 +104,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author Andrew Reitz <andrew@andrewreitz.com>
  */
 @TargetApi(4)
-public class BeaconManager {
+public class    BeaconManager {
     private static final String TAG = "BeaconManager";
     private Context mContext;
     protected static BeaconManager client = null;
@@ -304,6 +305,7 @@ public class BeaconManager {
             else {
                 LogManager.d(TAG, "This consumer is not bound.  binding: %s", consumer);
                 Intent intent = new Intent(consumer.getApplicationContext(), BeaconService.class);
+                mContext.startService(intent);
                 consumer.bindService(intent, newConsumerInfo.beaconServiceConnection, Context.BIND_AUTO_CREATE);
                 LogManager.d(TAG, "consumer count is now: %s", consumers.size());
             }
@@ -467,7 +469,7 @@ public class BeaconManager {
         }
         Message msg = Message.obtain(null, BeaconService.MSG_START_RANGING, 0, 0);
         StartRMData obj = new StartRMData(region, callbackPackageName(), this.getScanPeriod(), this.getBetweenScanPeriod(), this.mBackgroundMode);
-        msg.obj = obj;
+        msg.obj = addToBundle(obj);
         serviceMessenger.send(msg);
         synchronized (rangedRegions) {
             rangedRegions.add(region);
@@ -495,7 +497,7 @@ public class BeaconManager {
         }
         Message msg = Message.obtain(null, BeaconService.MSG_STOP_RANGING, 0, 0);
         StartRMData obj = new StartRMData(region, callbackPackageName(), this.getScanPeriod(), this.getBetweenScanPeriod(), this.mBackgroundMode);
-        msg.obj = obj;
+        msg.obj = addToBundle(obj);
         serviceMessenger.send(msg);
         synchronized (rangedRegions) {
             Region regionToRemove = null;
@@ -530,7 +532,7 @@ public class BeaconManager {
         }
         Message msg = Message.obtain(null, BeaconService.MSG_START_MONITORING, 0, 0);
         StartRMData obj = new StartRMData(region, callbackPackageName(), this.getScanPeriod(), this.getBetweenScanPeriod(), this.mBackgroundMode);
-        msg.obj = obj;
+        msg.obj = addToBundle(obj);
         serviceMessenger.send(msg);
         synchronized (monitoredRegions) {
             monitoredRegions.add(region);
@@ -559,7 +561,7 @@ public class BeaconManager {
         }
         Message msg = Message.obtain(null, BeaconService.MSG_STOP_MONITORING, 0, 0);
         StartRMData obj = new StartRMData(region, callbackPackageName(), this.getScanPeriod(), this.getBetweenScanPeriod(), this.mBackgroundMode);
-        msg.obj = obj;
+        msg.obj = addToBundle(obj);
         serviceMessenger.send(msg);
         synchronized (monitoredRegions) {
             Region regionToRemove = null;
@@ -572,7 +574,11 @@ public class BeaconManager {
         }
     }
 
-
+    private Bundle addToBundle(StartRMData startRMData){
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(StartRMData.TAG, startRMData);
+        return bundle;
+    }
     /**
      * Updates an already running scan with scanPeriod/betweenScanPeriod according to Background/Foreground state.
      * Change will take effect on the start of the next scan cycle.
@@ -592,7 +598,7 @@ public class BeaconManager {
         LogManager.d(TAG, "updating background flag to %s", mBackgroundMode);
         LogManager.d(TAG, "updating scan period to %s, %s", this.getScanPeriod(), this.getBetweenScanPeriod());
         StartRMData obj = new StartRMData(this.getScanPeriod(), this.getBetweenScanPeriod(), this.mBackgroundMode);
-        msg.obj = obj;
+        msg.obj = addToBundle(obj);
         serviceMessenger.send(msg);
     }
 

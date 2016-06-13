@@ -23,6 +23,7 @@
  */
 package org.altbeacon.beacon.service;
 
+import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -31,6 +32,8 @@ import org.altbeacon.beacon.Region;
 import java.io.Serializable;
 
 public class StartRMData implements Serializable, Parcelable {
+    public static final String TAG="StartRMData";
+
     private Region region;
     private long scanPeriod;
     private long betweenScanPeriod;
@@ -95,5 +98,6 @@ public class StartRMData implements Serializable, Parcelable {
         betweenScanPeriod = in.readLong();
         backgroundFlag = in.readByte() != 0;
     }
+
 
 }

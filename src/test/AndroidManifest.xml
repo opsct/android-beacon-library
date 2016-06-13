@@ -14,9 +14,9 @@
                 <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED"/>
             </intent-filter>
         </receiver>
-
+        <!--android:process="org.altbeacon.beacon.service"-->
         <service android:enabled="true"
-            android:exported="false"
+            android:exported="true"
             android:isolatedProcess="false"
             android:label="beacon"
             android:name=".service.BeaconService"

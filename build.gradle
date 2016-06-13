@@ -32,13 +32,19 @@ buildscript {
         classpath 'com.jakewharton.sdkmanager:gradle-plugin:0.12.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.0'
         classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:3.0.3'
+        classpath "net.researchgate:gradle-release:2.0.2"
+        classpath "com.github.dcendents:android-maven-plugin:1.2"
     }
 }
 
 apply plugin: 'android-sdk-manager'
 apply plugin: 'com.android.library'
-
+apply plugin: 'net.researchgate.release'
+apply plugin: 'com.github.dcendents.android-maven'
 apply from: 'gradle/eclipse.gradle'
+
+archivesBaseName = 'android-beacon-library'
+group = 'org.altbeacon'
 
 allprojects {
     version = "${getVersionName()}${isSnapshot == true ? "-SNAPSHOT" : ""}"
@@ -146,9 +152,9 @@ task distribution(dependsOn: [bundleEclipse, build, clean, renameAarForRelease])
     println "Building with version=$version"
 }
 
-task release(dependsOn: 'distribution') << {
+/*task release(dependsOn: 'distribution') << {
     println('Doing release build')
-}
+}*/
 
 android.libraryVariants.all { variant ->
 

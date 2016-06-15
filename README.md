@@ -1,3 +1,13 @@
+## About this fork
+
+The AltBeacon library doesn't support the registry of several RangeNotifier or MonitorNotifier.
+We develop a library based on AltBeacon. 
+Because we would like to be sure a developper won't have to deal with conflicts if using altBeacon or an other beacon library based on AltBeacon, 
+we create this fork with a different package name.
+
+We are waiting for the following pull request to be integrated:
+https://github.com/AltBeacon/android-beacon-library/pull/171
+
 Android Beacon Library
 =======================
 

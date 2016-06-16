@@ -10,7 +10,7 @@ import org.altbeacon.beacon.logging.LogManager;
 import org.altbeacon.bluetooth.BluetoothCrashResolver;
 
 @TargetApi(18)
-public class CycledLeScannerForJellyBeanMr2 extends CycledLeScanner {
+public class CycledLeScannerForJellyBeanMr2 extends CycledLeScannerOld {
     private static final String TAG = "CycledLeScannerForJellyBeanMr2";
     private BluetoothAdapter.LeScanCallback leScanCallback;
 

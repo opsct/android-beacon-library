@@ -38,6 +38,7 @@ import android.os.RemoteException;
 import org.altbeacon.beacon.logging.LogManager;
 import org.altbeacon.beacon.logging.Loggers;
 import org.altbeacon.beacon.service.BeaconService;
+import org.altbeacon.beacon.service.scanner.CycleParameter;
 import org.altbeacon.beacon.service.scanner.NonBeaconLeScanCallback;
 import org.altbeacon.beacon.service.RangeState;
 import org.altbeacon.beacon.service.RangedBeacon;
@@ -169,6 +170,8 @@ public class BeaconManager {
     private long foregroundBetweenScanPeriod = DEFAULT_FOREGROUND_BETWEEN_SCAN_PERIOD;
     private long backgroundScanPeriod = DEFAULT_BACKGROUND_SCAN_PERIOD;
     private long backgroundBetweenScanPeriod = DEFAULT_BACKGROUND_BETWEEN_SCAN_PERIOD;
+    private CycleParameter foregroundCycleParameter;
+    private CycleParameter backgroundCycleParameter;
 
     /**
      * Sets the duration in milliseconds of each Bluetooth LE scan cycle to look for beacons.
@@ -558,7 +561,12 @@ public class BeaconManager {
             throw new RemoteException("The BeaconManager is not bound to the service.  Call beaconManager.bind(BeaconConsumer consumer) and wait for a callback to onBeaconServiceConnect()");
         }
         Message msg = Message.obtain(null, BeaconService.MSG_STOP_MONITORING, 0, 0);
-        StartRMData obj = new StartRMData(region, callbackPackageName(), this.getScanPeriod(), this.getBetweenScanPeriod(), this.mBackgroundMode);
+        StartRMData obj = null;
+        if(getCycleParameter() == null) {
+            obj = new StartRMData(region, callbackPackageName(), this.getScanPeriod(), this.getBetweenScanPeriod(), this.mBackgroundMode);
+        }else{
+            obj = new StartRMData(region, callbackPackageName(), this.getCycleParameter());
+        }
         msg.obj = obj;
         serviceMessenger.send(msg);
         synchronized (monitoredRegions) {
@@ -591,7 +599,12 @@ public class BeaconManager {
         Message msg = Message.obtain(null, BeaconService.MSG_SET_SCAN_PERIODS, 0, 0);
         LogManager.d(TAG, "updating background flag to %s", mBackgroundMode);
         LogManager.d(TAG, "updating scan period to %s, %s", this.getScanPeriod(), this.getBetweenScanPeriod());
-        StartRMData obj = new StartRMData(this.getScanPeriod(), this.getBetweenScanPeriod(), this.mBackgroundMode);
+        StartRMData obj = null;
+        if(this.getCycleParameter() == null){
+            obj = new StartRMData(this.getScanPeriod(), this.getBetweenScanPeriod(), this.mBackgroundMode);
+        }else{
+            obj = new StartRMData(this.getCycleParameter());
+        }
         msg.obj = obj;
         serviceMessenger.send(msg);
     }
@@ -736,6 +749,14 @@ public class BeaconManager {
             return backgroundScanPeriod;
         } else {
             return foregroundScanPeriod;
+        }
+    }
+
+    private CycleParameter getCycleParameter(){
+        if(mBackgroundMode){
+            return backgroundCycleParameter;
+        }else{
+            return foregroundCycleParameter;
         }
     }
 

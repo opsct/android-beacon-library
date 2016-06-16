@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @TargetApi(21)
-public class CycledLeScannerForLollipop extends CycledLeScannerOld {
+public class LeScannerForLollipop extends LeScanner {
     private static final String TAG = "CycledLeScannerForLollipop";
     private static final long BACKGROUND_L_SCAN_DETECTION_PERIOD_MILLIS = 10000l;
     private BluetoothLeScanner mScanner;
@@ -31,9 +31,9 @@ public class CycledLeScannerForLollipop extends CycledLeScannerOld {
     private boolean mMainScanCycleActive = false;
     private final BeaconManager mBeaconManager;
 
-    public CycledLeScannerForLollipop(Context context, long scanPeriod, long betweenScanPeriod, boolean backgroundFlag, CycledLeScanCallback cycledLeScanCallback, BluetoothCrashResolver crashResolver) {
-        super(context, scanPeriod, betweenScanPeriod, backgroundFlag, cycledLeScanCallback, crashResolver);
-        mBeaconManager = BeaconManager.getInstanceForApplication(mContext);
+    public LeScannerForLollipop(Context context, CycledLeScanCallback cycledLeScanCallback, BluetoothCrashResolver crashResolver) {
+        super(context, cycledLeScanCallback, crashResolver);
+        mBeaconManager = BeaconManager.getInstanceForApplication(context);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class CycledLeScannerForLollipop extends CycledLeScannerOld {
         try {
             if (getScanner() != null) {
                 try {
-                    getScanner().stopScan((android.bluetooth.le.ScanCallback) getNewLeScanCallback());
+                    getScanner().stopScan((ScanCallback) getNewLeScanCallback());
                 }
                 catch (NullPointerException npe) {
                     // Necessary because of https://code.google.com/p/android/issues/detail?id=160503
@@ -86,10 +86,10 @@ public class CycledLeScannerForLollipop extends CycledLeScannerOld {
            will get a callback within a few seconds on Android L vs. up to 5 minutes on older
            operating system versions.
      */
-    protected boolean deferScanIfNeeded() {
+    protected boolean onDeferScanIfNeeded(boolean isDefer) {
         // This method is called to see if it is time to start a scan
-        long millisecondsUntilStart = mNextScanCycleStartTime - SystemClock.elapsedRealtime();
-        if (millisecondsUntilStart > 0) {
+        boolean setWakeUpAlarm = false;
+        if (isDefer) {
             mMainScanCycleActive = false;
             if (true) {
                 long secsSinceLastDetection = SystemClock.elapsedRealtime() -
@@ -132,29 +132,20 @@ public class CycledLeScannerForLollipop extends CycledLeScannerOld {
                         else {
                             // report the results up the chain
                             LogManager.d(TAG, "Delivering Android L background scanning results");
-                            mCycledLeScanCallback.onCycleEnd();
+                            getCycledLeScanCallback().onCycleEnd();
                         }
                     }
                 }
             }
-            LogManager.d(TAG, "Waiting to start full Bluetooth scan for another %s milliseconds",
-                    millisecondsUntilStart);
+
             // Don't actually wait until the next scan time -- only wait up to 1 second.  This
             // allows us to start scanning sooner if a consumer enters the foreground and expects
             // results more quickly.
-            if (mScanDeferredBefore == false && mBackgroundFlag) {
-                setWakeUpAlarm();
-            }
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    scanLeDevice(true);
-                }
-            }, millisecondsUntilStart > 1000 ? 1000 : millisecondsUntilStart);
+            setWakeUpAlarm = mScanDeferredBefore == false && getBackgroundFlag();
+
             mScanDeferredBefore = true;
             return true;
-        }
-        else {
+        } else {
             if (mBackgroundLScanStartTime > 0l) {
                 stopScan();
                 mBackgroundLScanStartTime = 0;
@@ -162,7 +153,7 @@ public class CycledLeScannerForLollipop extends CycledLeScannerOld {
             mScanDeferredBefore = false;
             mMainScanCycleActive = true;
         }
-        return false;
+        return setWakeUpAlarm;
     }
 
     @Override
@@ -170,7 +161,7 @@ public class CycledLeScannerForLollipop extends CycledLeScannerOld {
         List<ScanFilter> filters = new ArrayList<ScanFilter>();
         ScanSettings settings;
 
-        if (mBackgroundFlag && !mMainScanCycleActive) {
+        if (getBackgroundFlag() && !mMainScanCycleActive) {
             LogManager.d(TAG, "starting filtered scan in SCAN_MODE_LOW_POWER");
             settings = (new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)).build();
             filters = new ScanFilterUtils().createScanFiltersForBeaconParsers(
@@ -201,7 +192,6 @@ public class CycledLeScannerForLollipop extends CycledLeScannerOld {
     protected void finishScan() {
         LogManager.d(TAG, "Stopping scan");
         stopScan();
-        mScanningPaused = true;
     }
 
     private BluetoothLeScanner getScanner() {
@@ -233,7 +223,7 @@ public class CycledLeScannerForLollipop extends CycledLeScannerOld {
                             }
                         }
                     }
-                    mCycledLeScanCallback.onLeScan(scanResult.getDevice(),
+                    getCycledLeScanCallback().onLeScan(scanResult.getDevice(),
                             scanResult.getRssi(), scanResult.getScanRecord().getBytes());
                     if (mBackgroundLScanStartTime > 0) {
                         LogManager.d(TAG, "got a filtered scan result in the background.");
@@ -244,7 +234,7 @@ public class CycledLeScannerForLollipop extends CycledLeScannerOld {
                 public void onBatchScanResults(List<ScanResult> results) {
                     LogManager.d(TAG, "got batch records");
                     for (ScanResult scanResult : results) {
-                        mCycledLeScanCallback.onLeScan(scanResult.getDevice(),
+                        getCycledLeScanCallback().onLeScan(scanResult.getDevice(),
                                 scanResult.getRssi(), scanResult.getScanRecord().getBytes());
                     }
                     if (mBackgroundLScanStartTime > 0) {

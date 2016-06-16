@@ -21,7 +21,7 @@ import org.altbeacon.bluetooth.BluetoothCrashResolver;
 import java.util.Date;
 
 @TargetApi(18)
-public class CycledLeScanner {
+public abstract class CycledLeScannerOld {
     private static final String TAG = "CycledLeScanner";
     private BluetoothAdapter mBluetoothAdapter;
 
@@ -45,19 +45,17 @@ public class CycledLeScanner {
 
     protected boolean mBackgroundFlag = false;
     protected boolean mRestartNeeded = false;
-    private LeScanner mLeScanner;
 
-    public CycledLeScanner(Context context, long scanPeriod, long betweenScanPeriod, boolean backgroundFlag, CycledLeScanCallback cycledLeScanCallback, BluetoothCrashResolver crashResolver) {
+    protected CycledLeScannerOld(Context context, long scanPeriod, long betweenScanPeriod, boolean backgroundFlag, CycledLeScanCallback cycledLeScanCallback, BluetoothCrashResolver crashResolver) {
         mScanPeriod = scanPeriod;
         mBetweenScanPeriod = betweenScanPeriod;
         mContext = context;
         mCycledLeScanCallback = cycledLeScanCallback;
         mBluetoothCrashResolver = crashResolver;
         mBackgroundFlag = backgroundFlag;
-        mLeScanner = createLeScanner(context, cycledLeScanCallback, crashResolver);
     }
 
-    private LeScanner createLeScanner(Context context, CycledLeScanCallback cycledLeScanCallback, BluetoothCrashResolver crashResolver){
+    public static CycledLeScannerOld createScanner(Context context, long scanPeriod, long betweenScanPeriod, boolean backgroundFlag, CycledLeScanCallback cycledLeScanCallback, BluetoothCrashResolver crashResolver) {
         boolean useAndroidLScanner;
         if (android.os.Build.VERSION.SDK_INT < 18) {
             LogManager.w(TAG, "Not supported prior to API 18.");
@@ -78,10 +76,11 @@ public class CycledLeScanner {
         }
 
         if (useAndroidLScanner) {
-            return new LeScannerForLollipop(context, cycledLeScanCallback, crashResolver);
+            return new CycledLeScannerForLollipop(context, scanPeriod, betweenScanPeriod, backgroundFlag, cycledLeScanCallback, crashResolver);
         } else {
-            return new LeScannerForJellyBeanMr2(context, cycledLeScanCallback, crashResolver);
+            return new CycledLeScannerForJellyBeanMr2(context, scanPeriod, betweenScanPeriod, backgroundFlag, cycledLeScanCallback, crashResolver);
         }
+
     }
 
     /**
@@ -152,37 +151,11 @@ public class CycledLeScanner {
         }
     }
 
-    private void stopScan(){
-        mLeScanner.stopScan();
-    }
+    protected abstract void stopScan();
 
-    protected boolean deferScanIfNeeded(){
-        long millisecondsUntilStart = mNextScanCycleStartTime - SystemClock.elapsedRealtime();
-        if (millisecondsUntilStart > 0) {
-            LogManager.d(TAG, "Waiting to start next Bluetooth scan for another %s milliseconds",
-                    millisecondsUntilStart);
-            // Don't actually wait until the next scan time -- only wait up to 1 second.  This
-            // allows us to start scanning sooner if a consumer enters the foreground and expects
-            // results more quickly.
-            if (mLeScanner.onDeferScanIfNeeded(true)) {
-                setWakeUpAlarm();
-            }
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    scanLeDevice(true);
-                }
-            }, millisecondsUntilStart > 1000 ? 1000 : millisecondsUntilStart);
-            return true;
-        }else{
-            mLeScanner.onDeferScanIfNeeded(false);
-        }
-        return false;
-    }
+    protected abstract boolean deferScanIfNeeded();
 
-    protected void startScan(){
-        mLeScanner.startScan();
-    }
+    protected abstract void startScan();
 
     @SuppressLint("NewApi")
     protected void scanLeDevice(final Boolean enable) {
@@ -266,9 +239,7 @@ public class CycledLeScanner {
         }
     }
 
-    private void finishScan(){
-        mLeScanner.finishScan();
-    }
+    protected abstract void finishScan();
 
     private void finishScanCycle() {
         LogManager.d(TAG, "Done with scan cycle");

@@ -3,6 +3,7 @@ package org.altbeacon.beacon.service;
 import android.content.Context;
 
 import org.altbeacon.beacon.Beacon;
+import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.logging.LogManager;
 
@@ -33,19 +34,22 @@ public class MonitoringStatus {
 
     private boolean mStatePreservationIsOn = true;
 
-    public static MonitoringStatus getInstanceForApplication(Context context) {
+    private MonitorNotifier mMonitorNotifier;
+
+    public static MonitoringStatus getInstanceForApplication(Context context, MonitorNotifier monitorNotifier) {
         if (sInstance == null) {
             synchronized (MonitoringStatus.class) {
                 if (sInstance == null) {
-                    sInstance = new MonitoringStatus(context.getApplicationContext());
+                    sInstance = new MonitoringStatus(context.getApplicationContext(), monitorNotifier);
                 }
             }
         }
         return sInstance;
     }
 
-    public MonitoringStatus(Context context) {
+    public MonitoringStatus(Context context, MonitorNotifier monitorNotifier) {
         this.mContext = context;
+        this.mMonitorNotifier = monitorNotifier;
         restoreMonitoringStatus();
     }
 
@@ -82,6 +86,10 @@ public class MonitoringStatus {
                 needsMonitoringStateSaving = true;
                 LogManager.d(TAG, "found a monitor that expired: %s", region);
                 state.getCallback().call(mContext, "monitoringData", new MonitoringData(state.isInside(), region));
+                if(mMonitorNotifier != null){
+                    mMonitorNotifier.didDetermineStateForRegion(MonitorNotifier.OUTSIDE, region);
+                    mMonitorNotifier.didExitRegion(region);
+                }
             }
         }
         if (needsMonitoringStateSaving) saveMonitoringStatusIfOn();
@@ -96,6 +104,10 @@ public class MonitoringStatus {
                 needsMonitoringStateSaving = true;
                 state.getCallback().call(mContext, "monitoringData",
                         new MonitoringData(state.isInside(), region));
+                if(mMonitorNotifier != null){
+                    mMonitorNotifier.didDetermineStateForRegion(MonitorNotifier.INSIDE, region);
+                    mMonitorNotifier.didEnterRegion(region);
+                }
             }
         }
         if (needsMonitoringStateSaving) saveMonitoringStatusIfOn();

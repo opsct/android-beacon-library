@@ -7,25 +7,25 @@ package org.altbeacon.beacon.service.scanner.optimizer;
  *
  * Created by Connecthings
  */
-public class CycleScanStrategyInstance implements ScreenStateListener{
+public class ScreenStateInstance implements ScreenStateListener{
 
-    private static CycleScanStrategyInstance INSTANCE;
+    private static ScreenStateInstance INSTANCE;
 
     private ScreenStateListener mScreenStateListener;
 
     private final Object mScreenStateListenerLock = new Object();
 
-    public static CycleScanStrategyInstance getInstance(){
+    public static ScreenStateInstance getInstance(){
         if(INSTANCE == null){
-            INSTANCE  = new CycleScanStrategyInstance();
+            INSTANCE  = new ScreenStateInstance();
         }
         return INSTANCE;
     }
 
-    public void updateCycleScanStrategy(CycleScanStrategy cycleScanStrategy){
+    public void update(Object object){
         synchronized (mScreenStateListenerLock) {
-            if(cycleScanStrategy instanceof ScreenStateListener) {
-                this.mScreenStateListener = (ScreenStateListener) cycleScanStrategy;
+            if(object instanceof ScreenStateListener) {
+                this.mScreenStateListener = (ScreenStateListener) object;
             }else{
                 this.mScreenStateListener = null;
             }

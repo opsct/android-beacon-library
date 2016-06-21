@@ -16,4 +16,6 @@ public abstract class CycleScanStrategy {
     private boolean mBackgroundFlag;
 
 
+
+
 }

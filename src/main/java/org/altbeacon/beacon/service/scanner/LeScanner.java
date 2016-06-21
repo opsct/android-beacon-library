@@ -21,7 +21,7 @@ import org.altbeacon.bluetooth.BluetoothCrashResolver;
 import java.util.Date;
 
 @TargetApi(18)
-public abstract class LeScanner {
+public abstract class LeScanner implements RecordDetectionListener{
 
     private static final String TAG="LeScanner";
 
@@ -31,6 +31,7 @@ public abstract class LeScanner {
     private BluetoothCrashResolver mBluetoothCrashResolver;
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mBackgroundFlag;
+    private long mLastDetectionTime = 0l;
 
     public LeScanner(Context context,CycledLeScanCallback cycledLeScanCallback, BluetoothCrashResolver bluetoothCrashResolver) {
         this.mContext = context;
@@ -79,4 +80,10 @@ public abstract class LeScanner {
         return mBluetoothAdapter;
     }
 
+    public long getLastDetectionTime() {
+        return mLastDetectionTime;
+    }
+    public void recordDetection() {
+        mLastDetectionTime = SystemClock.elapsedRealtime();
+    }
 }

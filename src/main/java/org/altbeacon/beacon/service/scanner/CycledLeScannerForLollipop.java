@@ -153,8 +153,7 @@ public class CycledLeScannerForLollipop extends CycledLeScannerOld {
             }, millisecondsUntilStart > 1000 ? 1000 : millisecondsUntilStart);
             mScanDeferredBefore = true;
             return true;
-        }
-        else {
+        } else {
             if (mBackgroundLScanStartTime > 0l) {
                 stopScan();
                 mBackgroundLScanStartTime = 0;

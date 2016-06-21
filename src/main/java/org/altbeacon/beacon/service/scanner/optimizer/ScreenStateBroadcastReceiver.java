@@ -14,7 +14,7 @@ public class ScreenStateBroadcastReceiver extends BroadcastReceiver{
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        CycleScanStrategyInstance cycleScanStrategyInstance = CycleScanStrategyInstance.getInstance();
+        ScreenStateInstance cycleScanStrategyInstance = ScreenStateInstance.getInstance();
         if (Intent.ACTION_SCREEN_ON.equals(action)) {
             cycleScanStrategyInstance.onScreenOn();
         }else if (Intent.ACTION_SCREEN_OFF.equals(action)) {

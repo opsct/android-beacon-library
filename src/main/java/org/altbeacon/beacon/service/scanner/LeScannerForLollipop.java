@@ -13,7 +13,6 @@ import android.os.SystemClock;
 
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.logging.LogManager;
-import org.altbeacon.beacon.service.DetectionTracker;
 import org.altbeacon.bluetooth.BluetoothCrashResolver;
 
 import java.util.ArrayList;
@@ -21,7 +20,7 @@ import java.util.List;
 
 @TargetApi(21)
 public class LeScannerForLollipop extends LeScanner {
-    private static final String TAG = "CycledLeScannerForLollipop";
+    private static final String TAG = "LeScannerForLollipop";
     private static final long BACKGROUND_L_SCAN_DETECTION_PERIOD_MILLIS = 10000l;
     private BluetoothLeScanner mScanner;
     private ScanCallback leScanCallback;
@@ -93,7 +92,7 @@ public class LeScannerForLollipop extends LeScanner {
             mMainScanCycleActive = false;
             if (true) {
                 long secsSinceLastDetection = SystemClock.elapsedRealtime() -
-                        DetectionTracker.getInstance().getLastDetectionTime();
+                        getLastDetectionTime();
                 // If we have seen a device recently
                 // devices should behave like pre-Android L devices, because we don't want to drain battery
                 // by continuously delivering packets for beacons visible in the background
@@ -116,9 +115,9 @@ public class LeScannerForLollipop extends LeScanner {
                 }
                 if (mBackgroundLScanStartTime > 0l) {
                     // if we are in here, we have detected beacons recently in a background L scan
-                    if (DetectionTracker.getInstance().getLastDetectionTime() > mBackgroundLScanStartTime) {
+                    if (getLastDetectionTime() > mBackgroundLScanStartTime) {
                         if (mBackgroundLScanFirstDetectionTime == 0l) {
-                            mBackgroundLScanFirstDetectionTime = DetectionTracker.getInstance().getLastDetectionTime();
+                            mBackgroundLScanFirstDetectionTime = getLastDetectionTime();
                         }
                         if (SystemClock.elapsedRealtime() - mBackgroundLScanFirstDetectionTime
                                 >= BACKGROUND_L_SCAN_DETECTION_PERIOD_MILLIS) {
@@ -141,10 +140,9 @@ public class LeScannerForLollipop extends LeScanner {
             // Don't actually wait until the next scan time -- only wait up to 1 second.  This
             // allows us to start scanning sooner if a consumer enters the foreground and expects
             // results more quickly.
-            setWakeUpAlarm = mScanDeferredBefore == false && getBackgroundFlag();
+            setWakeUpAlarm = !mScanDeferredBefore && getBackgroundFlag();
 
             mScanDeferredBefore = true;
-            return true;
         } else {
             if (mBackgroundLScanStartTime > 0l) {
                 stopScan();

@@ -14,9 +14,9 @@ public class CycleParameter implements Parcelable{
     private boolean backgroundFlag;
 
 
-    public CycleParameter(long betweenScanPeriod, long scanPeriod, boolean backgroundFlag) {
-        this.betweenScanPeriod = betweenScanPeriod;
+    public CycleParameter(long scanPeriod, long betweenScanPeriod, boolean backgroundFlag) {
         this.scanPeriod = scanPeriod;
+        this.betweenScanPeriod = betweenScanPeriod;
         this.backgroundFlag = backgroundFlag;
     }
 

@@ -45,6 +45,7 @@ import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.BuildConfig;
+import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.distance.DistanceCalculator;
 import org.altbeacon.beacon.distance.ModelSpecificDistanceCalculator;
@@ -52,8 +53,12 @@ import org.altbeacon.beacon.logging.LogManager;
 import org.altbeacon.beacon.service.scanner.CycleParameter;
 import org.altbeacon.beacon.service.scanner.CycledLeScanCallback;
 import org.altbeacon.beacon.service.scanner.CycledLeScanner;
+import org.altbeacon.beacon.service.scanner.CycledLeScannerScreenState;
 import org.altbeacon.beacon.service.scanner.NonBeaconLeScanCallback;
+import org.altbeacon.beacon.service.scanner.RecordDetectionListener;
+import org.altbeacon.beacon.service.scanner.ScanPeriods;
 import org.altbeacon.beacon.service.scanner.optimizer.ScreenStateBroadcastReceiver;
+import org.altbeacon.beacon.service.scanner.optimizer.ScreenStateInstance;
 import org.altbeacon.beacon.startup.StartupBroadcastReceiver;
 import org.altbeacon.bluetooth.BluetoothCrashResolver;
 
@@ -156,26 +161,26 @@ public class BeaconService extends Service {
                     case MSG_START_RANGING:
                         LogManager.i(TAG, "start ranging received");
                         service.startRangingBeaconsInRegion(startRMData.getRegionData(), new org.altbeacon.beacon.service.Callback(startRMData.getCallbackPackageName()));
-                        service.setCyleParameter(startRMData.getCycleParameter());
+                        service.updateApplicationStatus(startRMData.getCycleParameter());
                         break;
                     case MSG_STOP_RANGING:
                         LogManager.i(TAG, "stop ranging received");
                         service.stopRangingBeaconsInRegion(startRMData.getRegionData());
-                        service.setCyleParameter(startRMData.getCycleParameter());
+                        service.updateApplicationStatus(startRMData.getCycleParameter());
                         break;
                     case MSG_START_MONITORING:
                         LogManager.i(TAG, "start monitoring received");
                         service.startMonitoringBeaconsInRegion(startRMData.getRegionData(), new org.altbeacon.beacon.service.Callback(startRMData.getCallbackPackageName()));
-                        service.setCyleParameter(startRMData.getCycleParameter());
+                        service.updateApplicationStatus(startRMData.getCycleParameter());
                         break;
                     case MSG_STOP_MONITORING:
                         LogManager.i(TAG, "stop monitoring received");
                         service.stopMonitoringBeaconsInRegion(startRMData.getRegionData());
-                        service.setCyleParameter(startRMData.getCycleParameter());
+                        service.updateApplicationStatus(startRMData.getCycleParameter());
                         break;
                     case MSG_SET_SCAN_PERIODS:
                         LogManager.i(TAG, "set scan intervals received");
-                        service.setCyleParameter(startRMData.getCycleParameter());
+                        service.updateApplicationStatus(startRMData.getCycleParameter());
                         break;
                     default:
                         super.handleMessage(msg);
@@ -206,16 +211,21 @@ public class BeaconService extends Service {
         // Create a private executor so we don't compete with threads used by AsyncTask
         // This uses fewer threads than the default executor so it won't hog CPU
         mExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
-
-        mCycledScanner = new CycledLeScanner(this, BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD,
+        /*mCycledScanner = CycledLeScannerOld.createScanner(this, BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD,
                 BeaconManager.DEFAULT_FOREGROUND_BETWEEN_SCAN_PERIOD, mBackgroundFlag, mCycledLeScanCallback, bluetoothCrashResolver);
+                //*/
+        mCycledScanner = new CycledLeScannerScreenState(this, new ScanPeriods(BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD,
+                BeaconManager.DEFAULT_FOREGROUND_BETWEEN_SCAN_PERIOD), new ScanPeriods(BeaconManager.DEFAULT_BACKGROUND_SCAN_PERIOD, BeaconManager.DEFAULT_BACKGROUND_BETWEEN_SCAN_PERIOD), mBackgroundFlag, mCycledLeScanCallback, bluetoothCrashResolver);
 
+                //*/
+        ScreenStateInstance.getInstance().update(mCycledScanner);
         beaconManager = BeaconManager.getInstanceForApplication(getApplicationContext());
         beaconParsers = beaconManager.getBeaconParsers();
         defaultDistanceCalculator =  new ModelSpecificDistanceCalculator(this, BeaconManager.getDistanceModelUpdateUrl());
         Beacon.setDistanceCalculator(defaultDistanceCalculator);
 
-        monitoringStatus = MonitoringStatus.getInstanceForApplication(getApplicationContext());
+        MonitorNotifier monitorNotifier = mCycledScanner instanceof MonitorNotifier?(MonitorNotifier)mCycledScanner:null;
+        monitoringStatus = MonitoringStatus.getInstanceForApplication(getApplicationContext(), monitorNotifier);
         // Look for simulated scan data
         try {
             Class klass = Class.forName("org.altbeacon.beacon.SimulatedScanData");
@@ -334,8 +344,8 @@ public class BeaconService extends Service {
         }
     }
 
-    public void setCyleParameter(CycleParameter cyleParameter) {
-        mCycledScanner.setScanPeriods(cyleParameter);
+    public void updateApplicationStatus(CycleParameter cyleParameter) {
+        mCycledScanner.updateApplicationStatus(cyleParameter.getBackgroundFlag());
     }
 
     protected final CycledLeScanCallback mCycledLeScanCallback = new CycledLeScanCallback() {
@@ -346,8 +356,12 @@ public class BeaconService extends Service {
             NonBeaconLeScanCallback nonBeaconLeScanCallback = beaconManager.getNonBeaconLeScanCallback();
 
             try {
-                new ScanProcessor(nonBeaconLeScanCallback).executeOnExecutor(mExecutor,
+                /*new ScanProcessor(nonBeaconLeScanCallback, null).executeOnExecutor(mExecutor,
                         new ScanData(device, rssi, scanRecord));
+                //*/
+                new ScanProcessor(nonBeaconLeScanCallback, mCycledScanner.getLeScanner()).executeOnExecutor(mExecutor,
+                        new ScanData(device, rssi, scanRecord));
+                //*/
             } catch (RejectedExecutionException e) {
                 LogManager.w(TAG, "Ignoring scan result because we cannot keep up.");
             }
@@ -455,9 +469,11 @@ public class BeaconService extends Service {
         final DetectionTracker mDetectionTracker = DetectionTracker.getInstance();
 
         private final NonBeaconLeScanCallback mNonBeaconLeScanCallback;
+        private final RecordDetectionListener mRecordDetectionListener;
 
-        public ScanProcessor(NonBeaconLeScanCallback nonBeaconLeScanCallback) {
+        public ScanProcessor(NonBeaconLeScanCallback nonBeaconLeScanCallback, RecordDetectionListener recordDetectionListener) {
             mNonBeaconLeScanCallback = nonBeaconLeScanCallback;
+            mRecordDetectionListener = recordDetectionListener;
         }
 
         @Override
@@ -475,6 +491,9 @@ public class BeaconService extends Service {
             }
             if (beacon != null) {
                 mDetectionTracker.recordDetection();
+                if(mRecordDetectionListener != null){
+                    mRecordDetectionListener.recordDetection();
+                }
                 trackedBeaconsPacketCount++;
                 processBeaconFromScan(beacon);
             } else {

@@ -11,6 +11,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.os.SystemClock;
 
 import org.altbeacon.beacon.BeaconManager;
@@ -21,7 +23,7 @@ import org.altbeacon.bluetooth.BluetoothCrashResolver;
 import java.util.Date;
 
 @TargetApi(18)
-public class CycledLeScanner {
+public class CycledLeScanner implements Parcelable{
     private static final String TAG = "CycledLeScanner";
     private BluetoothAdapter mBluetoothAdapter;
 
@@ -34,15 +36,15 @@ public class CycledLeScanner {
     private boolean mScanningPaused;
     private boolean mScanCyclerStarted = false;
     private boolean mScanningEnabled = false;
-    private final Context mContext;
+    private Context mContext;
     private ScanPeriods mActiveScanPeriods;
     private ScanPeriods mPassiveScanPeriods;
     private ScanPeriods mCurrentScanPeriods;
 
     private final Handler mHandler = new Handler();
 
-    private final BluetoothCrashResolver mBluetoothCrashResolver;
-    private final CycledLeScanCallback mCycledLeScanCallback;
+    private BluetoothCrashResolver mBluetoothCrashResolver;
+    private CycledLeScanCallback mCycledLeScanCallback;
 
     private boolean mBackgroundFlag = false;
     private boolean mActiveMode = false;
@@ -50,16 +52,20 @@ public class CycledLeScanner {
     private LeScanner mLeScanner;
     private Runnable mNextCycleRunnable;
 
-    public CycledLeScanner(Context context, ScanPeriods activeScanPeriods, ScanPeriods passiveScanPeriods, boolean backgroundFlag, CycledLeScanCallback cycledLeScanCallback, BluetoothCrashResolver crashResolver) {
+    public CycledLeScanner(ScanPeriods activeScanPeriods, ScanPeriods passiveScanPeriods) {
         this.mActiveScanPeriods = activeScanPeriods;
         this.mPassiveScanPeriods = passiveScanPeriods;
+        mBackgroundFlag = false;
+        mActiveMode = !mBackgroundFlag;
+        mCurrentScanPeriods = mActiveMode ? mActiveScanPeriods : mPassiveScanPeriods;
+    }
+
+    public void initScanning(Context context, CycledLeScanCallback cycledLeScanCallback){
         mContext = context;
         mCycledLeScanCallback = cycledLeScanCallback;
-        mBluetoothCrashResolver = crashResolver;
-        mBackgroundFlag = backgroundFlag;
-        mActiveMode = !backgroundFlag;
-        mCurrentScanPeriods = mActiveMode ?activeScanPeriods: passiveScanPeriods;
-        mLeScanner = createLeScanner(context, cycledLeScanCallback, crashResolver);
+        mBluetoothCrashResolver = new BluetoothCrashResolver(context);
+        mLeScanner = createLeScanner(context, cycledLeScanCallback, mBluetoothCrashResolver);
+        mBluetoothCrashResolver.start();
     }
 
     private LeScanner createLeScanner(Context context, CycledLeScanCallback cycledLeScanCallback, BluetoothCrashResolver crashResolver){
@@ -106,20 +112,21 @@ public class CycledLeScanner {
      * Background mode flag  is used only with the Android 5.0 scanning implementations to switch
      * between LOW_POWER_MODE vs. LOW_LATENCY_MODE
      */
-    public void updateApplicationStatus(boolean backgroundFlag) {
-        mBackgroundFlag = backgroundFlag;
-        LogManager.d(TAG, "Background mode must have changed - Background Mode : %s.", backgroundFlag);
+    public void updateCycledParameter(CycledParameter cycledParameter) {
+        mBackgroundFlag = cycledParameter.getBackgroundFlag();
+        LogManager.d(TAG, "Background mode must have changed - Background Mode : %s.", mBackgroundFlag);
         if (mBackgroundFlag) {
+            mPassiveScanPeriods = cycledParameter.getScanPeriods();
             LogManager.d(TAG, "We are in the background.  Setting wakeup alarm");
             setWakeUpAlarm();
             mLeScanner.onBackground();
         } else {
+            mActiveScanPeriods = cycledParameter.getScanPeriods();
             LogManager.d(TAG, "We are not in the background.  Cancelling wakeup alarm");
             cancelWakeUpAlarm();
             mLeScanner.onForeground();
         }
-        updateActiveMode(!backgroundFlag);
-
+        updateActiveMode(!cycledParameter.getBackgroundFlag());
     }
 
     public void updateActiveMode(boolean activeMode){
@@ -133,14 +140,21 @@ public class CycledLeScanner {
 
         long now = SystemClock.elapsedRealtime();
         if (mNextScanCycleStartTime > now) {
-            // We are waiting to start scanning.  We may need to adjust the next start time
-            // only do an adjustment if we need to make it happen sooner.  Otherwise, it will
-            // take effect on the next cycle.
-            long proposedNextScanStartTime = (mLastScanCycleEndTime + mCurrentScanPeriods.getBetweenScanPeriod());
-            if (proposedNextScanStartTime < mNextScanCycleStartTime) {
-                mNextScanCycleStartTime = proposedNextScanStartTime;
-                LogManager.i(TAG, "Adjusted nextScanStartTime to be %s",
-                        new Date(mNextScanCycleStartTime - SystemClock.elapsedRealtime() + System.currentTimeMillis()));
+            //if we switch to the active mode we start to scan directly
+            if(activeMode){
+                mNextScanCycleStartTime = now;
+                cancelNextCycledRunnable();
+                scanLeDevice(true);
+            }else {
+                // We are waiting to start scanning.  We may need to adjust the next start time
+                // only do an adjustment if we need to make it happen sooner.  Otherwise, it will
+                // take effect on the next cycle.
+                long proposedNextScanStartTime = (mLastScanCycleEndTime + mCurrentScanPeriods.getBetweenScanPeriod());
+                if (proposedNextScanStartTime < mNextScanCycleStartTime) {
+                    mNextScanCycleStartTime = proposedNextScanStartTime;
+                    LogManager.i(TAG, "Adjusted nextScanStartTime to be %s",
+                            new Date(mNextScanCycleStartTime - SystemClock.elapsedRealtime() + System.currentTimeMillis()));
+                }
             }
         }
         if (mScanCycleStopTime > now) {
@@ -176,6 +190,11 @@ public class CycledLeScanner {
             stopScan();
             mLastScanCycleEndTime = SystemClock.elapsedRealtime();
         }
+    }
+
+    public void onDestroy(){
+        mBluetoothCrashResolver.stop();
+        this.stop();
     }
 
     private void stopScan(){
@@ -440,6 +459,36 @@ public class CycledLeScanner {
         return mContext.checkPermission(permission, android.os.Process.myPid(), android.os.Process.myUid()) == PackageManager.PERMISSION_GRANTED;
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
 
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeParcelable(mActiveScanPeriods, flags);
+        dest.writeParcelable(mPassiveScanPeriods, flags);
+        dest.writeInt(mBackgroundFlag?1:0);
+        dest.writeInt(mActiveMode?1:0);
+    }
 
+    protected CycledLeScanner(Parcel in){
+        ClassLoader classLoader = ScanPeriods.class.getClassLoader();
+        mActiveScanPeriods = in.readParcelable(classLoader);
+        mPassiveScanPeriods = in.readParcelable(classLoader);
+        mBackgroundFlag = in.readInt() == 1;
+        mActiveMode = in.readInt() == 1;
+        mCurrentScanPeriods = mActiveMode ? mActiveScanPeriods : mPassiveScanPeriods;
+    }
+
+    public static final Parcelable.Creator<CycledLeScanner> CREATOR
+            = new Parcelable.Creator<CycledLeScanner>() {
+        public CycledLeScanner createFromParcel(Parcel in) {
+            return new CycledLeScanner(in);
+        }
+
+        public CycledLeScanner[] newArray(int size) {
+            return new CycledLeScanner[size];
+        }
+    };
 }

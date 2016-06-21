@@ -50,17 +50,14 @@ import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.distance.DistanceCalculator;
 import org.altbeacon.beacon.distance.ModelSpecificDistanceCalculator;
 import org.altbeacon.beacon.logging.LogManager;
-import org.altbeacon.beacon.service.scanner.CycleParameter;
+import org.altbeacon.beacon.service.scanner.CycledParameter;
 import org.altbeacon.beacon.service.scanner.CycledLeScanCallback;
 import org.altbeacon.beacon.service.scanner.CycledLeScanner;
-import org.altbeacon.beacon.service.scanner.CycledLeScannerScreenState;
 import org.altbeacon.beacon.service.scanner.NonBeaconLeScanCallback;
 import org.altbeacon.beacon.service.scanner.RecordDetectionListener;
-import org.altbeacon.beacon.service.scanner.ScanPeriods;
 import org.altbeacon.beacon.service.scanner.optimizer.ScreenStateBroadcastReceiver;
 import org.altbeacon.beacon.service.scanner.optimizer.ScreenStateInstance;
 import org.altbeacon.beacon.startup.StartupBroadcastReceiver;
-import org.altbeacon.bluetooth.BluetoothCrashResolver;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -89,12 +86,10 @@ public class BeaconService extends Service {
 
     int trackedBeaconsPacketCount;
     private final Handler handler = new Handler();
-    private BluetoothCrashResolver bluetoothCrashResolver;
     private DistanceCalculator defaultDistanceCalculator = null;
     private BeaconManager beaconManager;
     private List<BeaconParser> beaconParsers;
     private CycledLeScanner mCycledScanner;
-    private boolean mBackgroundFlag = false;
     private final GattBeaconTracker mGattBeaconTracker = new GattBeaconTracker();
     private ExecutorService mExecutor;
     private ScreenStateBroadcastReceiver screenStateBroadcastReceiver;
@@ -161,26 +156,26 @@ public class BeaconService extends Service {
                     case MSG_START_RANGING:
                         LogManager.i(TAG, "start ranging received");
                         service.startRangingBeaconsInRegion(startRMData.getRegionData(), new org.altbeacon.beacon.service.Callback(startRMData.getCallbackPackageName()));
-                        service.updateApplicationStatus(startRMData.getCycleParameter());
+                        service.updateCycledParameter(startRMData.getCycledParameter());
                         break;
                     case MSG_STOP_RANGING:
                         LogManager.i(TAG, "stop ranging received");
                         service.stopRangingBeaconsInRegion(startRMData.getRegionData());
-                        service.updateApplicationStatus(startRMData.getCycleParameter());
+                        service.updateCycledParameter(startRMData.getCycledParameter());
                         break;
                     case MSG_START_MONITORING:
                         LogManager.i(TAG, "start monitoring received");
                         service.startMonitoringBeaconsInRegion(startRMData.getRegionData(), new org.altbeacon.beacon.service.Callback(startRMData.getCallbackPackageName()));
-                        service.updateApplicationStatus(startRMData.getCycleParameter());
+                        service.updateCycledParameter(startRMData.getCycledParameter());
                         break;
                     case MSG_STOP_MONITORING:
                         LogManager.i(TAG, "stop monitoring received");
                         service.stopMonitoringBeaconsInRegion(startRMData.getRegionData());
-                        service.updateApplicationStatus(startRMData.getCycleParameter());
+                        service.updateCycledParameter(startRMData.getCycledParameter());
                         break;
                     case MSG_SET_SCAN_PERIODS:
                         LogManager.i(TAG, "set scan intervals received");
-                        service.updateApplicationStatus(startRMData.getCycleParameter());
+                        service.updateCycledParameter(startRMData.getCycledParameter());
                         break;
                     default:
                         super.handleMessage(msg);
@@ -198,8 +193,6 @@ public class BeaconService extends Service {
     @Override
     public void onCreate() {
         LogManager.i(TAG, "beaconService version %s is starting up", BuildConfig.VERSION_NAME);
-        bluetoothCrashResolver = new BluetoothCrashResolver(this);
-        bluetoothCrashResolver.start();
         /**
          * If we register it inot the manifest we are not notified about the action
          * Registering it from the code is the only way
@@ -214,12 +207,12 @@ public class BeaconService extends Service {
         /*mCycledScanner = CycledLeScannerOld.createScanner(this, BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD,
                 BeaconManager.DEFAULT_FOREGROUND_BETWEEN_SCAN_PERIOD, mBackgroundFlag, mCycledLeScanCallback, bluetoothCrashResolver);
                 //*/
-        mCycledScanner = new CycledLeScannerScreenState(this, new ScanPeriods(BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD,
-                BeaconManager.DEFAULT_FOREGROUND_BETWEEN_SCAN_PERIOD), new ScanPeriods(BeaconManager.DEFAULT_BACKGROUND_SCAN_PERIOD, BeaconManager.DEFAULT_BACKGROUND_BETWEEN_SCAN_PERIOD), mBackgroundFlag, mCycledLeScanCallback, bluetoothCrashResolver);
-
+        beaconManager = BeaconManager.getInstanceForApplication(getApplicationContext());
+        mCycledScanner = beaconManager.getCycledLeScanner();
+        mCycledScanner.initScanning(this, mCycledLeScanCallback);
                 //*/
         ScreenStateInstance.getInstance().update(mCycledScanner);
-        beaconManager = BeaconManager.getInstanceForApplication(getApplicationContext());
+
         beaconParsers = beaconManager.getBeaconParsers();
         defaultDistanceCalculator =  new ModelSpecificDistanceCalculator(this, BeaconManager.getDistanceModelUpdateUrl());
         Beacon.setDistanceCalculator(defaultDistanceCalculator);
@@ -273,11 +266,10 @@ public class BeaconService extends Service {
             LogManager.w(TAG, "Not supported prior to API 18.");
             return;
         }
-        bluetoothCrashResolver.stop();
         unregisterReceiver(screenStateBroadcastReceiver);
         LogManager.i(TAG, "onDestroy called.  stopping scanning");
         handler.removeCallbacksAndMessages(null);
-        mCycledScanner.stop();
+        mCycledScanner.onDestroy();
         monitoringStatus.stopStatusPreservationOnProcessDestruction();
     }
 
@@ -344,8 +336,8 @@ public class BeaconService extends Service {
         }
     }
 
-    public void updateApplicationStatus(CycleParameter cyleParameter) {
-        mCycledScanner.updateApplicationStatus(cyleParameter.getBackgroundFlag());
+    public void updateCycledParameter(CycledParameter cyleParameter) {
+        mCycledScanner.updateCycledParameter(cyleParameter);
     }
 
     protected final CycledLeScanCallback mCycledLeScanCallback = new CycledLeScanCallback() {

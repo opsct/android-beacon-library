@@ -1,26 +1,35 @@
 package org.altbeacon.beacon.service.scanner;
 
-import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
 
+import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.service.scanner.optimizer.ScreenStateListener;
-import org.altbeacon.bluetooth.BluetoothCrashResolver;
 
 /**
  * Created by Connecthings on 17/06/16.
  */
 public class CycledLeScannerScreenState extends CycledLeScanner implements ScreenStateListener{
 
-    public static final int DELAY=40*1000;
+    private static final int DELAY=40*1000;
 
-    private Runnable mCancelScanningRun;
+    private Runnable mStopScanningRunnable;
+    private final int mActiveScanPeriodOnScreenStateSwitch;
 
-    public CycledLeScannerScreenState(Context context, ScanPeriods activePeriods, ScanPeriods passivePeriods, boolean backgroundFlag, CycledLeScanCallback cycledLeScanCallback, BluetoothCrashResolver crashResolver) {
-        super(context, activePeriods, passivePeriods, backgroundFlag, cycledLeScanCallback, crashResolver);
+    public CycledLeScannerScreenState() {
+        this(new ScanPeriods(BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD, BeaconManager.DEFAULT_FOREGROUND_BETWEEN_SCAN_PERIOD),
+                new ScanPeriods(BeaconManager.DEFAULT_BACKGROUND_SCAN_PERIOD, BeaconManager.DEFAULT_BACKGROUND_BETWEEN_SCAN_PERIOD),
+                DELAY);
     }
 
-    public void updateApplicationStatus(boolean backgroundFlag) {
-        cancelRunnableCancelScanning();
-        super.updateApplicationStatus(backgroundFlag);
+    public CycledLeScannerScreenState(ScanPeriods activePeriods, ScanPeriods passivePeriods, int activeScanPeriodOnScreenStateSwitch) {
+        super(activePeriods, passivePeriods);
+        mActiveScanPeriodOnScreenStateSwitch = activeScanPeriodOnScreenStateSwitch;
+    }
+
+    public void updateCycledParameter(CycledParameter cycledParameter) {
+        cancelRunnableStopScanning();
+        super.updateCycledParameter(cycledParameter);
     }
 
     protected long calculateNextScanLeDeviceDelayBackground(){
@@ -39,22 +48,22 @@ public class CycledLeScannerScreenState extends CycledLeScanner implements Scree
         }
     }
 
-    private void cancelRunnableCancelScanning(){
-        cancelRunnable(mCancelScanningRun);
+    private void cancelRunnableStopScanning(){
+        cancelRunnable(mStopScanningRunnable);
     }
 
     private void launchBackgroundScanning(){
         if(getBackgroundFlag()){
             cancelNextCycledRunnable();
-            cancelRunnableCancelScanning();
+            cancelRunnableStopScanning();
             this.updateActiveMode(true);
-            mCancelScanningRun = new Runnable() {
+            mStopScanningRunnable = new Runnable() {
                 @Override
                 public void run() {
                     updateActiveMode(false);
                 }
             };
-            scheduleRunnable(mCancelScanningRun, DELAY);
+            scheduleRunnable(mStopScanningRunnable, mActiveScanPeriodOnScreenStateSwitch);
             scanLeDevice(true);
         }
     }
@@ -68,4 +77,26 @@ public class CycledLeScannerScreenState extends CycledLeScanner implements Scree
     public void onScreenOff() {
        launchBackgroundScanning();
     }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeInt(mActiveScanPeriodOnScreenStateSwitch);
+    }
+
+    protected CycledLeScannerScreenState(Parcel in){
+        super(in);
+        mActiveScanPeriodOnScreenStateSwitch = in.readInt();
+    }
+
+    public static final Parcelable.Creator<CycledLeScannerScreenState> CREATOR
+            = new Parcelable.Creator<CycledLeScannerScreenState>() {
+        public CycledLeScannerScreenState createFromParcel(Parcel in) {
+            return new CycledLeScannerScreenState(in);
+        }
+
+        public CycledLeScannerScreenState[] newArray(int size) {
+            return new CycledLeScannerScreenState[size];
+        }
+    };
 }

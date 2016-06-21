@@ -27,13 +27,13 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import org.altbeacon.beacon.Region;
-import org.altbeacon.beacon.service.scanner.CycleParameter;
+import org.altbeacon.beacon.service.scanner.CycledParameter;
 
 import java.io.Serializable;
 
 public class StartRMData implements Serializable, Parcelable {
     private Region region;
-    private CycleParameter cycleParameter;
+    private CycledParameter cycledParameter;
     private String callbackPackageName;
 
     public StartRMData(Region region, String callbackPackageName) {
@@ -41,29 +41,17 @@ public class StartRMData implements Serializable, Parcelable {
         this.callbackPackageName = callbackPackageName;
     }
 
-    public StartRMData(CycleParameter cycleParameter){
-        this.cycleParameter = cycleParameter;
-    }
-
-    public StartRMData(Region region, String callbackPackageName, CycleParameter cycleParameter) {
-        cycleParameter = this.cycleParameter;
-        this.region = region;
-        this.callbackPackageName = callbackPackageName;
-    }
-
-    @Deprecated
     public StartRMData(long scanPeriod, long betweenScanPeriod, boolean backgroundFlag) {
-        cycleParameter = new CycleParameter(scanPeriod, betweenScanPeriod, backgroundFlag);
+        cycledParameter = new CycledParameter(scanPeriod, betweenScanPeriod, backgroundFlag);
     }
 
-    @Deprecated
     public StartRMData(Region region, String callbackPackageName, long scanPeriod, long betweenScanPeriod, boolean backgroundFlag) {
-        cycleParameter = new CycleParameter(scanPeriod, betweenScanPeriod, backgroundFlag);
+        cycledParameter = new CycledParameter(scanPeriod, betweenScanPeriod, backgroundFlag);
         this.region = region;
         this.callbackPackageName = callbackPackageName;
     }
 
-    public CycleParameter getCycleParameter(){ return cycleParameter; }
+    public CycledParameter getCycledParameter(){ return cycledParameter; }
     public Region getRegionData() {
         return region;
     }
@@ -77,7 +65,7 @@ public class StartRMData implements Serializable, Parcelable {
     public void writeToParcel(Parcel out, int flags) {
         out.writeParcelable(region, flags);
         out.writeString(callbackPackageName);
-        out.writeParcelable(cycleParameter, flags);
+        out.writeParcelable(cycledParameter, flags);
     }
 
     public static final Parcelable.Creator<StartRMData> CREATOR
@@ -94,7 +82,7 @@ public class StartRMData implements Serializable, Parcelable {
     private StartRMData(Parcel in) {
         region = in.readParcelable(StartRMData.class.getClassLoader());
         callbackPackageName = in.readString();
-        cycleParameter = in.readParcelable(CycleParameter.class.getClassLoader());
+        cycledParameter = in.readParcelable(CycledParameter.class.getClassLoader());
     }
 
 }

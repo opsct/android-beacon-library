@@ -98,15 +98,15 @@ public class CycledLeScannerOld2 {
      * Background mode flag  is used only with the Android 5.0 scanning implementations to switch
      * between LOW_POWER_MODE vs. LOW_LATENCY_MODE
      */
-    public void setScanPeriods(CycleParameter cycleParameter) {
+    public void setScanPeriods(CycledParameter cycleParameter) {
         LogManager.d(TAG, "Set scan periods called with %s, %s Background mode must have changed.",
-                cycleParameter.getScanPeriod(), cycleParameter.getBackgroundFlag());
+                cycleParameter.getScanPeriods().getScanPeriod(), cycleParameter.getBackgroundFlag());
         if (mBackgroundFlag != cycleParameter.getBackgroundFlag()) {
             mRestartNeeded = true;
         }
         mBackgroundFlag = cycleParameter.getBackgroundFlag();
-        mScanPeriod = cycleParameter.getScanPeriod();
-        mBetweenScanPeriod = cycleParameter.getBetweenScanPeriod();
+        mScanPeriod = cycleParameter.getScanPeriods().getScanPeriod();
+        mBetweenScanPeriod = cycleParameter.getScanPeriods().getBetweenScanPeriod();
         if (mBackgroundFlag) {
             LogManager.d(TAG, "We are in the background.  Setting wakeup alarm");
             setWakeUpAlarm();

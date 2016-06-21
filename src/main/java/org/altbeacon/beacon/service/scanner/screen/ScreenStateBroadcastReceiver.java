@@ -1,4 +1,4 @@
-package org.altbeacon.beacon.service.scanner.optimizer;
+package org.altbeacon.beacon.service.scanner.screen;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -14,11 +14,11 @@ public class ScreenStateBroadcastReceiver extends BroadcastReceiver{
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        ScreenStateInstance cycleScanStrategyInstance = ScreenStateInstance.getInstance();
+        ScreenStateInstance screenScanStrategyInstance = ScreenStateInstance.getInstance();
         if (Intent.ACTION_SCREEN_ON.equals(action)) {
-            cycleScanStrategyInstance.onScreenOn();
+            screenScanStrategyInstance.onScreenOn();
         }else if (Intent.ACTION_SCREEN_OFF.equals(action)) {
-            cycleScanStrategyInstance.onScreenOff();
+            screenScanStrategyInstance.onScreenOff();
         }
 
     }

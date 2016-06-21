@@ -1,4 +1,4 @@
-package org.altbeacon.beacon.service.scanner.optimizer;
+package org.altbeacon.beacon.service.scanner.screen;
 
 /**
  * Listener to monitor the screen state

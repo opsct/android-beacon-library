@@ -55,8 +55,8 @@ import org.altbeacon.beacon.service.scanner.CycledLeScanCallback;
 import org.altbeacon.beacon.service.scanner.CycledLeScanner;
 import org.altbeacon.beacon.service.scanner.NonBeaconLeScanCallback;
 import org.altbeacon.beacon.service.scanner.RecordDetectionListener;
-import org.altbeacon.beacon.service.scanner.optimizer.ScreenStateBroadcastReceiver;
-import org.altbeacon.beacon.service.scanner.optimizer.ScreenStateInstance;
+import org.altbeacon.beacon.service.scanner.screen.ScreenStateBroadcastReceiver;
+import org.altbeacon.beacon.service.scanner.screen.ScreenStateInstance;
 import org.altbeacon.beacon.startup.StartupBroadcastReceiver;
 
 import java.lang.ref.WeakReference;

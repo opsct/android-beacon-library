@@ -4,7 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import org.altbeacon.beacon.BeaconManager;
-import org.altbeacon.beacon.service.scanner.optimizer.ScreenStateListener;
+import org.altbeacon.beacon.service.scanner.screen.ScreenStateListener;
 
 /**
  * Created by Connecthings on 17/06/16.

@@ -1,4 +1,4 @@
-package org.altbeacon.beacon.service.scanner.screen;
+package org.altbeacon.beacon.service.scanner.screenstate;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

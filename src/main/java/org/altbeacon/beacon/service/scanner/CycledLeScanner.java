@@ -56,8 +56,8 @@ public class CycledLeScanner implements Parcelable{
         this.mActiveScanPeriods = activeScanPeriods;
         this.mPassiveScanPeriods = passiveScanPeriods;
         mBackgroundFlag = false;
-        mActiveMode = !mBackgroundFlag;
-        mCurrentScanPeriods = mActiveMode ? mActiveScanPeriods : mPassiveScanPeriods;
+        mActiveMode = true;
+        mCurrentScanPeriods = mActiveScanPeriods;
     }
 
     public void initScanning(Context context, CycledLeScanCallback cycledLeScanCallback){
@@ -116,20 +116,27 @@ public class CycledLeScanner implements Parcelable{
         mBackgroundFlag = cycledParameter.getBackgroundFlag();
         LogManager.d(TAG, "Background mode must have changed - Background Mode : %s.", mBackgroundFlag);
         if (mBackgroundFlag) {
-            mPassiveScanPeriods = cycledParameter.getScanPeriods();
             LogManager.d(TAG, "We are in the background.  Setting wakeup alarm");
             setWakeUpAlarm();
             mLeScanner.onBackground();
         } else {
-            mActiveScanPeriods = cycledParameter.getScanPeriods();
             LogManager.d(TAG, "We are not in the background.  Cancelling wakeup alarm");
             cancelWakeUpAlarm();
             mLeScanner.onForeground();
         }
-        updateActiveMode(!cycledParameter.getBackgroundFlag());
+        updateMode(cycledParameter.getScanPeriods(), !cycledParameter.getBackgroundFlag());
     }
 
-    public void updateActiveMode(boolean activeMode){
+    public void updateMode(ScanPeriods scanPeriods, boolean activeMode){
+        if(activeMode){
+            mActiveScanPeriods = scanPeriods;
+        }else{
+            mPassiveScanPeriods = scanPeriods;
+        }
+        updateMode(activeMode);
+    }
+
+    public void updateMode(boolean activeMode){
         if (mActiveMode != activeMode) {
             mRestartNeeded = true;
         }
@@ -319,7 +326,7 @@ public class CycledLeScanner implements Parcelable{
 
     private void scheduleScanCycleStop() {
         // Stops scanning after a pre-defined scan period.
-        long millisecondsUntilStart = mBackgroundFlag? calculateNextStopCyleDelayBackground(): calculateNextDelayDefault(mScanCycleStopTime);
+        long millisecondsUntilStart = mBackgroundFlag?calculateNextStopCyleDelayBackground():calculateNextDelayDefault(mScanCycleStopTime);
         if (millisecondsUntilStart > 0) {
             LogManager.d(TAG, "Waiting to stop scan cycle for another %s milliseconds",
                     millisecondsUntilStart);

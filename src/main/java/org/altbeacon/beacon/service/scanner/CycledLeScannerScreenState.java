@@ -4,26 +4,27 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import org.altbeacon.beacon.BeaconManager;
-import org.altbeacon.beacon.service.scanner.screen.ScreenStateListener;
+import org.altbeacon.beacon.logging.LogManager;
+import org.altbeacon.beacon.service.scanner.screenstate.ScreenStateListener;
 
 /**
  * Created by Connecthings on 17/06/16.
  */
 public class CycledLeScannerScreenState extends CycledLeScanner implements ScreenStateListener{
 
-    private static final int DELAY=40*1000;
+    private static final String TAG = "CycledLeScannerScreenState";
+
+    public static final int DELAY=20*1000;
 
     private Runnable mStopScanningRunnable;
     private final int mActiveScanPeriodOnScreenStateSwitch;
 
     public CycledLeScannerScreenState() {
-        this(new ScanPeriods(BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD, BeaconManager.DEFAULT_FOREGROUND_BETWEEN_SCAN_PERIOD),
-                new ScanPeriods(BeaconManager.DEFAULT_BACKGROUND_SCAN_PERIOD, BeaconManager.DEFAULT_BACKGROUND_BETWEEN_SCAN_PERIOD),
-                DELAY);
+        this(new ScanPeriods(BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD, BeaconManager.DEFAULT_FOREGROUND_BETWEEN_SCAN_PERIOD), DELAY);
     }
 
-    public CycledLeScannerScreenState(ScanPeriods activePeriods, ScanPeriods passivePeriods, int activeScanPeriodOnScreenStateSwitch) {
-        super(activePeriods, passivePeriods);
+    public CycledLeScannerScreenState(ScanPeriods activePeriods, int activeScanPeriodOnScreenStateSwitch) {
+        super(activePeriods, new ScanPeriods(BeaconManager.DEFAULT_BACKGROUND_SCAN_PERIOD, BeaconManager.DEFAULT_BACKGROUND_BETWEEN_SCAN_PERIOD));
         mActiveScanPeriodOnScreenStateSwitch = activeScanPeriodOnScreenStateSwitch;
     }
 
@@ -34,16 +35,20 @@ public class CycledLeScannerScreenState extends CycledLeScanner implements Scree
 
     protected long calculateNextScanLeDeviceDelayBackground(){
         if(getActiveMode()){
+            LogManager.d(TAG, "active period -> launch the scan immidiatly");
             return 0;
         }else{
+            LogManager.d(TAG, "passive period -> never launch the next scan");
             return 1000;
         }
     }
 
     protected long calculateNextStopCyleDelayBackground(){
         if(getActiveMode()){
+            LogManager.d(TAG, "active period -> don't cancel the current scan");
             return 1000;
         }else{
+            LogManager.d(TAG, "passive period -> cancel the scan");
             return 0;
         }
     }
@@ -56,11 +61,12 @@ public class CycledLeScannerScreenState extends CycledLeScanner implements Scree
         if(getBackgroundFlag()){
             cancelNextCycledRunnable();
             cancelRunnableStopScanning();
-            this.updateActiveMode(true);
+            this.updateMode(true);
             mStopScanningRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    updateActiveMode(false);
+                    LogManager.d(TAG, "stop active background scanning");
+                    updateMode(false);
                 }
             };
             scheduleRunnable(mStopScanningRunnable, mActiveScanPeriodOnScreenStateSwitch);
@@ -70,12 +76,14 @@ public class CycledLeScannerScreenState extends CycledLeScanner implements Scree
 
     @Override
     public void onScreenOn() {
+        LogManager.d(TAG, "screen on -> launch an active background scanning");
         launchBackgroundScanning();
     }
 
     @Override
     public void onScreenOff() {
-       launchBackgroundScanning();
+        LogManager.d(TAG, "screen off -> launch an active background scanning");
+        launchBackgroundScanning();
     }
 
     @Override

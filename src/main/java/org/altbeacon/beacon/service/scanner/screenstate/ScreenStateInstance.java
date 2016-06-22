@@ -1,4 +1,4 @@
-package org.altbeacon.beacon.service.scanner.screen;
+package org.altbeacon.beacon.service.scanner.screenstate;
 
 /**
  * Singleton to keep the current CycleScanStrategy if implementing the ScreenStateListener.

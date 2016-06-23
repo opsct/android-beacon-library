@@ -6,6 +6,7 @@ import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.logging.LogManager;
+import org.altbeacon.beacon.service.scanner.optimizer.CycledMonitorNotifier;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -34,22 +35,22 @@ public class MonitoringStatus {
 
     private boolean mStatePreservationIsOn = true;
 
-    private MonitorNotifier mMonitorNotifier;
+    private CycledMonitorNotifier mCycledMonitorNotifier;
 
-    public static MonitoringStatus getInstanceForApplication(Context context, MonitorNotifier monitorNotifier) {
+    public static MonitoringStatus getInstanceForApplication(Context context, CycledMonitorNotifier cycledMonitorNotifier) {
         if (sInstance == null) {
             synchronized (MonitoringStatus.class) {
                 if (sInstance == null) {
-                    sInstance = new MonitoringStatus(context.getApplicationContext(), monitorNotifier);
+                    sInstance = new MonitoringStatus(context.getApplicationContext(), cycledMonitorNotifier);
                 }
             }
         }
         return sInstance;
     }
 
-    public MonitoringStatus(Context context, MonitorNotifier monitorNotifier) {
+    public MonitoringStatus(Context context, CycledMonitorNotifier cycledMonitorNotifier) {
         this.mContext = context;
-        this.mMonitorNotifier = monitorNotifier;
+        this.mCycledMonitorNotifier = cycledMonitorNotifier;
         restoreMonitoringStatus();
     }
 
@@ -86,10 +87,11 @@ public class MonitoringStatus {
                 needsMonitoringStateSaving = true;
                 LogManager.d(TAG, "found a monitor that expired: %s", region);
                 state.getCallback().call(mContext, "monitoringData", new MonitoringData(state.isInside(), region));
-                if(mMonitorNotifier != null){
-                    mMonitorNotifier.didDetermineStateForRegion(MonitorNotifier.OUTSIDE, region);
-                    mMonitorNotifier.didExitRegion(region);
+                if(mCycledMonitorNotifier != null){
+                    mCycledMonitorNotifier.didExitRegion(region);
                 }
+            }else if(state.isInside()){
+                mCycledMonitorNotifier.regionWithBeaconInside(region);
             }
         }
         if (needsMonitoringStateSaving) saveMonitoringStatusIfOn();
@@ -104,10 +106,11 @@ public class MonitoringStatus {
                 needsMonitoringStateSaving = true;
                 state.getCallback().call(mContext, "monitoringData",
                         new MonitoringData(state.isInside(), region));
-                if(mMonitorNotifier != null){
-                    mMonitorNotifier.didDetermineStateForRegion(MonitorNotifier.INSIDE, region);
-                    mMonitorNotifier.didEnterRegion(region);
+                if(mCycledMonitorNotifier != null){
+                    mCycledMonitorNotifier.didEnterRegion(region);
                 }
+            }else if(state.isInside()){
+                mCycledMonitorNotifier.regionWithBeaconInside(region);
             }
         }
         if (needsMonitoringStateSaving) saveMonitoringStatusIfOn();

@@ -35,20 +35,20 @@ public class CycledLeScannerScreenState extends CycledLeScanner implements Scree
 
     protected long calculateNextScanLeDeviceDelayBackground(){
         if(getActiveMode()){
-            LogManager.d(TAG, "active period -> launch the scan immidiatly");
+            LogManager.d(TAG, "nextScanDelay - ScreenUpdate - scan start now");
             return 0;
         }else{
-            LogManager.d(TAG, "passive period -> never launch the next scan");
+            LogManager.d(TAG, "nextScanDelay -screen of - scan lock");
             return 1000;
         }
     }
 
-    protected long calculateNextStopCyleDelayBackground(){
+    protected long calculateNextStopCycleDelayBackground(){
         if(getActiveMode()){
-            LogManager.d(TAG, "active period -> don't cancel the current scan");
+            LogManager.d(TAG, "nextStopCycle - ScreenUpdate - stop cycle lock");
             return 1000;
         }else{
-            LogManager.d(TAG, "passive period -> cancel the scan");
+            LogManager.d(TAG, "nextStopCycle - screen of - stop scan now");
             return 0;
         }
     }
@@ -59,6 +59,7 @@ public class CycledLeScannerScreenState extends CycledLeScanner implements Scree
 
     private void launchBackgroundScanning(){
         if(getBackgroundFlag()){
+            LogManager.d(TAG, "launch background scanning");
             cancelNextCycledRunnable();
             cancelRunnableStopScanning();
             this.updateMode(true);
@@ -76,13 +77,13 @@ public class CycledLeScannerScreenState extends CycledLeScanner implements Scree
 
     @Override
     public void onScreenOn() {
-        LogManager.d(TAG, "screen on -> launch an active background scanning");
+        LogManager.d(TAG, "screen on -> test to launch an active background scanning");
         launchBackgroundScanning();
     }
 
     @Override
     public void onScreenOff() {
-        LogManager.d(TAG, "screen off -> launch an active background scanning");
+        LogManager.d(TAG, "screen off -> test to launch an active background scanning");
         launchBackgroundScanning();
     }
 

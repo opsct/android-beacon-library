@@ -4,10 +4,14 @@ import android.os.SystemClock;
 
 import org.altbeacon.beacon.Region;
 
+import java.util.HashMap;
+
 /**
  * Created by Connecthings on 22/06/16.
  */
 public abstract class CountRegion {
+    private final HashMap<String, Region> regions = new HashMap<>();
+    private int previousCount;
     private int count;
     private long previousIn;
     private long previousOut;
@@ -15,6 +19,7 @@ public abstract class CountRegion {
     private long lastOut;
     private long last;
     private long previous;
+
 
     public boolean isIn(){
         return count != 0;
@@ -35,6 +40,10 @@ public abstract class CountRegion {
 
     public boolean isOutForLessThan(long delay){
         return count == 0 && lastOut + delay >= SystemClock.elapsedRealtime();
+    }
+
+    public int getPreviousCount() {
+        return previousCount;
     }
 
     public int getCount() {
@@ -68,7 +77,9 @@ public abstract class CountRegion {
     protected abstract boolean checkRegion(Region region);
 
     public boolean add(Region region){
-        if(checkRegion(region)){
+        if(checkRegion(region) && !regions.containsKey(region.getUniqueId())){
+            regions.put(region.getUniqueId(), region);
+            previousCount = count;
             count ++;
             previousIn = lastIn;
             lastIn = SystemClock.elapsedRealtime();
@@ -80,7 +91,9 @@ public abstract class CountRegion {
     }
 
     public boolean remove(Region region){
-        if(checkRegion(region)) {
+        if(checkRegion(region) && regions.containsKey(region.getUniqueId())) {
+            regions.remove(region);
+            previousCount = count;
             count --;
             previousOut = lastOut;
             lastOut = SystemClock.elapsedRealtime();

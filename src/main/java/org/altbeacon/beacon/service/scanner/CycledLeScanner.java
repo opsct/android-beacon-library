@@ -43,6 +43,7 @@ public class CycledLeScanner implements Parcelable{
 
     private final Handler mHandler = new Handler();
 
+
     private BluetoothCrashResolver mBluetoothCrashResolver;
     private CycledLeScanCallback mCycledLeScanCallback;
 
@@ -50,7 +51,20 @@ public class CycledLeScanner implements Parcelable{
     private boolean mActiveMode = false;
     private boolean mRestartNeeded = false;
     private LeScanner mLeScanner;
-    private Runnable mNextCycleRunnable;
+
+    private final Runnable mNextCycleScanRunnable = new Runnable() {
+        @Override
+        public void run() {
+            scanLeDevice(true);
+        }
+    };
+    private final Runnable mNextCycleStopScanRunnable = new Runnable() {
+        @Override
+        public void run() {
+            scheduleScanCycleStop();
+        }
+    };;
+
 
     public CycledLeScanner(ScanPeriods activeScanPeriods, ScanPeriods passiveScanPeriods) {
         this.mActiveScanPeriods = activeScanPeriods;
@@ -149,8 +163,8 @@ public class CycledLeScanner implements Parcelable{
         if (mNextScanCycleStartTime > now) {
             //if we switch to the active mode we start to scan directly
             if(activeMode){
-                mNextScanCycleStartTime = now;
                 cancelNextCycledRunnable();
+                mNextScanCycleStartTime = now;
                 scanLeDevice(true);
             }else {
                 // We are waiting to start scanning.  We may need to adjust the next start time
@@ -225,7 +239,8 @@ public class CycledLeScanner implements Parcelable{
     }
 
     protected void cancelNextCycledRunnable(){
-        cancelRunnable(mNextCycleRunnable);
+        cancelRunnable(mNextCycleScanRunnable);
+        cancelRunnable(mNextCycleStopScanRunnable);
     }
 
     private boolean deferScanIfNeeded(){
@@ -239,14 +254,7 @@ public class CycledLeScanner implements Parcelable{
             if (mLeScanner.onDeferScanIfNeeded(true)) {
                 setWakeUpAlarm();
             }
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    scanLeDevice(true);
-                }
-            };
-            scheduleRunnable(runnable, millisecondsUntilStart < 1000?millisecondsUntilStart:1000);
-            mNextCycleRunnable = runnable;
+            scheduleRunnable(mNextCycleScanRunnable, millisecondsUntilStart < 1000?millisecondsUntilStart:1000);
             return true;
         }else{
             mLeScanner.onDeferScanIfNeeded(false);
@@ -320,27 +328,20 @@ public class CycledLeScanner implements Parcelable{
         }
     }
 
-    protected long calculateNextStopCyleDelayBackground(){
+    protected long calculateNextStopCycleDelayBackground(){
        return calculateNextDelayDefault(mScanCycleStopTime);
     }
 
     private void scheduleScanCycleStop() {
         // Stops scanning after a pre-defined scan period.
-        long millisecondsUntilStart = mBackgroundFlag?calculateNextStopCyleDelayBackground():calculateNextDelayDefault(mScanCycleStopTime);
+        long millisecondsUntilStart = mBackgroundFlag? calculateNextStopCycleDelayBackground():calculateNextDelayDefault(mScanCycleStopTime);
         if (millisecondsUntilStart > 0) {
             LogManager.d(TAG, "Waiting to stop scan cycle for another %s milliseconds",
                     millisecondsUntilStart);
             if (mBackgroundFlag) {
                 setWakeUpAlarm();
             }
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    scheduleScanCycleStop();
-                }
-            };
-            scheduleRunnable(runnable, millisecondsUntilStart < 1000?millisecondsUntilStart:1000);
-            mNextCycleRunnable = runnable;
+            scheduleRunnable(mNextCycleStopScanRunnable, millisecondsUntilStart < 1000?millisecondsUntilStart:1000);
         } else {
             finishScanCycle();
         }
@@ -450,7 +451,7 @@ public class CycledLeScanner implements Parcelable{
         if (mCurrentScanPeriods.getBetweenScanPeriod() == 0) {
             return SystemClock.elapsedRealtime();
         }
-        long fullScanCycle = mCurrentScanPeriods.getScanPeriod() + mCurrentScanPeriods.getScanPeriod();
+        long fullScanCycle = mCurrentScanPeriods.getScanPeriod() + mCurrentScanPeriods.getBetweenScanPeriod();
         long normalizedBetweenScanPeriod = mCurrentScanPeriods.getBetweenScanPeriod()-(SystemClock.elapsedRealtime() % fullScanCycle);
         LogManager.d(TAG, "Normalizing between scan period from %s to %s", mCurrentScanPeriods.getBetweenScanPeriod(),
                 normalizedBetweenScanPeriod);

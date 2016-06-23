@@ -22,6 +22,15 @@ public class CountRegions extends CountRegion{
         countRegions.add(new CountRegionIndividual(3));
     }
 
+    public boolean isOneIntervalLessThen(long interval){
+        for(CountRegion countRegion:countRegions){
+            if(countRegion.isIntervalLessThan(interval)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean isOutFromR23SinceLessThan(long delay){
         int size = countRegions.size();
         for(int i = 1;i<size; i++){

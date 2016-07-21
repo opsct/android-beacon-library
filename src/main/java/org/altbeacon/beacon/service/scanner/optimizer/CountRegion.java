@@ -92,7 +92,7 @@ public abstract class CountRegion {
 
     public boolean remove(Region region){
         if(checkRegion(region) && regions.containsKey(region.getUniqueId())) {
-            regions.remove(region);
+            regions.remove(region.getUniqueId());
             previousCount = count;
             count --;
             previousOut = lastOut;

@@ -31,6 +31,8 @@ public class CycledLeScanner implements Parcelable{
     private long mLastScanCycleEndTime = 0l;
     private long mNextScanCycleStartTime = 0l;
     private long mScanCycleStopTime = 0l;
+    private long mNextScanCycleReferenceStartTime = 0l;
+    private long mScanCycleReferenceStopTime = 0l;
 
     private boolean mScanning;
     private boolean mScanningPaused;
@@ -40,14 +42,15 @@ public class CycledLeScanner implements Parcelable{
     private ScanPeriods mActiveScanPeriods;
     private ScanPeriods mPassiveScanPeriods;
     private ScanPeriods mCurrentScanPeriods;
+    private ScanPeriods mReferenceScanPeriods;
 
     private final Handler mHandler = new Handler();
-
 
     private BluetoothCrashResolver mBluetoothCrashResolver;
     private CycledLeScanCallback mCycledLeScanCallback;
 
     private boolean mBackgroundFlag = false;
+    private boolean mScanningMode = false;
     private boolean mActiveMode = false;
     private boolean mRestartNeeded = false;
     private LeScanner mLeScanner;
@@ -63,7 +66,7 @@ public class CycledLeScanner implements Parcelable{
         public void run() {
             scheduleScanCycleStop();
         }
-    };;
+    };
 
 
     public CycledLeScanner(ScanPeriods activeScanPeriods, ScanPeriods passiveScanPeriods) {
@@ -72,6 +75,11 @@ public class CycledLeScanner implements Parcelable{
         mBackgroundFlag = false;
         mActiveMode = true;
         mCurrentScanPeriods = mActiveScanPeriods;
+        createReferenceScanPeriods(mActiveScanPeriods);
+    }
+
+    public void createReferenceScanPeriods(ScanPeriods scanPeriods){
+        mReferenceScanPeriods = new ScanPeriods(Math.min(scanPeriods.getScanPeriod(), BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD), 0);
     }
 
     public void initScanning(Context context, CycledLeScanCallback cycledLeScanCallback){
@@ -144,6 +152,7 @@ public class CycledLeScanner implements Parcelable{
     public void updateMode(ScanPeriods scanPeriods, boolean activeMode){
         if(activeMode){
             mActiveScanPeriods = scanPeriods;
+            createReferenceScanPeriods(mActiveScanPeriods);
         }else{
             mPassiveScanPeriods = scanPeriods;
         }
@@ -222,12 +231,13 @@ public class CycledLeScanner implements Parcelable{
         mLeScanner.stopScan();
     }
 
-    protected long calculateNextDelayDefault(long referenceTime){
-        return  referenceTime - SystemClock.elapsedRealtime();
+    protected long calculateNextDelayDefault(long referenceTime1, long referenceTime2){
+        long realTime = SystemClock.elapsedRealtime();
+        return  Math.min(referenceTime1 - realTime, referenceTime2 - realTime);
     }
 
     protected  long calculateNextScanLeDeviceDelayBackground(){
-        return calculateNextDelayDefault(mNextScanCycleStartTime);
+        return calculateNextDelayDefault(mNextScanCycleStartTime, mNextScanCycleReferenceStartTime);
     }
 
     protected void scheduleRunnable(Runnable runnable, long delay){
@@ -244,7 +254,7 @@ public class CycledLeScanner implements Parcelable{
     }
 
     private boolean deferScanIfNeeded(){
-        long millisecondsUntilStart =  mBackgroundFlag?calculateNextScanLeDeviceDelayBackground():calculateNextDelayDefault(mNextScanCycleStartTime);
+        long millisecondsUntilStart =  mBackgroundFlag?calculateNextScanLeDeviceDelayBackground():calculateNextDelayDefault(mNextScanCycleStartTime, mNextScanCycleReferenceStartTime);
         if (millisecondsUntilStart > 0) {
             LogManager.d(TAG, "Waiting to start next Bluetooth scan for another %s milliseconds",
                     millisecondsUntilStart);
@@ -315,7 +325,12 @@ public class CycledLeScanner implements Parcelable{
             } else {
                 LogManager.d(TAG, "We are already scanning");
             }
-            mScanCycleStopTime = (SystemClock.elapsedRealtime() + mCurrentScanPeriods.getScanPeriod());
+            long realTime = SystemClock.elapsedRealtime();
+            if(mScanCycleStopTime < realTime && !mScanningMode){
+                mScanCycleStopTime = SystemClock.elapsedRealtime() + mCurrentScanPeriods.getScanPeriod();
+                mScanningMode = true;
+            }
+            mScanCycleReferenceStopTime = SystemClock.elapsedRealtime() + mReferenceScanPeriods.getScanPeriod();
             scheduleScanCycleStop();
 
             LogManager.d(TAG, "Scan started");
@@ -329,12 +344,12 @@ public class CycledLeScanner implements Parcelable{
     }
 
     protected long calculateNextStopCycleDelayBackground(){
-       return calculateNextDelayDefault(mScanCycleStopTime);
+       return calculateNextDelayDefault(mScanCycleStopTime, mScanCycleReferenceStopTime);
     }
 
     private void scheduleScanCycleStop() {
         // Stops scanning after a pre-defined scan period.
-        long millisecondsUntilStart = mBackgroundFlag? calculateNextStopCycleDelayBackground():calculateNextDelayDefault(mScanCycleStopTime);
+        long millisecondsUntilStart = mBackgroundFlag? calculateNextStopCycleDelayBackground():calculateNextDelayDefault(mScanCycleStopTime, mScanCycleReferenceStopTime);
         if (millisecondsUntilStart > 0) {
             LogManager.d(TAG, "Waiting to stop scan cycle for another %s milliseconds",
                     millisecondsUntilStart);
@@ -371,7 +386,15 @@ public class CycledLeScanner implements Parcelable{
                     LogManager.d(TAG, "Bluetooth is disabled.  Cannot scan for beacons.");
                 }
             }
-            mNextScanCycleStartTime = getNextScanStartTime();
+
+            if(mScanCycleReferenceStopTime < SystemClock.elapsedRealtime() && mScanningMode){
+                mNextScanCycleStartTime = getNextScanStartTime(mCurrentScanPeriods);
+                mNextScanCycleReferenceStartTime = mNextScanCycleStartTime;
+                mScanningMode = false;
+            }else{
+                mNextScanCycleReferenceStartTime = getNextScanStartTime(mReferenceScanPeriods);
+            }
+
             if (mScanningEnabled) {
                 scanLeDevice(true);
             }
@@ -439,7 +462,7 @@ public class CycledLeScanner implements Parcelable{
 
     }
 
-    private long getNextScanStartTime() {
+    private long getNextScanStartTime(ScanPeriods scanPeriods) {
         // Because many apps may use this library on the same device, we want to try to synchronize
         // scanning as much as possible in order to save battery.  Therefore, we will set the scan
         // intervals to be on a predictable interval using a modulus of the system time.  This may
@@ -448,12 +471,12 @@ public class CycledLeScanner implements Parcelable{
         // will all be doing scans at the same time, thereby saving battery when none are scanning.
         // This, of course, won't help at all if people set custom scan periods.  But since most
         // people accept the defaults, this will likely have a positive effect.
-        if (mCurrentScanPeriods.getBetweenScanPeriod() == 0) {
+        if (scanPeriods.getBetweenScanPeriod() == 0) {
             return SystemClock.elapsedRealtime();
         }
-        long fullScanCycle = mCurrentScanPeriods.getScanPeriod() + mCurrentScanPeriods.getBetweenScanPeriod();
-        long normalizedBetweenScanPeriod = mCurrentScanPeriods.getBetweenScanPeriod()-(SystemClock.elapsedRealtime() % fullScanCycle);
-        LogManager.d(TAG, "Normalizing between scan period from %s to %s", mCurrentScanPeriods.getBetweenScanPeriod(),
+        long fullScanCycle = scanPeriods.getScanPeriod() + scanPeriods.getBetweenScanPeriod();
+        long normalizedBetweenScanPeriod = scanPeriods.getBetweenScanPeriod()-(SystemClock.elapsedRealtime() % fullScanCycle);
+        LogManager.d(TAG, "Normalizing between scan period from %s to %s", scanPeriods.getBetweenScanPeriod(),
                 normalizedBetweenScanPeriod);
 
         return SystemClock.elapsedRealtime()+normalizedBetweenScanPeriod;

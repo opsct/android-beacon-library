@@ -11,15 +11,17 @@ public class OptimizerScanPeriods {
 
     private long maxDelayToSwitchToPreviousPeriod;
 
-    private ScanPeriods scanPeriodsScreenOn, scanPeriodsScreenOff;
+    private ScanPeriods scanPeriodsReference, scanPeriodsScreenOff, getScanPeriodsScreenOnNoBeacon;
 
 
-    public OptimizerScanPeriods(long periodDuration, long maxDelayToSwitchToPreviousPeriod, float pourcentageOfAdditionalPauseWhenScreenOff,
+    public OptimizerScanPeriods(long periodDuration, long maxDelayToSwitchToPreviousPeriod,
+                                float pourcentageOfAdditionalPauseWhenScreenOff, float pourcentageOfAdditionalPauseWhenScreenOnNoBeacon,
                                 long scanPeriod, long betweenScanPeriod) {
         this.periodDuration = periodDuration;
         this.maxDelayToSwitchToPreviousPeriod = maxDelayToSwitchToPreviousPeriod;
-        this.scanPeriodsScreenOn = new ScanPeriods(scanPeriod, betweenScanPeriod);
+        this.scanPeriodsReference = new ScanPeriods(scanPeriod, betweenScanPeriod);
         this.scanPeriodsScreenOff = new ScanPeriods(scanPeriod, (long) (betweenScanPeriod * (1.0+pourcentageOfAdditionalPauseWhenScreenOff)));
+        this.getScanPeriodsScreenOnNoBeacon = new ScanPeriods(scanPeriod, (long) (betweenScanPeriod * (1.0+pourcentageOfAdditionalPauseWhenScreenOnNoBeacon)));
     }
 
     public long getPeriodDuration() {
@@ -30,9 +32,13 @@ public class OptimizerScanPeriods {
         return maxDelayToSwitchToPreviousPeriod;
     }
 
-    public ScanPeriods getScanPeriods(boolean isScreenOn){
+    public ScanPeriods selectScanPeriods(boolean isScreenOn, boolean beaconsInRegion){
         if(isScreenOn) {
-            return scanPeriodsScreenOn;
+            if(beaconsInRegion) {
+                return scanPeriodsReference;
+            }else{
+                return getScanPeriodsScreenOnNoBeacon;
+            }
         }else{
             return scanPeriodsScreenOff;
         }

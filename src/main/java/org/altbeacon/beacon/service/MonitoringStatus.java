@@ -90,7 +90,7 @@ public class MonitoringStatus {
                 if(mCycledMonitorNotifier != null){
                     mCycledMonitorNotifier.didExitRegion(region);
                 }
-            }else if(state.isInside()){
+            }else if(mCycledMonitorNotifier != null && state.isInside()){
                 mCycledMonitorNotifier.regionWithBeaconInside(region);
             }
         }
@@ -109,7 +109,7 @@ public class MonitoringStatus {
                 if(mCycledMonitorNotifier != null){
                     mCycledMonitorNotifier.didEnterRegion(region);
                 }
-            }else if(state.isInside()){
+            }else if(mCycledMonitorNotifier!=null && state.isInside()){
                 mCycledMonitorNotifier.regionWithBeaconInside(region);
             }
         }

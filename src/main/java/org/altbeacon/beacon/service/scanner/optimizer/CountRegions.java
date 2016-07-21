@@ -9,10 +9,6 @@ import java.util.List;
  * Created by Connecthings on 22/06/16.
  */
 public class CountRegions extends CountRegion{
-
-    private int count;
-    private long lastInt;
-    private long lastOut;
     private List<CountRegion> countRegions;
 
     public CountRegions(){

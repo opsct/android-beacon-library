@@ -3,7 +3,6 @@ package org.altbeacon.beacon.service.scanner;
 import android.os.Parcel;
 
 import org.altbeacon.beacon.BeaconManager;
-import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.logging.LogManager;
 import org.altbeacon.beacon.service.scanner.optimizer.CycledMonitorNotifier;
@@ -27,6 +26,7 @@ public class CycledLeScannerScreenStateOptimizer extends CycledLeScanner impleme
     private boolean activeFromScreenState = false;
     private boolean screenOn;
     private List<OptimizerScanPeriods> optimizerScanPeriodsList;
+    private int optimizerScanPeriodsSizeMinus;
     private int currentScanPeriodsPosition = 0;
     private final Object lockScanPeriodsPosition = new Object();
     private int backClockPositionOnScreenStateSwitch;
@@ -52,10 +52,11 @@ public class CycledLeScannerScreenStateOptimizer extends CycledLeScanner impleme
             doOnEnterOrExitRegion();
         }
     };
+    private boolean planEnterExitRegion;
 
     public CycledLeScannerScreenStateOptimizer() {
         this(new ScanPeriods(BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD, BeaconManager.DEFAULT_FOREGROUND_BETWEEN_SCAN_PERIOD),
-                CycledLeScannerScreenState.DELAY, null, 0.50f, 5, 4);
+                CycledLeScannerScreenState.DELAY, null, 0.75f, 0.5f, 3, 2);
     }
 
     public CycledLeScannerScreenStateOptimizer(ScanPeriods activePeriods,
@@ -63,41 +64,42 @@ public class CycledLeScannerScreenStateOptimizer extends CycledLeScanner impleme
                                                 List<OptimizerScanPeriods> clockScanPeriodsList,
                                                 int backClockPositionOnScreenStateSwitch,
                                                 int backClockPositionOnNewRegionEntry) {
-        this(activePeriods, activeScanPeriodOnScreenStateSwitch, clockScanPeriodsList, 0, backClockPositionOnNewRegionEntry, backClockPositionOnScreenStateSwitch);
+        this(activePeriods, activeScanPeriodOnScreenStateSwitch, clockScanPeriodsList, 0, 0,backClockPositionOnNewRegionEntry, backClockPositionOnScreenStateSwitch);
     }
 
     public CycledLeScannerScreenStateOptimizer(ScanPeriods activePeriods,
                                                 int activeScanPeriodOnScreenStateSwitch,
                                                 int backClockPositionOnScreenStateSwitch,
                                                 int backClockPositionOnNewRegionEntry,
-                                                float pourcentageOfAdditionalPauseWhenScreenOff) {
-        this(activePeriods, activeScanPeriodOnScreenStateSwitch, null,  pourcentageOfAdditionalPauseWhenScreenOff, backClockPositionOnScreenStateSwitch, backClockPositionOnScreenStateSwitch);
+                                                float pourcentageOfAdditionalPauseWhenScreenOff, float pourcentageOfAdditionalPauseWhenScreenOnNoBeacon) {
+        this(activePeriods, activeScanPeriodOnScreenStateSwitch, null,  pourcentageOfAdditionalPauseWhenScreenOff, pourcentageOfAdditionalPauseWhenScreenOnNoBeacon, backClockPositionOnScreenStateSwitch, backClockPositionOnScreenStateSwitch);
     }
 
     private CycledLeScannerScreenStateOptimizer(ScanPeriods activePeriods,
                                                int activeScanPeriodOnScreenStateSwitch,
-                                               List<OptimizerScanPeriods> clockScanPeriodsList, float pourcentageOfAdditionalPauseWhenScreenOff,
+                                               List<OptimizerScanPeriods> clockScanPeriodsList,
+                                                float pourcentageOfAdditionalPauseWhenScreenOff, float pourcentageOfAdditionalPauseWhenScreenOnNoBeacon,
                                                int backClockPositionOnScreenStateSwitch,
                                                int backClockPositionOnNewRegionEntry) {
         super(activePeriods,  new ScanPeriods(BeaconManager.DEFAULT_BACKGROUND_SCAN_PERIOD, BeaconManager.DEFAULT_BACKGROUND_BETWEEN_SCAN_PERIOD));
         mActiveScanPeriodOnScreenStateSwitch = activeScanPeriodOnScreenStateSwitch;
-        this.optimizerScanPeriodsList = clockScanPeriodsList == null ? initDefaultClockScanPeriods(pourcentageOfAdditionalPauseWhenScreenOff):clockScanPeriodsList;
+        this.optimizerScanPeriodsList = clockScanPeriodsList == null ? initDefaultClockScanPeriods(pourcentageOfAdditionalPauseWhenScreenOff, pourcentageOfAdditionalPauseWhenScreenOnNoBeacon):clockScanPeriodsList;
+        optimizerScanPeriodsSizeMinus = optimizerScanPeriodsList.size() - 1;
         this.backClockPositionOnScreenStateSwitch = backClockPositionOnScreenStateSwitch;
         this.backClockPositionOnNewRegionEntry = backClockPositionOnNewRegionEntry;
+        this.planEnterExitRegion = false;
     }
 
-    private List<OptimizerScanPeriods> initDefaultClockScanPeriods(float pourcentageOfAdditionalPauseWhenScreenOff){
+    private List<OptimizerScanPeriods> initDefaultClockScanPeriods(float pourcentageOfAdditionalPauseWhenScreenOff, float pourcentageOfAdditionalPauseWhenScreenOnNoBeacon){
         ArrayList<OptimizerScanPeriods> clockScanPeriodsList = new ArrayList<>();
-        clockScanPeriodsList.add(new OptimizerScanPeriods(0, 0, pourcentageOfAdditionalPauseWhenScreenOff, BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD, BeaconManager.DEFAULT_FOREGROUND_BETWEEN_SCAN_PERIOD));
-        clockScanPeriodsList.add(new OptimizerScanPeriods(2 * 1000 * 60, 1000 * 60, pourcentageOfAdditionalPauseWhenScreenOff, 20 * 1000, 5 * 1000));
-        clockScanPeriodsList.add(new OptimizerScanPeriods(3 * 1000 * 60, 2500 * 60, pourcentageOfAdditionalPauseWhenScreenOff, 20 * 1000, 6500));
-        clockScanPeriodsList.add(new OptimizerScanPeriods(5 * 1000 * 60, 5000 * 60, pourcentageOfAdditionalPauseWhenScreenOff, 20 * 1000, 7500));
-        clockScanPeriodsList.add(new OptimizerScanPeriods(5 * 1000 * 60, 5000 * 60, pourcentageOfAdditionalPauseWhenScreenOff, 20 * 1000, 10 * 1000));
-        clockScanPeriodsList.add(new OptimizerScanPeriods(15 * 1000 * 60, 5000 * 60, pourcentageOfAdditionalPauseWhenScreenOff, 20 * 1000, 20 * 1000));
-        clockScanPeriodsList.add(new OptimizerScanPeriods(15 * 1000 * 60, 5000 * 60, pourcentageOfAdditionalPauseWhenScreenOff, 20 * 1000, 30
-
-                * 1000));
-        clockScanPeriodsList.add(new OptimizerScanPeriods(15 * 1000 * 60, 5000 * 60, pourcentageOfAdditionalPauseWhenScreenOff, (long) (2.5 * 60 * 1000), 20 * 1000));
+        clockScanPeriodsList.add(new OptimizerScanPeriods(2 * 1000 * 60, 1000 * 60, pourcentageOfAdditionalPauseWhenScreenOff, pourcentageOfAdditionalPauseWhenScreenOnNoBeacon, BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD, BeaconManager.DEFAULT_FOREGROUND_BETWEEN_SCAN_PERIOD));
+        clockScanPeriodsList.add(new OptimizerScanPeriods(2 * 1000 * 60 + 1, 1000 * 60, pourcentageOfAdditionalPauseWhenScreenOff, pourcentageOfAdditionalPauseWhenScreenOnNoBeacon, 20 * 1000, 10 * 1000));
+        clockScanPeriodsList.add(new OptimizerScanPeriods(2 * 1000 * 60 +2, 1000 * 60, pourcentageOfAdditionalPauseWhenScreenOff, pourcentageOfAdditionalPauseWhenScreenOnNoBeacon, 20 * 1000, 20*1000));
+        clockScanPeriodsList.add(new OptimizerScanPeriods(2 * 1000 * 60 +3, 1000 * 60, pourcentageOfAdditionalPauseWhenScreenOff, pourcentageOfAdditionalPauseWhenScreenOnNoBeacon, 20 * 1000, 30 * 1000));
+        clockScanPeriodsList.add(new OptimizerScanPeriods(2 * 1000 * 60 +4, 1000 * 60, pourcentageOfAdditionalPauseWhenScreenOff, pourcentageOfAdditionalPauseWhenScreenOnNoBeacon, 20 * 1000, (long) (60 * 1000)));
+        //clockScanPeriodsList.add(new OptimizerScanPeriods(2 * 1000 * 60, 5000 * 60, pourcentageOfAdditionalPauseWhenScreenOff, pourcentageOfAdditionalPauseWhenScreenOnNoBeacon, 20 * 1000, 20 * 1000));
+        //clockScanPeriodsList.add(new OptimizerScanPeriods(2 * 1000 * 60, 5000 * 60, pourcentageOfAdditionalPauseWhenScreenOff, pourcentageOfAdditionalPauseWhenScreenOnNoBeacon, 20 * 1000, 30 * 1000));
+        //clockScanPeriodsList.add(new OptimizerScanPeriods(2 * 1000 * 60, 5000 * 60, pourcentageOfAdditionalPauseWhenScreenOff, pourcentageOfAdditionalPauseWhenScreenOnNoBeacon, (long) (2.5 * 60 * 1000), 20 * 1000));
         return clockScanPeriodsList;
     }
 
@@ -106,6 +108,9 @@ public class CycledLeScannerScreenStateOptimizer extends CycledLeScanner impleme
         cancelNextScanPeriodRunnable();
         cancelStopScanningRunnable();
         super.updateCycledParameter(cycledParameter);
+        if(cycledParameter.getBackgroundFlag()){
+            stopActiveScanning();
+        }
     }
 
 
@@ -113,29 +118,36 @@ public class CycledLeScannerScreenStateOptimizer extends CycledLeScanner impleme
         if(activeFromScreenState) {
             LogManager.d(TAG, "nextScanDelay - ScreenUpdate - scan start immediatly");
             return 0;
-        }else if(countRegions.isIn()){
-            LogManager.d(TAG, "nextScanDelay - region in - used the current scanPeriod %s", currentScanPeriodsPosition);
+        }else {
+            LogManager.d(TAG, "nextScanDelay - region in or screen on - used the current scanPeriod %s / %s", currentScanPeriodsPosition, optimizerScanPeriodsSizeMinus);
+            return super.calculateNextScanLeDeviceDelayBackground();
+        }/*else if(countRegions.isIn() || screenOn){
+            LogManager.d(TAG, "nextScanDelay - region in or screen on - used the current scanPeriod %s / %s", currentScanPeriodsPosition, optimizerScanPeriodsSizeMinus);
             return super.calculateNextScanLeDeviceDelayBackground();
         }else{
             LogManager.d(TAG, "nextScanDelay - no beacon - lock the scan");
             return 1000;
-        }
+        }*/
     }
 
     protected long calculateNextStopCycleDelayBackground(){
         if(activeFromScreenState) {
             LogManager.d(TAG, "nextStopCycleDelay - ScreenUpdate - stop cycle is locked");
             return 1000;
-        } else if(countRegions.isIn()){
-            LogManager.d(TAG, "nextStopCycleDelay - region in - used the current scanPeriod %s", currentScanPeriodsPosition);
+        } else {
+            LogManager.d(TAG, "nextStopCycleDelay - region in or screen on - used the current scanPeriod %s / %s", currentScanPeriodsPosition, optimizerScanPeriodsSizeMinus);
+            return super.calculateNextStopCycleDelayBackground();
+        }/* else if(countRegions.isIn() || screenOn){
+            LogManager.d(TAG, "nextStopCycleDelay - region in or screen on - used the current scanPeriod %s / %s", currentScanPeriodsPosition, optimizerScanPeriodsSizeMinus);
             return super.calculateNextStopCycleDelayBackground();
         }else{
             LogManager.d(TAG, "nextStopCycleDelay - no beacon - stop cycle immediatly");
             return 0;
-        }
+        }*/
     }
 
     private void cancelOnEnterExitRegionRunnable(){
+        planEnterExitRegion = false;
         cancelRunnable(mOnEnterExitRegionRunnable);
     }
 
@@ -148,46 +160,72 @@ public class CycledLeScannerScreenStateOptimizer extends CycledLeScanner impleme
         cancelRunnable(mStopScanningRunnable);
     }
 
-    private void stopActiveScanning(){
-        synchronized (lockScanPeriodsPosition) {
-            LogManager.d(TAG, "stopScanningRunnable");
-            activeFromScreenState = false;
-            if(countRegions.isIn()){
-                LogManager.d(TAG, "still one beacon region active with currentScanPeriodsPosition %s", currentScanPeriodsPosition);
-                if (countRegions.isLastUpdateForLessThen(mActiveScanPeriodOnScreenStateSwitch)) {
-                    LogManager.d(TAG, "an update region has occured while the active scan was launched -> currentScanPeriodsPosition back to 0");
-                    currentScanPeriodsPosition = 0;
-                } else {
-                    currentScanPeriodsPosition = Math.min(currentScanPeriodsPosition, backClockPositionOnScreenStateSwitch);
-                    LogManager.d(TAG, "no update region -> currentScanPeriodsPosition back to %s", currentScanPeriodsPosition);
+
+    private void calculateScanPeriodsPosition(){
+        if (getBackgroundFlag()) {
+            int backClockPosition = 0;
+            if(activeFromScreenState && planEnterExitRegion){
+                LogManager.d(TAG, "calculateScanPeriodsPosition - screenState and planEnterExit");
+                backClockPosition = Math.min(backClockPositionOnScreenStateSwitch, backClockPositionOnNewRegionEntry);
+            }else if(activeFromScreenState){
+                LogManager.d(TAG, "calculateScanPeriodsPosition - screenState");
+                backClockPosition = backClockPositionOnScreenStateSwitch;
+            }else if(planEnterExitRegion){
+                LogManager.d(TAG, "calculateScanPeriodsPosition - planEnterExit");
+                backClockPosition = backClockPositionOnScreenStateSwitch;
+            }
+            cancelOnEnterExitRegionRunnable();
+            LogManager.d(TAG, "calculateScanPeriodsPosition - before lock with backClock: %s", backClockPosition);
+            synchronized (lockScanPeriodsPosition) {
+                if(countRegions.isIn() || screenOn) {
+                    LogManager.d(TAG, "calculateScanPeriodsPosition - currentScanPeriodPosition %s / %s", currentScanPeriodsPosition, optimizerScanPeriodsSizeMinus);
+                    int scanPeriodPosition = Math.min(currentScanPeriodsPosition, backClockPosition);
+                    LogManager.d(TAG, "calculateScanPeriodsPosition - min scanPeriodPosition %s / %s", scanPeriodPosition, optimizerScanPeriodsList.size());
+                    if (scanPeriodPosition < optimizerScanPeriodsList.size()) {
+                        if (scanPeriodPosition == currentScanPeriodsPosition) {
+                            OptimizerScanPeriods optimizerScanPeriods = optimizerScanPeriodsList.get(currentScanPeriodsPosition);
+                            if (countRegions.isOneIntervalLessThen(optimizerScanPeriods.getMaxDelayToSwitchToPreviousPeriod()) && currentScanPeriodsPosition > 0) {
+                                scanPeriodPosition--;
+                                LogManager.d(TAG, "doObackScanPeriodsPositionnEnterOrExitRegion - back previous interval: %s / %s", scanPeriodPosition, optimizerScanPeriodsSizeMinus);
+                            }
+                        }
+                        currentScanPeriodsPosition = scanPeriodPosition;
+                        updateMode(optimizerScanPeriodsList.get(currentScanPeriodsPosition).selectScanPeriods(screenOn, countRegions.isIn()), false);
+                        LogManager.d(TAG, "calculateScanPeriodsPosition - update currentScanPeriodPosition: %s / %s", currentScanPeriodsPosition, optimizerScanPeriodsSizeMinus);
+                        cancelNextScanPeriodRunnable();
+                        planNextOptimizerScanPeriods();
+                    }
+                }else{
+                    currentScanPeriodsPosition = optimizerScanPeriodsList.size() -1;
+                    LogManager.d(TAG, "calculateScanPeriodsPosition - no beacons in - update scan periods: %s / %s", currentScanPeriodsPosition, optimizerScanPeriodsSizeMinus);
+                    updateMode(optimizerScanPeriodsList.get(currentScanPeriodsPosition).selectScanPeriods(screenOn, countRegions.isIn()), false);
                 }
-                OptimizerScanPeriods optimizerScanPeriods = optimizerScanPeriodsList.get(currentScanPeriodsPosition);
-                updateMode(optimizerScanPeriodsList.get(currentScanPeriodsPosition).getScanPeriods(screenOn), false);
-                planNextOptimizerScanPeriods();
-            }else{
-                currentScanPeriodsPosition = optimizerScanPeriodsList.size() - 1;
-                LogManager.d(TAG, "not inside region -> the scanning will be locked - currentScanPeriodsPosition %s", currentScanPeriodsPosition);
-                updateMode(optimizerScanPeriodsList.get(currentScanPeriodsPosition).getScanPeriods(screenOn), false);
             }
         }
     }
 
+    private void stopActiveScanning(){
+        LogManager.d(TAG, "stopActiveScanning and calculate new scan periods...");
+        calculateScanPeriodsPosition();
+        activeFromScreenState = false;
+    }
+
     private void goNextScanPeriods(){
         synchronized (lockScanPeriodsPosition) {
-            LogManager.d(TAG, "goNextScanPeriods - currentScanPeriodsPosition: %s", currentScanPeriodsPosition);
-            if (currentScanPeriodsPosition < optimizerScanPeriodsList.size() - 1) {
+            LogManager.d(TAG, "goNextScanPeriods - currentScanPeriodsPosition: %s / %s", currentScanPeriodsPosition, optimizerScanPeriodsSizeMinus);
+            if (currentScanPeriodsPosition < optimizerScanPeriodsSizeMinus) {
                 currentScanPeriodsPosition++;
-                LogManager.d(TAG, "goNextScanPeriods - update currentScanPosition: %s", currentScanPeriodsPosition);
-                updateMode(optimizerScanPeriodsList.get(currentScanPeriodsPosition).getScanPeriods(screenOn), false);
+                LogManager.d(TAG, "goNextScanPeriods - update currentScanPosition: %s / %s", currentScanPeriodsPosition, optimizerScanPeriodsSizeMinus);
+                updateMode(optimizerScanPeriodsList.get(currentScanPeriodsPosition).selectScanPeriods(screenOn, countRegions.isIn()), false);
                 planNextOptimizerScanPeriods();
             }
         }
     }
 
     private synchronized void planNextOptimizerScanPeriods(){
-        LogManager.d(TAG, "planNextOptimizerScanPeriods - currentScanPeriodsPosition: %s", currentScanPeriodsPosition);
-        if(currentScanPeriodsPosition < optimizerScanPeriodsList.size() -1){
-            OptimizerScanPeriods nextPeriods = optimizerScanPeriodsList.get(currentScanPeriodsPosition + 1);
+        LogManager.d(TAG, "planNextOptimizerScanPeriods - currentScanPeriodsPosition: %s / %s", currentScanPeriodsPosition, optimizerScanPeriodsSizeMinus);
+        if(currentScanPeriodsPosition < optimizerScanPeriodsList.size()){
+            OptimizerScanPeriods nextPeriods = optimizerScanPeriodsList.get(currentScanPeriodsPosition);
             long nextTime = nextPeriods.getPeriodDuration();
             LogManager.d(TAG, "planNextOptimizerScanPeriods schedule next ScanPeriodRunnable - next time %s", nextTime);
             scheduleRunnable(mNextScanPeriodRunnable, nextTime);
@@ -224,34 +262,15 @@ public class CycledLeScannerScreenStateOptimizer extends CycledLeScanner impleme
 
     public void doOnEnterOrExitRegion(){
         LogManager.d(TAG, "doOnEnterOrExitRegion - backegound: %s, in: %s", getBackgroundFlag(), countRegions.isIn());
-        if (getBackgroundFlag() && countRegions.isIn()) {
-            synchronized (lockScanPeriodsPosition) {
-                LogManager.d(TAG, "doOnEnterOrExitRegion - currentScanPeriodPosition %s", currentScanPeriodsPosition);
-                int scanPeriodPosition = Math.min(currentScanPeriodsPosition, backClockPositionOnNewRegionEntry);
-                LogManager.d(TAG, "doOnEnterOrExitRegion - min scanPeriodPosition %s", scanPeriodPosition);
-                if (scanPeriodPosition < optimizerScanPeriodsList.size()) {
-                    if (scanPeriodPosition == currentScanPeriodsPosition) {
-                        OptimizerScanPeriods optimizerScanPeriods = optimizerScanPeriodsList.get(currentScanPeriodsPosition);
-                        if (countRegions.isOneIntervalLessThen(optimizerScanPeriods.getMaxDelayToSwitchToPreviousPeriod()) && currentScanPeriodsPosition > 0) {
-                            scanPeriodPosition--;
-                            LogManager.d(TAG, "doOnEnterOrExitRegion - back previous interval: %s", scanPeriodPosition);
-                        }
-                    }
-                    currentScanPeriodsPosition = scanPeriodPosition;
-                    updateMode(optimizerScanPeriodsList.get(currentScanPeriodsPosition).getScanPeriods(screenOn), false);
-                    LogManager.d(TAG, "doOnEnterOrExitRegion - update currentScanPeriodPosition: %s", currentScanPeriodsPosition);
-                    cancelNextScanPeriodRunnable();
-                    planNextOptimizerScanPeriods();
-                }
-            }
-        }
+        calculateScanPeriodsPosition();
+        planEnterExitRegion = false;
     }
 
     public void actionOnEnterOrExitRegion(){
         LogManager.d(TAG, "actionOnEnterOrExitRegion - background: %s, activeFromScreenState: %s", getBackgroundFlag(), activeFromScreenState);
-        cancelOnEnterExitRegionRunnable();
-        if(getBackgroundFlag() && !activeFromScreenState) {
-            LogManager.d(TAG, "schedule an enter exit region");
+        if(getBackgroundFlag() && !activeFromScreenState && !planEnterExitRegion) {
+            LogManager.d(TAG, "schedule an enter/exit region");
+            planEnterExitRegion=true;
             scheduleRunnable(mOnEnterExitRegionRunnable, DELAY_ACTION_ENTER_EXIT_REGION);
         }
     }

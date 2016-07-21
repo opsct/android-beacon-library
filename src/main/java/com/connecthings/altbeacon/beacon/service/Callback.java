@@ -63,6 +63,10 @@ public class Callback implements Serializable {
      * @return false if it callback cannot be made
      */
     public boolean call(Context context, String dataName, Parcelable data) {
+        LogManager.d(TAG, "call - intent: %s, intentPackageName: %s", intent, intentPackageName);
+        if(intent == null){
+            initializeIntent();
+        }
         if (intent != null) {
             LogManager.d(TAG, "attempting callback via intent: %s", intent.getComponent());
             intent.putExtra(dataName, data);

@@ -27,16 +27,6 @@ public class CountRegions extends CountRegion{
         return false;
     }
 
-    public boolean isOutFromR23SinceLessThan(long delay){
-        int size = countRegions.size();
-        for(int i = 1;i<size; i++){
-            if(countRegions.get(i).isOutForLessThan(delay)){
-                return true;
-            }
-        }
-        return false;
-    }
-
     public boolean checkRegion(Region region){
         return true;
     }

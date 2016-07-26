@@ -34,7 +34,7 @@ public class ScanPeriods implements Parcelable{
         dest.writeLong(betweenScanPeriod);
     }
 
-    private ScanPeriods(Parcel in){
+    protected ScanPeriods(Parcel in){
         scanPeriod = in.readLong();
         betweenScanPeriod = in.readLong();
     }

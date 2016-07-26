@@ -3,7 +3,7 @@ package org.altbeacon.beacon.service.scanner.optimizer;
 import org.altbeacon.beacon.Region;
 
 /**
- * Created by olivierstevens on 22/06/16.
+ * Created by Connecthings on 22/06/16.
  */
 public class CountRegionIndividual extends CountRegion{
     private int count;

@@ -8,6 +8,9 @@ import org.altbeacon.beacon.logging.LogManager;
 import org.altbeacon.beacon.service.scanner.screenstate.ScreenStateListener;
 
 /**
+ * Launch on active scan on background only when the screen goes On or when the screen goes Off for a predefined delay.
+ * As default, this delay is 20 seconds.
+ *
  * Created by Connecthings on 17/06/16.
  */
 public class CycledLeScannerScreenState extends CycledLeScanner implements ScreenStateListener{
@@ -36,6 +39,7 @@ public class CycledLeScannerScreenState extends CycledLeScanner implements Scree
     protected long calculateNextScanLeDeviceDelayBackground(){
         if(getActiveMode()){
             LogManager.d(TAG, "nextScanDelay - ScreenUpdate - scan start now");
+            //return super.calculateNextStopCycleDelayBackground();
             return 0;
         }else{
             LogManager.d(TAG, "nextScanDelay -screen of - scan lock");

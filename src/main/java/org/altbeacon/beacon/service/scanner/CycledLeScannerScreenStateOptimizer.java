@@ -16,6 +16,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * The idea behind the <code>CycledLeScannerScreenStateOptimizer</code> is to adapt the scanning frequency to the situation.
+ *
+ * If the mobile phone is inside a beacon region, and there is many entry and exit of regions, it means it's interesting to scan more frequently.
+ * At contrary, if the screen is Off and the mobile is not inside a beacon region, the <code>CycledLeScannerScreenStateOptimizer</code> will scan at a low frequency
+ * until the mobile screen goes On where it will scan at high frequency for a predefined period.
+ * If an entry or exit of region is detected during this period, next the scan frequency will stay at a good frequency.
+ * If no entry or exit of region is detected, the frequency will slowly go down.
+ *
+ *
+ * To achieve this, the <code>CycledLeScannerScreenStateOptimizer</code> manages a list of <code>GroupOptimizerScanPeriods</code>.
+ * The <code>GroupOptimizerScanPeriods</code> permits to define various <code>ScanPeriods</code> depending of the situation:
+ * <ul>
+ *     <li>Is the screen on ? is the screen Off ?</li>
+ *     <li>Are there nearby beacons ?</li>
+ * </ul>
+ *
+ * The list of <code>GroupOptimizerScanPeriods</code> permits to adapt the scan frequency depending of the frequency of entry and exit regions.
+ * The first <code>GroupOptimizerScanPeriods</code> of the list get an higher scan frequency than the last elements.
+ *
+ *
  * Created by Connecthings on 17/06/16.
  */
 public class
@@ -233,6 +253,7 @@ CycledLeScannerScreenStateOptimizer extends CycledLeScanner implements ScreenSta
         LogManager.d(TAG, "stopActiveScanning and calculate new scan periods...");
         calculateScanPeriodsPosition();
         activeFromScreenState = false;
+        this.updateMode(false);
     }
 
     private void goNextScanPeriods(){

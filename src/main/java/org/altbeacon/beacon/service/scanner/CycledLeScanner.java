@@ -22,6 +22,11 @@ import org.altbeacon.bluetooth.BluetoothCrashResolver;
 
 import java.util.Date;
 
+/**
+ * Based CycledLeScanner.
+ *
+ * It scan for a predefined period and next pause for a predefined period.
+ */
 @TargetApi(18)
 public class CycledLeScanner implements Parcelable{
     private static final String TAG = "CycledLeScanner";

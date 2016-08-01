@@ -32,7 +32,6 @@ import com.connecthings.altbeacon.beacon.logging.LogManager;
 import com.connecthings.altbeacon.beacon.service.MonitoringData;
 import com.connecthings.altbeacon.beacon.service.RangingData;
 
-
 import java.util.Set;
 
 /**

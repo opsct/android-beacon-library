@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 
 import com.connecthings.altbeacon.beacon.logging.LogManager;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

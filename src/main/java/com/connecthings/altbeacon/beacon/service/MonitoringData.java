@@ -23,10 +23,10 @@
  */
 package com.connecthings.altbeacon.beacon.service;
 
-import com.connecthings.altbeacon.beacon.Region;
-
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.connecthings.altbeacon.beacon.Region;
 
 public class MonitoringData implements Parcelable {
     @SuppressWarnings("unused")

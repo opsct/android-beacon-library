@@ -1,21 +1,21 @@
 package com.connecthings.altbeacon.beacon;
 
-import com.connecthings.altbeacon.beacon.logging.LogManager;
-
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
-import java.nio.ByteOrder;
-import java.nio.ByteBuffer;
-import java.util.UUID;
 import android.bluetooth.le.AdvertiseCallback;
-import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.AdvertiseData;
+import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.content.Context;
 import android.content.pm.PackageManager;
-
 import android.os.ParcelUuid;
+
+import com.connecthings.altbeacon.beacon.logging.LogManager;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.UUID;
 
 /**
  * Provides a mechanism for transmitting as a beacon.   Requires Android 5.0
@@ -179,15 +179,17 @@ public class BeaconTransmitter {
                         (byte) ((serviceUuid >> 8) & 0xff)};
                 ParcelUuid parcelUuid = parseUuidFrom(serviceUuidBytes);
                 dataBuilder.addServiceData(parcelUuid, advertisingBytes);
-            }
-            else {
+                dataBuilder.addServiceUuid(parcelUuid);
+                dataBuilder.setIncludeTxPowerLevel(false);
+                dataBuilder.setIncludeDeviceName(false);
+
+            } else {
                 dataBuilder.addManufacturerData(manufacturerCode, advertisingBytes);
             }
 
             AdvertiseSettings.Builder settingsBuilder = new AdvertiseSettings.Builder();
 
             settingsBuilder.setAdvertiseMode(mAdvertiseMode);
-
             settingsBuilder.setTxPowerLevel(mAdvertiseTxPowerLevel);
             settingsBuilder.setConnectable(false);
 

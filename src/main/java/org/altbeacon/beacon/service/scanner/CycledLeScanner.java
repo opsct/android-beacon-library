@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -26,10 +27,14 @@ import java.util.Date;
  * Based CycledLeScanner.
  *
  * It scan for a predefined period and next pause for a predefined period.
+ *
+ * Check the news
  */
 @TargetApi(18)
 public class CycledLeScanner implements Parcelable{
     private static final String TAG = "CycledLeScanner";
+    private static final long ANDROID_N_MIN_SCAN_CYCLE_MILLIS = 6000l;
+
     private BluetoothAdapter mBluetoothAdapter;
 
     private long mLastScanCycleStartTime = 0l;
@@ -38,6 +43,8 @@ public class CycledLeScanner implements Parcelable{
     private long mScanCycleStopTime = 0l;
     private long mNextScanCycleReferenceStartTime = 0l;
     private long mScanCycleReferenceStopTime = 0l;
+    //From merge
+    private long mLastScanStopTime = 0l;
 
     private boolean mScanning;
     private boolean mScanningPaused;
@@ -86,6 +93,7 @@ public class CycledLeScanner implements Parcelable{
     public void createReferenceScanPeriods(ScanPeriods scanPeriods){
         mReferenceScanPeriods = new ScanPeriods(Math.min(scanPeriods.getScanPeriod(), BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD), 0);
     }
+
 
     public void initScanning(Context context, CycledLeScanCallback cycledLeScanCallback){
         mContext = context;
@@ -378,14 +386,28 @@ public class CycledLeScanner implements Parcelable{
         if (mScanning) {
             if (getBluetoothAdapter() != null) {
                 if (getBluetoothAdapter().isEnabled()) {
-                    try {
-                        LogManager.d(TAG, "stopping bluetooth le scan");
-
-                        finishScan();
-
-                    } catch (Exception e) {
-                        LogManager.w(e, TAG, "Internal Android exception scanning for beacons");
+                    long now = System.currentTimeMillis();
+                    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+                            mCurrentScanPeriods.getBetweenScanPeriod()+mCurrentScanPeriods.getScanPeriod() < ANDROID_N_MIN_SCAN_CYCLE_MILLIS &&
+                            now-mLastScanStopTime < ANDROID_N_MIN_SCAN_CYCLE_MILLIS) {
+                        // As of Android N, only 5 scans may be started in a 30 second period (6
+                        // seconds per cycle)  otherwise they are blocked.  So we check here to see
+                        // if the scan period is 6 seconds or less, and if we last stopped scanning
+                        // fewer than 6 seconds ag and if so, we simply do not stop scanning
+                        LogManager.d(TAG, "Not stopping scan because this is Android N and we" +
+                                " keep scanning for a minimum of 6 seconds at a time. "+
+                                 "We will stop in "+(ANDROID_N_MIN_SCAN_CYCLE_MILLIS-(now-mLastScanStopTime))+" millisconds.");
                     }
+                    else {
+                        try {
+                            LogManager.d(TAG, "stopping bluetooth le scan");
+                            finishScan();
+                            mLastScanStopTime = now;
+                        } catch (Exception e) {
+                            LogManager.w(e, TAG, "Internal Android exception scanning for beacons");
+                        }
+                    }
+
                     mLastScanCycleEndTime = SystemClock.elapsedRealtime();
                 } else {
                     LogManager.d(TAG, "Bluetooth is disabled.  Cannot scan for beacons.");

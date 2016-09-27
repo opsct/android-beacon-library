@@ -4,7 +4,7 @@ ext {
     /*isSnapshot = !project.hasProperty('release')
     isSnapCi = System.getenv('SNAP_CI') != null
     isSnapPullRequest = System.getenv('SNAP_PULL_REQUEST_NUMBER') != null*/
-    isSnapshot = true;
+    isSnapshot = false;
     isSnapCi = false;
     isSnapPullRequest = false;
 }

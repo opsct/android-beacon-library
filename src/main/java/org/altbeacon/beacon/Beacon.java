@@ -57,7 +57,7 @@ import java.util.List;
  * @author  David G. Young
  * @see     Region#matchesBeacon(Beacon Beacon)
  */
-public class Beacon<BeaconContent extends BeaconContentIdentifier> implements Parcelable {
+public class Beacon implements Parcelable {
     private static final String TAG = "Beacon";
 
     private static final List<Long> UNMODIFIABLE_LIST_OF_LONG =
@@ -178,7 +178,7 @@ public class Beacon<BeaconContent extends BeaconContentIdentifier> implements Pa
     /**
      * A Content associate to the beacon
      */
-    private BeaconFetchInfo<BeaconContent> mBeaconFetchInfo;
+    private BeaconFetchInfo<? extends BeaconContentIdentifier> mBeaconFetchInfo;
 
     /**
      * Required for making object Parcelable.  If you override this class, you must provide an
@@ -226,14 +226,15 @@ public class Beacon<BeaconContent extends BeaconContentIdentifier> implements Pa
      * @param in parcel
      */
     protected Beacon(Parcel in) {
-        int size = in.readInt();
+        int staticSize = in.readInt();
 
-        this.mStaticIdentifiers = new ArrayList<Identifier>(size);
-        for (int i = 0; i < size; i++) {
+        this.mStaticIdentifiers = new ArrayList<Identifier>(staticSize);
+        for (int i = 0; i < staticSize; i++) {
             mStaticIdentifiers.add(Identifier.parse(in.readString()));
         }
-        this.mEphemeralIdentifiers = new ArrayList<Identifier>(size);
-        for(int i = 0; i < size; i++){
+        int ephemeralSize = in.readInt();
+        this.mEphemeralIdentifiers = new ArrayList<Identifier>(ephemeralSize);
+        for(int i = 0; i < ephemeralSize; i++){
             mEphemeralIdentifiers.add(Identifier.parse(in.readString()));
         }
         mDistance = in.readDouble();
@@ -281,6 +282,7 @@ public class Beacon<BeaconContent extends BeaconContentIdentifier> implements Pa
         this.mServiceUuid = otherBeacon.getServiceUuid();
         this.mBluetoothName = otherBeacon.mBluetoothName;
         this.mParserIdentifier = otherBeacon.mParserIdentifier;
+        this.mBeaconFetchInfo = otherBeacon.mBeaconFetchInfo;
     }
 
     /**
@@ -547,7 +549,8 @@ public class Beacon<BeaconContent extends BeaconContentIdentifier> implements Pa
             return false;
         }
         Beacon thatBeacon = (Beacon) that;
-        if (!this.mStaticIdentifiers.equals(thatBeacon.mStaticIdentifiers) || this.mEphemeralIdentifiers.equals(thatBeacon.mEphemeralIdentifiers)) {
+        if ((this.mStaticIdentifiers.size()!=0 && !this.mStaticIdentifiers.equals(thatBeacon.mStaticIdentifiers)) ||
+                (this.mEphemeralIdentifiers.size()!=0 && !this.mEphemeralIdentifiers.equals(thatBeacon.mEphemeralIdentifiers))) {
             return false;
         }
         return sHardwareEqualityEnforced ?
@@ -573,18 +576,18 @@ public class Beacon<BeaconContent extends BeaconContentIdentifier> implements Pa
         return toStringBuilder().toString();
     }
 
-    public BeaconContent getBeaconContent(){
+    public BeaconContentIdentifier getBeaconContent(){
         if(mBeaconFetchInfo == null){
             return null;
         }
         return mBeaconFetchInfo.getContent();
     }
 
-    public BeaconFetchInfo<BeaconContent> getBeaconFetchInfo() {
+    public BeaconFetchInfo<? extends BeaconContentIdentifier> getBeaconFetchInfo() {
         return mBeaconFetchInfo;
     }
 
-    public void updateBeaconFetchInfo(BeaconFetchInfo<BeaconContent> beaconFetchInfo) {
+    public void updateBeaconFetchInfo(BeaconFetchInfo<? extends BeaconContentIdentifier> beaconFetchInfo) {
         this.mBeaconFetchInfo = beaconFetchInfo;
         if(beaconFetchInfo != null && beaconFetchInfo.getContent() !=null && beaconFetchInfo.getContent() instanceof BeaconEphemeralIdentifier){
             this.mStaticIdentifiers = beaconFetchInfo.getContent().getStaticIdentifier();

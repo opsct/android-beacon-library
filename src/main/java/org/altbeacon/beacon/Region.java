@@ -186,7 +186,7 @@ public class Region implements Parcelable, Serializable {
         for (int i = mIdentifiers.size(); --i >= 0; ) {
             final Identifier identifier = mIdentifiers.get(i);
             Identifier beaconIdentifier = null;
-            if (i < beacon.mIdentifiers.size()) {
+            if (i < beacon.mStaticIdentifiers.size()) {
                 beaconIdentifier = beacon.getIdentifier(i);
             }
             if ((beaconIdentifier == null && identifier != null) ||

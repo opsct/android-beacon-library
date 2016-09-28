@@ -75,7 +75,7 @@ public class BeaconParser {
     protected Boolean mAllowPduOverflow = true;
     protected String mIdentifier;
     protected int[] mHardwareAssistManufacturers = new int[] { 0x004c };
-
+    protected boolean mIsEphemeralIdentifier;
     protected List<BeaconParser> extraParsers = new ArrayList<BeaconParser>();
 
 
@@ -92,7 +92,6 @@ public class BeaconParser {
     public BeaconParser(String identifier) {
         mIdentifier = identifier;
     }
-
     /**
      * <p>Defines a beacon field parsing algorithm based on a string designating the zero-indexed
      * offsets to bytes within a BLE advertisement.</p>
@@ -164,10 +163,9 @@ public class BeaconParser {
      * @param beaconLayout
      * @return the BeaconParser instance
      */
-    public BeaconParser setBeaconLayout(String beaconLayout) {
-
+    public BeaconParser setBeaconLayout(String beaconLayout, boolean isEphemeralIdentifier) {
+        mIsEphemeralIdentifier = isEphemeralIdentifier;
         Log.d(TAG, "Parsing beacon layout: "+beaconLayout);
-
         String[] terms =  beaconLayout.split(",");
         mExtraFrame = false; // this is not an extra frame by default
 
@@ -286,6 +284,9 @@ public class BeaconParser {
         return this;
     }
 
+    public BeaconParser setBeaconLayout(String beaconLayout) {
+        return this.setBeaconLayout(beaconLayout, false);
+    }
     /**
      * Adds a <code>BeaconParser</code> used for parsing extra BLE beacon advertisement packets for
      * beacons that send multiple different advertisement packets (for example, Eddystone-TLM)
@@ -593,8 +594,11 @@ public class BeaconParser {
                 macAddress = device.getAddress();
                 name = device.getName();
             }
-
-            beacon.mIdentifiers = identifiers;
+            if(mIsEphemeralIdentifier){
+                beacon.mEphemeralIdentifiers = identifiers;
+            }else{
+                beacon.mStaticIdentifiers = identifiers;
+            }
             beacon.mDataFields = dataFields;
             beacon.mRssi = rssi;
             beacon.mBeaconTypeCode = beaconTypeCode;
@@ -717,7 +721,7 @@ public class BeaconParser {
 
         // set data fields
         for (int dataFieldNum = 0; dataFieldNum < this.mDataStartOffsets.size(); dataFieldNum++) {
-            long dataField = beacon.getDataFields().get(dataFieldNum);
+            long dataField = (long) beacon.getDataFields().get(dataFieldNum);
             int dataFieldLength = this.mDataEndOffsets.get(dataFieldNum) - this.mDataStartOffsets.get(dataFieldNum);
             for (int index = 0; index <= dataFieldLength; index ++) {
                 int endianCorrectedIndex = index;

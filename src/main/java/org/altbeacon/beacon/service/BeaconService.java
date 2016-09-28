@@ -45,6 +45,7 @@ import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.BuildConfig;
 import org.altbeacon.beacon.Region;
+import org.altbeacon.beacon.client.batch.BeaconDataBatchFetcher;
 import org.altbeacon.beacon.distance.DistanceCalculator;
 import org.altbeacon.beacon.distance.ModelSpecificDistanceCalculator;
 import org.altbeacon.beacon.logging.LogManager;
@@ -91,6 +92,7 @@ public class BeaconService extends Service {
     private boolean mBackgroundFlag = false;
     private ExtraDataBeaconTracker mExtraDataBeaconTracker;
     private ExecutorService mExecutor;
+    private BeaconDataBatchFetcher mBeacondataBatchFetcher;
 
     /*
      * The scan period is how long we wait between restarting the BLE advertisement scans
@@ -214,6 +216,8 @@ public class BeaconService extends Service {
                 }
             }
         }
+
+        mBeacondataBatchFetcher = new BeaconDataBatchFetcher(beaconManager.getBeaconDataBatchProvider(), beaconManager.getMaxDataCacheSize(), beaconManager.getMaxDataCacheTime())
 
         //initialize the extra data beacon tracker
         mExtraDataBeaconTracker = new ExtraDataBeaconTracker(matchBeaconsByServiceUUID);
@@ -360,6 +364,7 @@ public class BeaconService extends Service {
 
         @Override
         public void onCycleEnd() {
+            mBeacondataBatchFetcher.fetch();
             monitoringStatus.updateNewlyOutside();
             processRangeData();
             // If we want to use simulated scanning data, do it here.  This is used for testing in an emulator
@@ -422,7 +427,7 @@ public class BeaconService extends Service {
                         "not processing detections for GATT extra data beacon");
             }
         } else {
-
+            mBeacondataBatchFetcher.addBeacon(beacon);
             monitoringStatus.updateNewlyInsideInRegionsContaining(beacon);
 
             List<Region> matchedRegions = null;

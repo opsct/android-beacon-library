@@ -169,7 +169,7 @@ public class BeaconTest {
         beacon.writeToParcel(parcel, 0);
         parcel.setDataPosition(0);
         Beacon beacon2 = new Beacon(parcel);
-        assertEquals("Right number of identifiers after deserialization", 3, beacon2.mIdentifiers.size());
+        assertEquals("Right number of identifiers after deserialization", 3, beacon2.mStaticIdentifiers.size());
         assertEquals("id1 is same after deserialization", beacon.getIdentifier(0), beacon2.getIdentifier(0));
         assertEquals("id2 is same after deserialization", beacon.getIdentifier(1), beacon2.getIdentifier(1));
         assertEquals("id3 is same after deserialization", beacon.getIdentifier(2), beacon2.getIdentifier(2));

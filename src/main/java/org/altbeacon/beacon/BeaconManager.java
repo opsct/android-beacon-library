@@ -35,6 +35,9 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 
+import org.altbeacon.beacon.client.batch.BeaconContentIdentifier;
+import org.altbeacon.beacon.client.batch.BeaconDataBatchFetcher;
+import org.altbeacon.beacon.client.batch.BeaconDataBatchProvider;
 import org.altbeacon.beacon.logging.LogManager;
 import org.altbeacon.beacon.logging.Loggers;
 import org.altbeacon.beacon.service.BeaconService;
@@ -106,14 +109,14 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * @author Andrew Reitz <andrew@andrewreitz.com>
  */
 @TargetApi(4)
-public class BeaconManager {
+public class BeaconManager<BeaconContent extends BeaconContentIdentifier> {
     private static final String TAG = "BeaconManager";
     private Context mContext;
     protected static BeaconManager client = null;
     private final ConcurrentMap<BeaconConsumer, ConsumerInfo> consumers = new ConcurrentHashMap<BeaconConsumer,ConsumerInfo>();
     private Messenger serviceMessenger = null;
-    protected final Set<RangeNotifier> rangeNotifiers = new CopyOnWriteArraySet<>();
-    protected RangeNotifier dataRequestNotifier = null;
+    protected final Set<RangeNotifier<BeaconContent>> rangeNotifiers = new CopyOnWriteArraySet<>();
+    protected RangeNotifier<BeaconContent> dataRequestNotifier = null;
     protected Set<MonitorNotifier> monitorNotifiers = new CopyOnWriteArraySet<>();
     private final ArrayList<Region> monitoredRegions = new ArrayList<Region>();
     private final ArrayList<Region> rangedRegions = new ArrayList<Region>();
@@ -121,10 +124,11 @@ public class BeaconManager {
     private NonBeaconLeScanCallback mNonBeaconLeScanCallback;
     private boolean mBackgroundMode = false;
     private boolean mBackgroundModeUninitialized = true;
+    private BeaconDataBatchProvider<BeaconContent> beaconDataBatchProvider;
+
 
     private static boolean sAndroidLScanningDisabled = false;
     private static boolean sManifestCheckingDisabled = false;
-
     /**
      * Set to true if you want to show library debugging.
      *
@@ -168,11 +172,38 @@ public class BeaconManager {
 
     private static long sExitRegionPeriod = DEFAULT_EXIT_PERIOD;
 
+    public static final int MAX_DATA_CACHE_SIZE = 100;
+    public static final int MAX_DATA_CACHE_TIME = 5 * 60 * 1000;
+
     private long foregroundScanPeriod = DEFAULT_FOREGROUND_SCAN_PERIOD;
     private long foregroundBetweenScanPeriod = DEFAULT_FOREGROUND_BETWEEN_SCAN_PERIOD;
     private long backgroundScanPeriod = DEFAULT_BACKGROUND_SCAN_PERIOD;
     private long backgroundBetweenScanPeriod = DEFAULT_BACKGROUND_BETWEEN_SCAN_PERIOD;
+    private int maxDataCacheSize = MAX_DATA_CACHE_SIZE;
+    private int maxDataCacheTime = MAX_DATA_CACHE_TIME;
 
+    public int getMaxDataCacheSize() {
+        return maxDataCacheSize;
+    }
+
+    public void setMaxDataCacheSize(int maxDataCacheSize) {
+        this.maxDataCacheSize = maxDataCacheSize;
+    }
+
+    public int getMaxDataCacheTime() {
+        return maxDataCacheTime;
+    }
+
+    public void setMaxDataCacheTime(int maxDataCacheTime) {
+        this.maxDataCacheTime = maxDataCacheTime;
+    }
+
+    public BeaconDataBatchProvider<BeaconContent> getBeaconDataBatchProvider() {
+        return beaconDataBatchProvider;
+    }
+    public void setBeaconDataBatchProvider(BeaconDataBatchProvider<BeaconContent> beaconDataBatchProvider) {
+        this.beaconDataBatchProvider = beaconDataBatchProvider;
+    }
     /**
      * Sets the duration in milliseconds of each Bluetooth LE scan cycle to look for beacons.
      * This function is used to setup the period before calling {@link #bind} or when switching
@@ -778,7 +809,7 @@ public class BeaconManager {
     /**
      * @return the list of registered rangeNotifier
      */
-    public Set<RangeNotifier> getRangingNotifiers(){
+    public Set<RangeNotifier<BeaconContent>> getRangingNotifiers(){
         return rangeNotifiers;
     }
 

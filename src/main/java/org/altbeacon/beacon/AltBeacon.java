@@ -25,7 +25,6 @@ package org.altbeacon.beacon;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -66,7 +65,7 @@ public class AltBeacon extends Beacon {
     protected AltBeacon(Beacon beacon) {
         super();
         this.mBluetoothAddress = beacon.mBluetoothAddress;
-        this.mIdentifiers = beacon.mIdentifiers;
+        this.mStaticIdentifiers = beacon.mStaticIdentifiers;
         this.mBeaconTypeCode = beacon.mBeaconTypeCode;
         this.mDataFields = beacon.mDataFields;
         this.mDistance = beacon.mDistance;

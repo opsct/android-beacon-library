@@ -32,6 +32,7 @@ HOW TO SEE DEBUG LINES FROM YOUR UNIT TESTS:
 4. Expand the System.err section
  */
 public class RegionTest {
+
     @Test
     public void testBeaconMatchesRegionWithSameIdentifiers() {
         Beacon beacon = new AltBeacon.Builder().setId1("1").setId2("2").setId3("3").setRssi(4)

@@ -109,14 +109,14 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * @author Andrew Reitz <andrew@andrewreitz.com>
  */
 @TargetApi(4)
-public class BeaconManager<BeaconContent extends BeaconContentIdentifier> {
+public class BeaconManager {
     private static final String TAG = "BeaconManager";
     private Context mContext;
     protected static BeaconManager client = null;
     private final ConcurrentMap<BeaconConsumer, ConsumerInfo> consumers = new ConcurrentHashMap<BeaconConsumer,ConsumerInfo>();
     private Messenger serviceMessenger = null;
-    protected final Set<RangeNotifier<BeaconContent>> rangeNotifiers = new CopyOnWriteArraySet<>();
-    protected RangeNotifier<BeaconContent> dataRequestNotifier = null;
+    protected final Set<RangeNotifier> rangeNotifiers = new CopyOnWriteArraySet<>();
+    protected RangeNotifier dataRequestNotifier = null;
     protected Set<MonitorNotifier> monitorNotifiers = new CopyOnWriteArraySet<>();
     private final ArrayList<Region> monitoredRegions = new ArrayList<Region>();
     private final ArrayList<Region> rangedRegions = new ArrayList<Region>();
@@ -124,7 +124,7 @@ public class BeaconManager<BeaconContent extends BeaconContentIdentifier> {
     private NonBeaconLeScanCallback mNonBeaconLeScanCallback;
     private boolean mBackgroundMode = false;
     private boolean mBackgroundModeUninitialized = true;
-    private BeaconDataBatchProvider<BeaconContent> beaconDataBatchProvider;
+    private BeaconDataBatchProvider beaconDataBatchProvider;
 
 
     private static boolean sAndroidLScanningDisabled = false;
@@ -198,10 +198,10 @@ public class BeaconManager<BeaconContent extends BeaconContentIdentifier> {
         this.maxDataCacheTime = maxDataCacheTime;
     }
 
-    public BeaconDataBatchProvider<BeaconContent> getBeaconDataBatchProvider() {
+    public BeaconDataBatchProvider getBeaconDataBatchProvider() {
         return beaconDataBatchProvider;
     }
-    public void setBeaconDataBatchProvider(BeaconDataBatchProvider<BeaconContent> beaconDataBatchProvider) {
+    public void setBeaconDataBatchProvider(BeaconDataBatchProvider beaconDataBatchProvider) {
         this.beaconDataBatchProvider = beaconDataBatchProvider;
     }
     /**
@@ -809,7 +809,7 @@ public class BeaconManager<BeaconContent extends BeaconContentIdentifier> {
     /**
      * @return the list of registered rangeNotifier
      */
-    public Set<RangeNotifier<BeaconContent>> getRangingNotifiers(){
+    public Set<RangeNotifier> getRangingNotifiers(){
         return rangeNotifiers;
     }
 

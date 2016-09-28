@@ -217,7 +217,7 @@ public class BeaconService extends Service {
             }
         }
 
-        mBeacondataBatchFetcher = new BeaconDataBatchFetcher(beaconManager.getBeaconDataBatchProvider(), beaconManager.getMaxDataCacheSize(), beaconManager.getMaxDataCacheTime())
+        mBeacondataBatchFetcher = new BeaconDataBatchFetcher(beaconManager.getBeaconDataBatchProvider(), beaconManager.getMaxDataCacheSize(), beaconManager.getMaxDataCacheTime());
 
         //initialize the extra data beacon tracker
         mExtraDataBeaconTracker = new ExtraDataBeaconTracker(matchBeaconsByServiceUUID);

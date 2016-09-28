@@ -1,29 +1,25 @@
+import com.android.builder.core.BuilderConstants
+
 ext {
-    isSnapshot = !project.hasProperty('release')
+    /*isSnapshot = !project.hasProperty('release')
     isSnapCi = System.getenv('SNAP_CI') != null
-    isSnapPullRequest = System.getenv('SNAP_PULL_REQUEST_NUMBER') != null
+    isSnapPullRequest = System.getenv('SNAP_PULL_REQUEST_NUMBER') != null*/
+    isSnapshot = true;
+    isSnapCi = false;
+    isSnapPullRequest = false;
 }
 
 /*
  * Gets the version name from the latest Git tag
  */
 def getVersionName = {
-    def stdout = new ByteArrayOutputStream()
-    try {
-        exec {
-            commandLine 'git', 'describe', '--tags'
-            standardOutput = stdout
-        }
-        return stdout.toString().trim()
-    }
-    catch (e) {
-        println("Can't get version from git: " + e);
-        return "adhoc"
-    }
+    return "2.10-CT1"
 }
 
 buildscript {
     repositories {
+        mavenCentral()
+        maven { url "https://oss.sonatype.org/content/groups/public"}
         jcenter()
     }
 
@@ -31,16 +27,50 @@ buildscript {
         classpath 'com.android.tools.build:gradle:1.5.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.0'
         classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:3.0.3'
+        classpath "net.researchgate:gradle-release:2.0.2"
+        classpath "com.github.dcendents:android-maven-plugin:1.2"
     }
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'net.researchgate.release'
+apply plugin: 'com.github.dcendents.android-maven'
 
 apply from: 'gradle/eclipse.gradle'
 
+archivesBaseName = 'android-beacon-library'
+group = 'com.connecthings.altbeacon'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    jcenter()
+    maven {
+        credentials {
+            username = forgeMavenUser
+            password = forgeMavenPassword
+        }
+        url "https://forge.adtag.eu/nexus/content/groups/public" }
+    maven {
+        credentials {
+            username = forgeMavenUser
+            password = forgeMavenPassword
+        }
+        url "https://forge.adtag.eu/nexus/content/repositories/releases"
+    }
+    maven {
+        credentials {
+            username = forgeMavenUser
+            password = forgeMavenPassword
+        }
+        url "https://forge.adtag.eu/nexus/content/repositories/snapshots"
+    }
+    maven { url "http://repo.maven.apache.org/maven2" }
+}
+
 allprojects {
     version = "${getVersionName()}${isSnapshot == true ? "-SNAPSHOT" : ""}"
-    group = "org.altbeacon"
+    group = "com.connecthings.altbeacon"
 
     repositories {
         jcenter()
@@ -49,12 +79,12 @@ allprojects {
 
 android {
     compileSdkVersion 24
-    buildToolsVersion "24.0.2"
+    buildToolsVersion "23.0.2"
 //    buildToolsVersion "23.0.3"
 
     defaultConfig {
         minSdkVersion 7
-        targetSdkVersion 23
+        targetSdkVersion 24
         versionCode 1
         versionName version
         testInstrumentationRunner "com.google.android.apps.common.testing.testrunner.GoogleInstrumentationTestRunner"
@@ -139,13 +169,13 @@ task renameAarForRelease(type: Copy, dependsOn: build) {
     }
 }
 
-task distribution(dependsOn: [bundleEclipse, build, clean, renameAarForRelease]) << {
+/*task distribution(dependsOn: [bundleEclipse, build, clean, renameAarForRelease]) << {
     println "Building with version=$version"
-}
+}*/
 
-task release(dependsOn: 'distribution') << {
+/*task release(dependsOn: 'distribution') << {
     println('Doing release build')
-}
+}*/
 
 android.libraryVariants.all { variant ->
 
@@ -174,4 +204,14 @@ apply from: 'gradle/artifactory.gradle'
 artifactoryPublish {
     // Skip deploying to artifactory if building a pull request
     onlyIf { !isSnapPullRequest }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: "https://forge.adtag.eu/nexus/content/repositories/${project.version.endsWith('-SNAPSHOT') ? 'snapshots' : 'releases' }") {
+                authentication(userName: forgeMavenUser, password: forgeMavenPassword)
+            }
+        }
+    }
 }

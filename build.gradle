@@ -13,7 +13,7 @@ ext {
  * Gets the version name from the latest Git tag
  */
 def getVersionName = {
-    return "2.10-CT1"
+    return "2.9.1-CT1"
 }
 
 buildscript {
@@ -96,11 +96,11 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
 
-    /*sourceSets {
+    sourceSets {
         androidTest {
             setRoot('src/test')
         }
-    }*/
+    }
 
     lintOptions {
         abortOnError false

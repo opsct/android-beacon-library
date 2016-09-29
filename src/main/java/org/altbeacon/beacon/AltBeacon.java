@@ -42,7 +42,7 @@ import java.util.ArrayList;
  *
  * @author  David G. Young
  */
-public class AltBeacon extends Beacon {
+public class AltBeacon<BeaconContent extends BeaconContentIdentifier> extends Beacon<BeaconContent> {
     private static final String TAG = "AltBeacon";
 
     /**

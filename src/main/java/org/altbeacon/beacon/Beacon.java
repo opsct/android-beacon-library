@@ -57,7 +57,7 @@ import java.util.List;
  * @author  David G. Young
  * @see     Region#matchesBeacon(Beacon Beacon)
  */
-public class Beacon implements Parcelable {
+public class Beacon<BeaconContent extends BeaconContentIdentifier> implements Parcelable {
     private static final String TAG = "Beacon";
 
     private static final List<Long> UNMODIFIABLE_LIST_OF_LONG =
@@ -178,7 +178,7 @@ public class Beacon implements Parcelable {
     /**
      * A Content associate to the beacon
      */
-    private BeaconFetchInfo<? extends BeaconContentIdentifier> mBeaconFetchInfo;
+    private BeaconFetchInfo<BeaconContent> mBeaconFetchInfo;
 
     /**
      * Required for making object Parcelable.  If you override this class, you must provide an
@@ -576,7 +576,7 @@ public class Beacon implements Parcelable {
         return toStringBuilder().toString();
     }
 
-    public BeaconContentIdentifier getBeaconContent(){
+    public BeaconContent getBeaconContent(){
         if(mBeaconFetchInfo == null){
             return null;
         }
@@ -587,7 +587,7 @@ public class Beacon implements Parcelable {
         return mBeaconFetchInfo;
     }
 
-    public void updateBeaconFetchInfo(BeaconFetchInfo<? extends BeaconContentIdentifier> beaconFetchInfo) {
+    public void updateBeaconFetchInfo(BeaconFetchInfo<BeaconContent> beaconFetchInfo) {
         this.mBeaconFetchInfo = beaconFetchInfo;
         if(beaconFetchInfo != null && beaconFetchInfo.getContent() !=null && beaconFetchInfo.getContent() instanceof BeaconEphemeralIdentifier){
             this.mStaticIdentifiers = beaconFetchInfo.getContent().getStaticIdentifier();

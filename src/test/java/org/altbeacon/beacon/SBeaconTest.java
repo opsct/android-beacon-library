@@ -6,6 +6,7 @@ import android.os.Build;
 import android.os.Parcel;
 
 
+import org.altbeacon.beacon.client.batch.BeaconContentIdentifier;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -44,7 +45,7 @@ public class SBeaconTest {
         return data;
     }
 
-    class SBeacon extends Beacon {
+    class SBeacon<BeaconContent extends BeaconContentIdentifier> extends Beacon<BeaconContent> {
         private static final String TAG = "SBeacon";
         private int mTime;
 

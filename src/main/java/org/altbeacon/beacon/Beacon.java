@@ -678,7 +678,7 @@ public class Beacon implements Parcelable {
      * @return
      */
     public boolean isExtraBeaconData() {
-        return (mStaticIdentifiers.size() == 0 || mEphemeralIdentifiers.size() == 0) && mDataFields.size() != 0;
+        return mStaticIdentifiers.size() == 0 && mEphemeralIdentifiers.size() == 0 && mDataFields.size() != 0;
     }
 
     /**

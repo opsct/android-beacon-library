@@ -105,6 +105,7 @@ public class BeaconTest {
         Beacon beacon2 = new AltBeacon.Builder().setMfgReserved(7).setId1("1").setId2("2").setId3("3").setRssi(4)
                 .setBeaconTypeCode(5).setTxPower(6)
                 .setBluetoothAddress("1:2:3:4:5:6").build();
+        beacon2.getIdentifiers().toString();
         assertTrue("Beacons with same same macs are equal", beacon1.equals(beacon2));
     }
 

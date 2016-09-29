@@ -96,11 +96,11 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
 
-    sourceSets {
+    /*sourceSets {
         androidTest {
             setRoot('src/test')
         }
-    }
+    }*/
 
     lintOptions {
         abortOnError false

@@ -73,6 +73,7 @@ public class AltBeacon<BeaconContent extends BeaconContentIdentifier> extends Be
         this.mDistance = beacon.mDistance;
         this.mRssi = beacon.mRssi;
         this.mTxPower = beacon.mTxPower;
+        this.mBeaconFetchInfo = beacon.mBeaconFetchInfo;
     }
 
     /**

@@ -16,6 +16,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconContentIdentifie
     private FixSizeCache<String, BeaconFetchInfo<BeaconContent>> beaconContentInfoCache;
     private int mMaxBeaconCacheTime;
     private List<Beacon> beacons;
+    private final Object beaconsLock = new Object();
 
     public BeaconDataBatchFetcher(BeaconDataBatchProvider beaconDataBatchProvider, int cacheSize, int maxBeaconCacheTime){
         this.mBeaconDataBatchProvider = beaconDataBatchProvider;
@@ -25,44 +26,50 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconContentIdentifie
     }
 
     public void addBeacon(Beacon beacon){
-        beacons.add(beacon);
+        synchronized (beaconsLock) {
+            beacons.add(beacon);
+        }
     }
 
     public void fetch(){
-        if(mBeaconDataBatchProvider != null) {
-            List<Beacon> beaconsToFetch = new ArrayList<>(beacons.size());
-            BeaconFetchInfo<BeaconContent> fetchInfo = null;
-            String id;
-            for (Beacon beacon : beacons) {
-                fetchInfo = null;
-                id = null;
-                if (beacon.getIdentifiers().size() != 0) {
-                    id = beacon.getIdentifiers().toString();
-                    fetchInfo = beaconContentInfoCache.get(id);
+        synchronized (beaconsLock) {
+            if (mBeaconDataBatchProvider != null) {
+                List<Beacon> beaconsToFetch = new ArrayList<>(beacons.size());
+                BeaconFetchInfo<BeaconContent> fetchInfo = null;
+                String id;
+                for (Beacon beacon : beacons) {
+                    if (!beacon.isExtraBeaconData()) {
+                        fetchInfo = null;
+                        id = null;
+                        if (beacon.getIdentifiers().size() != 0) {
+                            id = beacon.getIdentifiers().toString();
+                            fetchInfo = beaconContentInfoCache.get(id);
 
-                }
-                if (fetchInfo == null && beacon.getEphemeralIdentifiers().size() != 0) {
-                    if (id == null) {
-                        id = beacon.getEphemeralIdentifiers().toString();
-                    }
-                    fetchInfo = beaconContentInfoCache.get(id == null ? beacon.getEphemeralIdentifiers().toString() : id);
-                }
-                if (fetchInfo == null || (fetchInfo.isTimeToUpdate() && fetchInfo.getStatus() != BeaconContentFetchStatus.IN_PROGRESS)) {
-                    beaconsToFetch.add(beacon);
-                    if (fetchInfo == null) {
-                        fetchInfo = new BeaconFetchInfo<>(null, mMaxBeaconCacheTime, BeaconContentFetchStatus.IN_PROGRESS);
-                    } else {
-                        fetchInfo.updateStatus(BeaconContentFetchStatus.IN_PROGRESS);
-                    }
-                }
-                if (fetchInfo != null) {
-                    beacon.updateBeaconFetchInfo(fetchInfo);
+                        }
+                        if (fetchInfo == null && beacon.getEphemeralIdentifiers().size() != 0) {
+                            if (id == null) {
+                                id = beacon.getEphemeralIdentifiers().toString();
+                            }
+                            fetchInfo = beaconContentInfoCache.get(id == null ? beacon.getEphemeralIdentifiers().toString() : id);
+                        }
+                        if (fetchInfo == null || (fetchInfo.isTimeToUpdate() && fetchInfo.getStatus() != BeaconContentFetchStatus.IN_PROGRESS)) {
+                            beaconsToFetch.add(beacon);
+                            if (fetchInfo == null) {
+                                fetchInfo = new BeaconFetchInfo<>(null, mMaxBeaconCacheTime, BeaconContentFetchStatus.IN_PROGRESS);
+                            } else {
+                                fetchInfo.updateStatus(BeaconContentFetchStatus.IN_PROGRESS);
+                            }
+                        }
+                        if (fetchInfo != null) {
+                            beacon.updateBeaconFetchInfo(fetchInfo);
 
+                        }
+                    }
                 }
+                this.mBeaconDataBatchProvider.fetch(beaconsToFetch, this);
             }
-            this.mBeaconDataBatchProvider.fetch(beaconsToFetch, this);
+            beacons.clear();
         }
-        beacons.clear();
     }
 
     @Override

@@ -27,6 +27,7 @@ public class BeaconFetchInfo<BeaconContent extends BeaconContentIdentifier> impl
         this.content = content;
         this.maxCacheTime = maxCacheTime;
         this.status = status;
+        nextUpdateTime = SystemClock.elapsedRealtime() + maxCacheTime;
     }
 
     private BeaconFetchInfo(Parcel from){
@@ -81,7 +82,7 @@ public class BeaconFetchInfo<BeaconContent extends BeaconContentIdentifier> impl
         if(content == null){
             dest.writeString("");
         }else{
-            dest.writeString(content.getClass().toString());
+            dest.writeString(content.getClass().getCanonicalName());
             dest.writeParcelable(content, 0);
         }
     }

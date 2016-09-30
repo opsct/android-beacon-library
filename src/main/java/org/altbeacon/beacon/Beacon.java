@@ -28,6 +28,8 @@ import android.os.Parcelable;
 
 import org.altbeacon.beacon.client.BeaconDataFactory;
 import org.altbeacon.beacon.client.NullBeaconDataFactory;
+import org.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
+import org.altbeacon.beacon.client.batch.BeaconContentSimple;
 import org.altbeacon.beacon.client.batch.BeaconEphemeralIdentifier;
 import org.altbeacon.beacon.client.batch.BeaconFetchInfo;
 import org.altbeacon.beacon.client.batch.BeaconContentIdentifier;
@@ -64,8 +66,6 @@ public class Beacon<BeaconContent extends BeaconContentIdentifier> implements Pa
             Collections.unmodifiableList(new ArrayList<Long>());
     private static final List<Identifier> UNMODIFIABLE_LIST_OF_IDENTIFIER =
             Collections.unmodifiableList(new ArrayList<Identifier>());
-
-    public static enum DownloadBeaconContentStatus {IN_PROGRESS, SUCCESS, NO_CONTENT, BACKEND_ERROR, NETWORK_ERROR};
 
     /**
      * Determines whether a the bluetoothAddress (mac address) must be the same for two Beacons
@@ -178,7 +178,7 @@ public class Beacon<BeaconContent extends BeaconContentIdentifier> implements Pa
     /**
      * A Content associate to the beacon
      */
-    private BeaconFetchInfo<BeaconContent> mBeaconFetchInfo;
+    protected BeaconFetchInfo<BeaconContent> mBeaconFetchInfo;
 
     /**
      * Required for making object Parcelable.  If you override this class, you must provide an
@@ -739,6 +739,9 @@ public class Beacon<BeaconContent extends BeaconContentIdentifier> implements Pa
                     }
                 }
             }
+            if(mBeacon.mBeaconFetchInfo==null) {
+                mBeacon.mBeaconFetchInfo = new BeaconFetchInfo(new BeaconContentSimple(mBeacon.mStaticIdentifiers), 5*60*1000, BeaconContentFetchStatus.IN_PROGRESS);
+            }
             return mBeacon;
         }
 
@@ -758,6 +761,12 @@ public class Beacon<BeaconContent extends BeaconContentIdentifier> implements Pa
             setRssi(beacon.getRssi());
             setServiceUuid(beacon.getServiceUuid());
             setMultiFrameBeacon(beacon.isMultiFrameBeacon());
+            setBeaconFetchInfo((beacon.getBeaconFetchInfo()));
+            return this;
+        }
+
+        public Builder setBeaconFetchInfo(BeaconFetchInfo<?> beaconFetchInfo){
+            this.mBeacon.mBeaconFetchInfo = beaconFetchInfo;
             return this;
         }
 

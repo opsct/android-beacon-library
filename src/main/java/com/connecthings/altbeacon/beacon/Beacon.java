@@ -30,6 +30,11 @@ import com.connecthings.altbeacon.beacon.client.BeaconDataFactory;
 import com.connecthings.altbeacon.beacon.client.NullBeaconDataFactory;
 import com.connecthings.altbeacon.beacon.distance.DistanceCalculator;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconContentSimple;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconEphemeralIdentifier;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconFetchInfo;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconContentIdentifier;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,7 +59,7 @@ import java.util.List;
  * @author  David G. Young
  * @see     Region#matchesBeacon(Beacon Beacon)
  */
-public class Beacon implements Parcelable {
+public class Beacon<BeaconContent extends BeaconContentIdentifier> implements Parcelable {
     private static final String TAG = "Beacon";
 
     private static final List<Long> UNMODIFIABLE_LIST_OF_LONG =
@@ -75,7 +80,13 @@ public class Beacon implements Parcelable {
      * a unique beacon.  The identifiers are ordered by significance for the purpose of grouping
      * beacons
      */
-    protected List<Identifier> mIdentifiers;
+    protected List<Identifier> mStaticIdentifiers;
+    /**
+     * The a list of the multi-part identifiers of the beacon.  Together, these identifiers signify
+     * a unique beacon.  The identifiers are ordered by significance for the purpose of grouping
+     * beacons
+     */
+    protected List<Identifier> mEphemeralIdentifiers;
 
     /**
      * A list of generic non-identifying data fields included in the beacon advertisement.  Data
@@ -165,6 +176,11 @@ public class Beacon implements Parcelable {
     protected boolean mMultiFrameBeacon = false;
 
     /**
+     * A Content associate to the beacon
+     */
+    protected BeaconFetchInfo<BeaconContent> mBeaconFetchInfo;
+
+    /**
      * Required for making object Parcelable.  If you override this class, you must provide an
      * equivalent version of this method.
      */
@@ -210,11 +226,16 @@ public class Beacon implements Parcelable {
      * @param in parcel
      */
     protected Beacon(Parcel in) {
-        int size = in.readInt();
+        int staticSize = in.readInt();
 
-        this.mIdentifiers = new ArrayList<Identifier>(size);
-        for (int i = 0; i < size; i++) {
-            mIdentifiers.add(Identifier.parse(in.readString()));
+        this.mStaticIdentifiers = new ArrayList<Identifier>(staticSize);
+        for (int i = 0; i < staticSize; i++) {
+            mStaticIdentifiers.add(Identifier.parse(in.readString()));
+        }
+        int ephemeralSize = in.readInt();
+        this.mEphemeralIdentifiers = new ArrayList<Identifier>(ephemeralSize);
+        for(int i = 0; i < ephemeralSize; i++){
+            mEphemeralIdentifiers.add(Identifier.parse(in.readString()));
         }
         mDistance = in.readDouble();
         mRssi = in.readInt();
@@ -239,6 +260,7 @@ public class Beacon implements Parcelable {
         mBluetoothName = in.readString();
         mParserIdentifier = in.readString();
         mMultiFrameBeacon = in.readByte() != 0;
+        mBeaconFetchInfo = in.readParcelable(BeaconFetchInfo.class.getClassLoader());
     }
 
     /**
@@ -247,7 +269,8 @@ public class Beacon implements Parcelable {
      */
     protected Beacon(Beacon otherBeacon) {
         super();
-        mIdentifiers = new ArrayList<>(otherBeacon.mIdentifiers);
+        mStaticIdentifiers = new ArrayList<>(otherBeacon.mStaticIdentifiers);
+        mEphemeralIdentifiers = new ArrayList<>(otherBeacon.mEphemeralIdentifiers);
         mDataFields = new ArrayList<>(otherBeacon.mDataFields);
         mExtraDataFields = new ArrayList<>(otherBeacon.mExtraDataFields);
         this.mDistance = otherBeacon.mDistance;
@@ -259,13 +282,15 @@ public class Beacon implements Parcelable {
         this.mServiceUuid = otherBeacon.getServiceUuid();
         this.mBluetoothName = otherBeacon.mBluetoothName;
         this.mParserIdentifier = otherBeacon.mParserIdentifier;
+        this.mBeaconFetchInfo = otherBeacon.mBeaconFetchInfo;
     }
 
     /**
      * Basic constructor that simply allocates fields
      */
     protected Beacon() {
-        mIdentifiers = new ArrayList<Identifier>(1);
+        mStaticIdentifiers = new ArrayList<Identifier>(1);
+        mEphemeralIdentifiers = new ArrayList<Identifier>(1);
         mDataFields = new ArrayList<Long>(1);
         mExtraDataFields = new ArrayList<Long>(1);
     }
@@ -308,8 +333,18 @@ public class Beacon implements Parcelable {
      * @param i - index identfier
      * @return identifier
      */
+    public Identifier getEphemeralIdentifier(int i) {
+        return mEphemeralIdentifiers.get(i);
+    }
+
+    /**
+     * Returns the specified identifier - 0 indexed
+     * Note:  to read id1, call getIdentifier(0);
+     * @param i - index identfier
+     * @return identifier
+     */
     public Identifier getIdentifier(int i) {
-        return mIdentifiers.get(i);
+        return mStaticIdentifiers.get(i);
     }
 
 
@@ -318,7 +353,7 @@ public class Beacon implements Parcelable {
      * @return
      */
     public Identifier getId1() {
-        return mIdentifiers.get(0);
+        return mStaticIdentifiers.get(0);
     }
 
     /**
@@ -326,7 +361,7 @@ public class Beacon implements Parcelable {
      * @return
      */
     public Identifier getId2() {
-        return mIdentifiers.get(1);
+        return mStaticIdentifiers.get(1);
     }
 
     /**
@@ -334,7 +369,31 @@ public class Beacon implements Parcelable {
      * @return
      */
     public Identifier getId3() {
-        return mIdentifiers.get(2);
+        return mStaticIdentifiers.get(2);
+    }
+
+    /**
+     * Convenience method to get the first identifier
+    * @return
+            */
+    public Identifier getEphemeralId1() {
+        return mEphemeralIdentifiers.get(0);
+    }
+
+    /**
+     * Convenience method to get the second identifier
+     * @return
+     */
+    public Identifier getEphemeralId2() {
+        return mEphemeralIdentifiers.get(1);
+    }
+
+    /**
+     * Convenience method to get the third identifier
+     * @return
+     */
+    public Identifier getEphemeralId3() {
+        return mEphemeralIdentifiers.get(2);
     }
 
     /**
@@ -376,11 +435,24 @@ public class Beacon implements Parcelable {
      * @return identifier
      */
     public List<Identifier> getIdentifiers() {
-        if (mIdentifiers.getClass().isInstance(UNMODIFIABLE_LIST_OF_IDENTIFIER)) {
-            return mIdentifiers;
+        if (mStaticIdentifiers.getClass().isInstance(UNMODIFIABLE_LIST_OF_IDENTIFIER)) {
+            return mStaticIdentifiers;
         }
         else {
-            return Collections.unmodifiableList(mIdentifiers);
+            return Collections.unmodifiableList(mStaticIdentifiers);
+        }
+    }
+
+    /**
+     * Returns the list of identifiers transmitted with the advertisement
+     * @return identifier
+     */
+    public List<Identifier> getEphemeralIdentifiers() {
+        if (mEphemeralIdentifiers.getClass().isInstance(UNMODIFIABLE_LIST_OF_IDENTIFIER)) {
+            return mEphemeralIdentifiers;
+        }
+        else {
+            return Collections.unmodifiableList(mEphemeralIdentifiers);
         }
     }
 
@@ -477,7 +549,8 @@ public class Beacon implements Parcelable {
             return false;
         }
         Beacon thatBeacon = (Beacon) that;
-        if (!this.mIdentifiers.equals(thatBeacon.mIdentifiers)) {
+        if ((this.mStaticIdentifiers.size()!=0 && !this.mStaticIdentifiers.equals(thatBeacon.mStaticIdentifiers)) ||
+                (this.mEphemeralIdentifiers.size()!=0 && !this.mEphemeralIdentifiers.equals(thatBeacon.mEphemeralIdentifiers))) {
             return false;
         }
         return sHardwareEqualityEnforced ?
@@ -503,19 +576,49 @@ public class Beacon implements Parcelable {
         return toStringBuilder().toString();
     }
 
-    private StringBuilder toStringBuilder() {
-        final StringBuilder sb = new StringBuilder();
+    public BeaconContent getBeaconContent(){
+        if(mBeaconFetchInfo == null){
+            return null;
+        }
+        return mBeaconFetchInfo.getContent();
+    }
+
+    public BeaconFetchInfo<? extends BeaconContentIdentifier> getBeaconFetchInfo() {
+        return mBeaconFetchInfo;
+    }
+
+    public void updateBeaconFetchInfo(BeaconFetchInfo<BeaconContent> beaconFetchInfo) {
+        this.mBeaconFetchInfo = beaconFetchInfo;
+        if(beaconFetchInfo != null && beaconFetchInfo.getContent() !=null && beaconFetchInfo.getContent() instanceof BeaconEphemeralIdentifier){
+            this.mStaticIdentifiers = beaconFetchInfo.getContent().getStaticIdentifier();
+        }
+    }
+
+    private void identifierToStringBuilder(List<Identifier> identifiers, StringBuilder sb, boolean isEphemeral){
         int i = 1;
-        for (Identifier identifier: mIdentifiers) {
+        for (Identifier identifier: identifiers) {
             if (i > 1) {
                 sb.append(" ");
             }
+            sb.append(isEphemeral?"ephemeral-":"static-");
             sb.append("id");
             sb.append(i);
             sb.append(": ");
             sb.append(identifier == null ? "null" : identifier.toString());
             i++;
         }
+    }
+
+    private StringBuilder toStringBuilder() {
+        final StringBuilder sb = new StringBuilder();
+
+        if(mEphemeralIdentifiers.size() != 0){
+            identifierToStringBuilder(mEphemeralIdentifiers, sb, true);
+        }
+        if(mStaticIdentifiers.size() != 0){
+            identifierToStringBuilder(mStaticIdentifiers, sb, false);
+        }
+
         if (mParserIdentifier != null) {
             sb.append(" type "+mParserIdentifier);
         }
@@ -534,9 +637,15 @@ public class Beacon implements Parcelable {
      * method if you add any additional fields.
      */
     public void writeToParcel(Parcel out, int flags) {
-        out.writeInt(mIdentifiers.size());
-        LogManager.d(TAG, "serializing identifiers of size %s", mIdentifiers.size());
-        for (Identifier identifier: mIdentifiers) {
+        out.writeInt(mStaticIdentifiers.size());
+        LogManager.d(TAG, "serializing static identifiers of size %s", mStaticIdentifiers.size());
+        for (Identifier identifier: mStaticIdentifiers) {
+            out.writeString(identifier == null ? null : identifier.toString());
+        }
+        out.writeInt(mEphemeralIdentifiers.size());
+        LogManager.d(TAG, "serializing random identifiers of size %s", mStaticIdentifiers.size());
+        for (Identifier identifier: mEphemeralIdentifiers
+                ) {
             out.writeString(identifier == null ? null : identifier.toString());
         }
         out.writeDouble(getDistance());
@@ -560,6 +669,7 @@ public class Beacon implements Parcelable {
         out.writeString(mBluetoothName);
         out.writeString(mParserIdentifier);
         out.writeByte((byte) (mMultiFrameBeacon ? 1: 0));
+        out.writeParcelable(mBeaconFetchInfo, 0);
     }
 
     /**
@@ -568,7 +678,7 @@ public class Beacon implements Parcelable {
      * @return
      */
     public boolean isExtraBeaconData() {
-        return mIdentifiers.size() == 0 && mDataFields.size() != 0;
+        return mStaticIdentifiers.size() == 0 && mEphemeralIdentifiers.size() == 0 && mDataFields.size() != 0;
     }
 
     /**
@@ -621,13 +731,16 @@ public class Beacon implements Parcelable {
          */
         public Beacon build() {
             if (mId1!= null) {
-                mBeacon.mIdentifiers.add(mId1);
+                mBeacon.mStaticIdentifiers.add(mId1);
                 if (mId2!= null) {
-                    mBeacon.mIdentifiers.add(mId2);
+                    mBeacon.mStaticIdentifiers.add(mId2);
                     if (mId3!= null) {
-                        mBeacon.mIdentifiers.add(mId3);
+                        mBeacon.mStaticIdentifiers.add(mId3);
                     }
                 }
+            }
+            if(mBeacon.mBeaconFetchInfo==null) {
+                mBeacon.mBeaconFetchInfo = new BeaconFetchInfo(new BeaconContentSimple(mBeacon.mStaticIdentifiers), 5*60*1000, BeaconContentFetchStatus.IN_PROGRESS);
             }
             return mBeacon;
         }
@@ -648,11 +761,17 @@ public class Beacon implements Parcelable {
             setRssi(beacon.getRssi());
             setServiceUuid(beacon.getServiceUuid());
             setMultiFrameBeacon(beacon.isMultiFrameBeacon());
+            setBeaconFetchInfo((beacon.getBeaconFetchInfo()));
+            return this;
+        }
+
+        public Builder setBeaconFetchInfo(BeaconFetchInfo<?> beaconFetchInfo){
+            this.mBeacon.mBeaconFetchInfo = beaconFetchInfo;
             return this;
         }
 
         /**
-         * @see Beacon#mIdentifiers
+         * @see Beacon#mStaticIdentifiers
          * @param identifiers identifiers to set
          * @return builder
          */
@@ -660,7 +779,7 @@ public class Beacon implements Parcelable {
             mId1 = null;
             mId2 = null;
             mId3 = null;
-            mBeacon.mIdentifiers = identifiers;
+            mBeacon.mStaticIdentifiers = identifiers;
             return this;
         }
 
@@ -696,6 +815,8 @@ public class Beacon implements Parcelable {
             mId3 = Identifier.parse(id3String);
             return this;
         }
+
+
 
         /**
          * @see Beacon#mRssi

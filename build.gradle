@@ -4,7 +4,7 @@ ext {
     /*isSnapshot = !project.hasProperty('release')
     isSnapCi = System.getenv('SNAP_CI') != null
     isSnapPullRequest = System.getenv('SNAP_PULL_REQUEST_NUMBER') != null*/
-    isSnapshot = false;
+    isSnapshot = true;
     isSnapCi = false;
     isSnapPullRequest = false;
 }
@@ -13,7 +13,7 @@ ext {
  * Gets the version name from the latest Git tag
  */
 def getVersionName = {
-    return "2.9.1-CT1"
+    return "2.9.1-CT-BF1"
 }
 
 buildscript {
@@ -96,11 +96,11 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
 
-    sourceSets {
+    /*sourceSets {
         androidTest {
             setRoot('src/test')
         }
-    }
+    }*/
 
     lintOptions {
         abortOnError false

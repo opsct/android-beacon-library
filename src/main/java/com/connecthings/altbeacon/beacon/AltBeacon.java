@@ -26,6 +26,8 @@ package com.connecthings.altbeacon.beacon;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.connecthings.altbeacon.beacon.client.batch.BeaconContentIdentifier;
+
 import java.util.ArrayList;
 
 /**
@@ -40,7 +42,7 @@ import java.util.ArrayList;
  *
  * @author  David G. Young
  */
-public class AltBeacon extends Beacon {
+public class AltBeacon<BeaconContent extends BeaconContentIdentifier> extends Beacon<BeaconContent> {
     private static final String TAG = "AltBeacon";
 
     /**
@@ -65,12 +67,13 @@ public class AltBeacon extends Beacon {
     protected AltBeacon(Beacon beacon) {
         super();
         this.mBluetoothAddress = beacon.mBluetoothAddress;
-        this.mIdentifiers = beacon.mIdentifiers;
+        this.mStaticIdentifiers = beacon.mStaticIdentifiers;
         this.mBeaconTypeCode = beacon.mBeaconTypeCode;
         this.mDataFields = beacon.mDataFields;
         this.mDistance = beacon.mDistance;
         this.mRssi = beacon.mRssi;
         this.mTxPower = beacon.mTxPower;
+        this.mBeaconFetchInfo = beacon.mBeaconFetchInfo;
     }
 
     /**

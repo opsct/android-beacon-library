@@ -46,6 +46,9 @@ import com.connecthings.altbeacon.beacon.service.RunningAverageRssiFilter;
 import com.connecthings.altbeacon.beacon.service.StartRMData;
 import com.connecthings.altbeacon.beacon.service.scanner.NonBeaconLeScanCallback;
 import com.connecthings.altbeacon.beacon.simulator.BeaconSimulator;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconContentIdentifier;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconDataBatchFetcher;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconDataBatchProvider;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -112,7 +115,7 @@ public class BeaconManager {
     protected static BeaconManager client = null;
     private final ConcurrentMap<BeaconConsumer, ConsumerInfo> consumers = new ConcurrentHashMap<BeaconConsumer,ConsumerInfo>();
     private Messenger serviceMessenger = null;
-    protected final Set<RangeNotifier> rangeNotifiers = new CopyOnWriteArraySet<>();
+    protected final Set<RangeNotifier<?>> rangeNotifiers = new CopyOnWriteArraySet<>();
     protected RangeNotifier dataRequestNotifier = null;
     protected Set<MonitorNotifier> monitorNotifiers = new CopyOnWriteArraySet<>();
     private final ArrayList<Region> monitoredRegions = new ArrayList<Region>();
@@ -121,10 +124,11 @@ public class BeaconManager {
     private NonBeaconLeScanCallback mNonBeaconLeScanCallback;
     private boolean mBackgroundMode = false;
     private boolean mBackgroundModeUninitialized = true;
+    private BeaconDataBatchProvider beaconDataBatchProvider;
+
 
     private static boolean sAndroidLScanningDisabled = false;
     private static boolean sManifestCheckingDisabled = false;
-
     /**
      * Set to true if you want to show library debugging.
      *
@@ -168,11 +172,38 @@ public class BeaconManager {
 
     private static long sExitRegionPeriod = DEFAULT_EXIT_PERIOD;
 
+    public static final int MAX_DATA_CACHE_SIZE = 100;
+    public static final int MAX_DATA_CACHE_TIME = 5 * 60 * 1000;
+
     private long foregroundScanPeriod = DEFAULT_FOREGROUND_SCAN_PERIOD;
     private long foregroundBetweenScanPeriod = DEFAULT_FOREGROUND_BETWEEN_SCAN_PERIOD;
     private long backgroundScanPeriod = DEFAULT_BACKGROUND_SCAN_PERIOD;
     private long backgroundBetweenScanPeriod = DEFAULT_BACKGROUND_BETWEEN_SCAN_PERIOD;
+    private int maxDataCacheSize = MAX_DATA_CACHE_SIZE;
+    private int maxDataCacheTime = MAX_DATA_CACHE_TIME;
 
+    public int getMaxDataCacheSize() {
+        return maxDataCacheSize;
+    }
+
+    public void setMaxDataCacheSize(int maxDataCacheSize) {
+        this.maxDataCacheSize = maxDataCacheSize;
+    }
+
+    public int getMaxDataCacheTime() {
+        return maxDataCacheTime;
+    }
+
+    public void setMaxDataCacheTime(int maxDataCacheTime) {
+        this.maxDataCacheTime = maxDataCacheTime;
+    }
+
+    public BeaconDataBatchProvider getBeaconDataBatchProvider() {
+        return beaconDataBatchProvider;
+    }
+    public void setBeaconDataBatchProvider(BeaconDataBatchProvider beaconDataBatchProvider) {
+        this.beaconDataBatchProvider = beaconDataBatchProvider;
+    }
     /**
      * Sets the duration in milliseconds of each Bluetooth LE scan cycle to look for beacons.
      * This function is used to setup the period before calling {@link #bind} or when switching
@@ -446,7 +477,7 @@ public class BeaconManager {
      * @param notifier
      * @see RangeNotifier
      */
-    public void addRangeNotifier(RangeNotifier notifier){
+    public void addRangeNotifier(RangeNotifier<? extends BeaconContentIdentifier> notifier){
         if(notifier != null){
             synchronized (rangeNotifiers){
                 rangeNotifiers.add(notifier);
@@ -460,7 +491,7 @@ public class BeaconManager {
      * @param notifier
      * @see RangeNotifier
      */
-    public boolean removeRangeNotifier(RangeNotifier notifier){
+    public boolean removeRangeNotifier(RangeNotifier<? extends BeaconContentIdentifier> notifier){
         synchronized (rangeNotifiers){
             return rangeNotifiers.remove(notifier);
         }
@@ -778,7 +809,7 @@ public class BeaconManager {
     /**
      * @return the list of registered rangeNotifier
      */
-    public Set<RangeNotifier> getRangingNotifiers(){
+    public Set<RangeNotifier<?>> getRangingNotifiers(){
         return rangeNotifiers;
     }
 

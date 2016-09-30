@@ -47,7 +47,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class ModelSpecificDistanceCalculator implements DistanceCalculator {
     Map<AndroidModel,DistanceCalculator> mModelMap;
-    private static final String CONFIG_FILE = "model-distance-calculations.json";
+    private static final String CONFIG_FILE = "model-distance-calculations-ct.json";
     private static final String TAG = "ModelSpecificDistanceCalculator";
     private AndroidModel mDefaultModel;
     private DistanceCalculator mDistanceCalculator;

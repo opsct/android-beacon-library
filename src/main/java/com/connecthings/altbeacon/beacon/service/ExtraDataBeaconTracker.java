@@ -72,12 +72,14 @@ public class ExtraDataBeaconTracker {
             matchingTrackedBeacons = new HashMap<Integer,Beacon>();
         }
         matchingTrackedBeacons.put(trackedBeacon.hashCode(), trackedBeacon);
+
         mBeaconsByKey.put(getBeaconKey(trackedBeacon), matchingTrackedBeacons);
     }
 
     private String getBeaconKey(Beacon beacon) {
         if (matchBeaconsByServiceUUID) {
-            return beacon.getBluetoothAddress() + beacon.getServiceUuid();
+            String key = beacon.getBluetoothAddress() + beacon.getServiceUuid();
+            return key;
         } else {
             return beacon.getBluetoothAddress();
         }

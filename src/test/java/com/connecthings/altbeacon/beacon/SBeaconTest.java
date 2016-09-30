@@ -6,6 +6,7 @@ import android.os.Build;
 import android.os.Parcel;
 
 
+import com.connecthings.altbeacon.beacon.client.batch.BeaconContentIdentifier;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -44,7 +45,7 @@ public class SBeaconTest {
         return data;
     }
 
-    class SBeacon extends Beacon {
+    class SBeacon<BeaconContent extends BeaconContentIdentifier> extends Beacon<BeaconContent> {
         private static final String TAG = "SBeacon";
         private int mTime;
 
@@ -54,21 +55,21 @@ public class SBeaconTest {
             mRssi = rssi;
             mBeaconTypeCode = beaconTypeCode;
             mBluetoothAddress = bluetoothAddress;
-            mIdentifiers = new ArrayList<Identifier>(2);
-            mIdentifiers.add(Identifier.fromInt(group));
-            mIdentifiers.add(Identifier.parse(id));
+            mStaticIdentifiers = new ArrayList<Identifier>(2);
+            mStaticIdentifiers.add(Identifier.fromInt(group));
+            mStaticIdentifiers.add(Identifier.parse(id));
             mTime = time;
             //BeaconManager.logDebug(TAG, "constructed a new sbeacon with id2: " + getIdentifier(2));
         }
 
         public int getGroup() {
-            return mIdentifiers.get(0).toInt();
+            return mStaticIdentifiers.get(0).toInt();
         }
         public int getTime() {
             return mTime;
         }
         public String getId() {
-            return mIdentifiers.get(1).toString();
+            return mStaticIdentifiers.get(1).toString();
         }
 
         @Override

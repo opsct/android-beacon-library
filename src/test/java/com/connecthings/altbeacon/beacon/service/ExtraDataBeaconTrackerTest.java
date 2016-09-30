@@ -1,4 +1,4 @@
-package org.altbeacon.beacon.service;
+package com.connecthings.altbeacon.beacon.service;
 
 import com.connecthings.altbeacon.beacon.Beacon;
 import org.junit.Before;

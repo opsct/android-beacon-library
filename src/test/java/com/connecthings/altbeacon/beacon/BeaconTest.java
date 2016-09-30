@@ -2,6 +2,11 @@ package com.connecthings.altbeacon.beacon;
 
 import android.os.Parcel;
 
+
+import com.connecthings.altbeacon.beacon.distance.ModelSpecificDistanceCalculator;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconContentSimple;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconFetchInfo;
 import com.connecthings.altbeacon.beacon.distance.ModelSpecificDistanceCalculator;
 import org.junit.Before;
 import org.junit.Test;
@@ -9,10 +14,12 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.robolectric.annotation.Config;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -105,6 +112,7 @@ public class BeaconTest {
         Beacon beacon2 = new AltBeacon.Builder().setMfgReserved(7).setId1("1").setId2("2").setId3("3").setRssi(4)
                 .setBeaconTypeCode(5).setTxPower(6)
                 .setBluetoothAddress("1:2:3:4:5:6").build();
+        beacon2.getIdentifiers().toString();
         assertTrue("Beacons with same same macs are equal", beacon1.equals(beacon2));
     }
 
@@ -163,13 +171,15 @@ public class BeaconTest {
     public void testCanSerializeParcelable() {
         org.robolectric.shadows.ShadowLog.stream = System.err;
         Parcel parcel = Parcel.obtain();
+
         Beacon beacon = new AltBeacon.Builder().setId1("1").setId2("2").setId3("3").setRssi(4)
                 .setBeaconTypeCode(5).setTxPower(6).setBluetoothName("xx")
                 .setBluetoothAddress("1:2:3:4:5:6").setDataFields(Arrays.asList(100l)).build();
+        
         beacon.writeToParcel(parcel, 0);
         parcel.setDataPosition(0);
         Beacon beacon2 = new Beacon(parcel);
-        assertEquals("Right number of identifiers after deserialization", 3, beacon2.mIdentifiers.size());
+        assertEquals("Right number of identifiers after deserialization", 3, beacon2.mStaticIdentifiers.size());
         assertEquals("id1 is same after deserialization", beacon.getIdentifier(0), beacon2.getIdentifier(0));
         assertEquals("id2 is same after deserialization", beacon.getIdentifier(1), beacon2.getIdentifier(1));
         assertEquals("id3 is same after deserialization", beacon.getIdentifier(2), beacon2.getIdentifier(2));
@@ -182,6 +192,11 @@ public class BeaconTest {
         assertEquals("manufacturer is same after deserialization", beacon.getManufacturer(), beacon2.getManufacturer());
         assertEquals("data field 0 is the same after deserialization", beacon.getDataFields().get(0), beacon2.getDataFields().get(0));
         assertEquals("data field 0 is the right value", beacon.getDataFields().get(0), (Long) 100l);
+        assertNotEquals("beaconFetchInfo beacon is defined", beacon.getBeaconFetchInfo(), null);
+        assertNotEquals("beaconFetchInfo beacon2 is defined", beacon2.getBeaconFetchInfo(), null);
+        assertEquals("beaconContent id1 is the same after deserialization", beacon2.getBeaconFetchInfo().getContent().getStaticIdentifier().get(0), beacon.getBeaconFetchInfo().getContent().getStaticIdentifier().get(0));
+        assertEquals("beaconContent id2 is the same after deserialization", beacon2.getBeaconFetchInfo().getContent().getStaticIdentifier().get(1), beacon.getBeaconFetchInfo().getContent().getStaticIdentifier().get(1));
+        assertEquals("beaconContent id3 is the same after deserialization", beacon2.getBeaconFetchInfo().getContent().getStaticIdentifier().get(2), beacon.getBeaconFetchInfo().getContent().getStaticIdentifier().get(2));
     }
 
     @Test

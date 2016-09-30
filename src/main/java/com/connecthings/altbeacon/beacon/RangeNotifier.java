@@ -23,6 +23,8 @@
  */
 package com.connecthings.altbeacon.beacon;
 
+import com.connecthings.altbeacon.beacon.client.batch.BeaconContentIdentifier;
+
 import java.util.Collection;
 /**
  * This interface is implemented by classes that receive beacon ranging notifications
@@ -35,11 +37,11 @@ import java.util.Collection;
  * @author David G. Young
  *
  */
-public interface RangeNotifier {
+public interface RangeNotifier<BeaconContent extends BeaconContentIdentifier> {
     /**
      * Called once per second to give an estimate of the mDistance to visible beacons
      * @param beacons a collection of <code>Beacon<code> objects that have been seen in the past second
      * @param region the <code>Region</code> object that defines the criteria for the ranged beacons
      */
-    public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region);
+    public void didRangeBeaconsInRegion(Collection<Beacon<BeaconContent>> beacons, Region region);
 }

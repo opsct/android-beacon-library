@@ -40,6 +40,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 
+
 import com.connecthings.altbeacon.beacon.Beacon;
 import com.connecthings.altbeacon.beacon.BeaconManager;
 import com.connecthings.altbeacon.beacon.BeaconParser;
@@ -53,6 +54,7 @@ import com.connecthings.altbeacon.beacon.service.scanner.CycledLeScanner;
 import com.connecthings.altbeacon.beacon.service.scanner.NonBeaconLeScanCallback;
 import com.connecthings.altbeacon.beacon.startup.StartupBroadcastReceiver;
 import com.connecthings.altbeacon.bluetooth.BluetoothCrashResolver;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconDataBatchFetcher;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -91,6 +93,7 @@ public class BeaconService extends Service {
     private boolean mBackgroundFlag = false;
     private ExtraDataBeaconTracker mExtraDataBeaconTracker;
     private ExecutorService mExecutor;
+    private BeaconDataBatchFetcher mBeacondataBatchFetcher;
 
     /*
      * The scan period is how long we wait between restarting the BLE advertisement scans
@@ -214,6 +217,8 @@ public class BeaconService extends Service {
                 }
             }
         }
+
+        mBeacondataBatchFetcher = new BeaconDataBatchFetcher(beaconManager.getBeaconDataBatchProvider(), beaconManager.getMaxDataCacheSize(), beaconManager.getMaxDataCacheTime());
 
         //initialize the extra data beacon tracker
         mExtraDataBeaconTracker = new ExtraDataBeaconTracker(matchBeaconsByServiceUUID);
@@ -360,6 +365,7 @@ public class BeaconService extends Service {
 
         @Override
         public void onCycleEnd() {
+            mBeacondataBatchFetcher.fetch();
             monitoringStatus.updateNewlyOutside();
             processRangeData();
             // If we want to use simulated scanning data, do it here.  This is used for testing in an emulator
@@ -422,7 +428,7 @@ public class BeaconService extends Service {
                         "not processing detections for GATT extra data beacon");
             }
         } else {
-
+            mBeacondataBatchFetcher.addBeacon(beacon);
             monitoringStatus.updateNewlyInsideInRegionsContaining(beacon);
 
             List<Region> matchedRegions = null;

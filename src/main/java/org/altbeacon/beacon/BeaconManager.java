@@ -35,8 +35,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 
-import org.altbeacon.beacon.client.batch.BeaconContentIdentifier;
-import org.altbeacon.beacon.client.batch.BeaconDataBatchFetcher;
+import org.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import org.altbeacon.beacon.client.batch.BeaconDataBatchProvider;
 import org.altbeacon.beacon.logging.LogManager;
 import org.altbeacon.beacon.logging.Loggers;
@@ -477,7 +476,7 @@ public class BeaconManager {
      * @param notifier
      * @see RangeNotifier
      */
-    public void addRangeNotifier(RangeNotifier<? extends BeaconContentIdentifier> notifier){
+    public void addRangeNotifier(RangeNotifier<? extends BeaconIdentifiers> notifier){
         if(notifier != null){
             synchronized (rangeNotifiers){
                 rangeNotifiers.add(notifier);
@@ -491,7 +490,7 @@ public class BeaconManager {
      * @param notifier
      * @see RangeNotifier
      */
-    public boolean removeRangeNotifier(RangeNotifier<? extends BeaconContentIdentifier> notifier){
+    public boolean removeRangeNotifier(RangeNotifier<? extends BeaconIdentifiers> notifier){
         synchronized (rangeNotifiers){
             return rangeNotifiers.remove(notifier);
         }

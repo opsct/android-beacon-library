@@ -9,9 +9,13 @@ import java.util.List;
 /**
  * Created by Connecthings on 28/09/16.
  */
-public abstract class BeaconContentIdentifier implements Parcelable{
+public interface BeaconIdentifiers {
 
 
-    public abstract List<Identifier> getStaticIdentifier();
+    List<Identifier> getStaticIdentifiers();
+
+    List<Identifier> getEphemeralIdentifiers();
+
+    boolean hasEphemeralIdentifiers();
 
 }

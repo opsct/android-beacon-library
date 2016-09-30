@@ -23,9 +23,7 @@
  */
 package org.altbeacon.beacon;
 
-import android.os.Parcelable;
-
-import org.altbeacon.beacon.client.batch.BeaconContentIdentifier;
+import org.altbeacon.beacon.client.batch.BeaconIdentifiers;
 
 import java.util.Collection;
 /**
@@ -39,7 +37,7 @@ import java.util.Collection;
  * @author David G. Young
  *
  */
-public interface RangeNotifier<BeaconContent extends BeaconContentIdentifier> {
+public interface RangeNotifier<BeaconContent extends BeaconIdentifiers> {
     /**
      * Called once per second to give an estimate of the mDistance to visible beacons
      * @param beacons a collection of <code>Beacon<code> objects that have been seen in the past second

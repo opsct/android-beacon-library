@@ -30,9 +30,8 @@ import org.altbeacon.beacon.client.BeaconDataFactory;
 import org.altbeacon.beacon.client.NullBeaconDataFactory;
 import org.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
 import org.altbeacon.beacon.client.batch.BeaconContentSimple;
-import org.altbeacon.beacon.client.batch.BeaconEphemeralIdentifier;
 import org.altbeacon.beacon.client.batch.BeaconFetchInfo;
-import org.altbeacon.beacon.client.batch.BeaconContentIdentifier;
+import org.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import org.altbeacon.beacon.distance.DistanceCalculator;
 import org.altbeacon.beacon.logging.LogManager;
 
@@ -59,7 +58,7 @@ import java.util.List;
  * @author  David G. Young
  * @see     Region#matchesBeacon(Beacon Beacon)
  */
-public class Beacon<BeaconContent extends BeaconContentIdentifier> implements Parcelable {
+public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelable {
     private static final String TAG = "Beacon";
 
     private static final List<Long> UNMODIFIABLE_LIST_OF_LONG =
@@ -583,14 +582,14 @@ public class Beacon<BeaconContent extends BeaconContentIdentifier> implements Pa
         return mBeaconFetchInfo.getContent();
     }
 
-    public BeaconFetchInfo<? extends BeaconContentIdentifier> getBeaconFetchInfo() {
+    public BeaconFetchInfo<? extends BeaconIdentifiers> getBeaconFetchInfo() {
         return mBeaconFetchInfo;
     }
 
     public void updateBeaconFetchInfo(BeaconFetchInfo<BeaconContent> beaconFetchInfo) {
         this.mBeaconFetchInfo = beaconFetchInfo;
-        if(beaconFetchInfo != null && beaconFetchInfo.getContent() !=null && beaconFetchInfo.getContent() instanceof BeaconEphemeralIdentifier){
-            this.mStaticIdentifiers = beaconFetchInfo.getContent().getStaticIdentifier();
+        if(beaconFetchInfo != null && beaconFetchInfo.getContent() !=null && beaconFetchInfo.getContent().hasEphemeralIdentifiers()){
+            this.mStaticIdentifiers = beaconFetchInfo.getContent().getStaticIdentifiers();
         }
     }
 

@@ -26,7 +26,7 @@ package org.altbeacon.beacon;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import org.altbeacon.beacon.client.batch.BeaconContentIdentifier;
+import org.altbeacon.beacon.client.batch.BeaconIdentifiers;
 
 import java.util.ArrayList;
 
@@ -42,7 +42,7 @@ import java.util.ArrayList;
  *
  * @author  David G. Young
  */
-public class AltBeacon<BeaconContent extends BeaconContentIdentifier> extends Beacon<BeaconContent> {
+public class AltBeacon<BeaconContent extends BeaconIdentifiers> extends Beacon<BeaconContent> {
     private static final String TAG = "AltBeacon";
 
     /**

@@ -27,7 +27,7 @@ import android.annotation.TargetApi;
 import android.app.IntentService;
 import android.content.Intent;
 
-import org.altbeacon.beacon.client.batch.BeaconContentIdentifier;
+import org.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import org.altbeacon.beacon.logging.LogManager;
 import org.altbeacon.beacon.service.MonitoringData;
 import org.altbeacon.beacon.service.RangingData;
@@ -62,7 +62,7 @@ public class BeaconIntentProcessor extends IntentService {
             if (rangingData.getBeacons() == null) {
                 LogManager.w(TAG, "Ranging data has a null beacons collection");
             }
-            Set<RangeNotifier<? extends BeaconContentIdentifier>> notifiers = BeaconManager.getInstanceForApplication(this).getRangingNotifiers();
+            Set<RangeNotifier<? extends BeaconIdentifiers>> notifiers = BeaconManager.getInstanceForApplication(this).getRangingNotifiers();
             java.util.Collection<Beacon> beacons = rangingData.getBeacons();
             if (notifiers != null) {
                 for(RangeNotifier notifier : notifiers){

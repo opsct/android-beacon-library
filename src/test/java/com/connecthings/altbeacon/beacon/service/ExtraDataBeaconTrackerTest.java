@@ -1,6 +1,8 @@
-package org.altbeacon.beacon.service;
+package com.connecthings.altbeacon.beacon.service;
 
 import com.connecthings.altbeacon.beacon.Beacon;
+import com.connecthings.altbeacon.beacon.service.ExtraDataBeaconTracker;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

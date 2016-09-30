@@ -1,4 +1,4 @@
-package org.altbeacon.beacon.service;
+package com.connecthings.altbeacon.beacon.service;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -9,6 +9,7 @@ import com.connecthings.altbeacon.beacon.BeaconManager;
 import com.connecthings.altbeacon.beacon.Region;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
 import com.connecthings.altbeacon.beacon.logging.Loggers;
+import com.connecthings.altbeacon.beacon.service.MonitoringStatus;
 import com.connecthings.altbeacon.beacon.service.scanner.CycledLeScanCallback;
 import org.junit.Before;
 import org.junit.Test;

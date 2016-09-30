@@ -3,22 +3,20 @@ package com.connecthings.altbeacon.beacon;
 import android.annotation.TargetApi;
 import android.os.Build;
 
-import static android.test.MoreAsserts.assertNotEqual;
+import com.connecthings.altbeacon.beacon.logging.LogManager;
+import com.connecthings.altbeacon.beacon.logging.Loggers;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
+import java.util.Arrays;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import com.connecthings.altbeacon.beacon.logging.LogManager;
-import com.connecthings.altbeacon.beacon.logging.Loggers;
-import org.robolectric.RobolectricTestRunner;
-
-import org.junit.runner.RunWith;
-import org.junit.Test;
-import org.robolectric.annotation.Config;
-
-import java.util.Arrays;
 
 @Config(sdk = 18)
 

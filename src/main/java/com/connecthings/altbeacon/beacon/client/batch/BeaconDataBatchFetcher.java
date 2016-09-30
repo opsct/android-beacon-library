@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Created by Connecthings on 27/09/16.
  */
-public class BeaconDataBatchFetcher<BeaconContent extends BeaconContentIdentifier> implements BeaconDataBatchNotifier<BeaconContent>{
+public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> implements BeaconDataBatchNotifier<BeaconContent>{
 
     private BeaconDataBatchProvider mBeaconDataBatchProvider;
 
@@ -76,18 +76,18 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconContentIdentifie
     public void onBatchUpdate(List<BeaconContent> beaconContents) {
         BeaconFetchInfo<BeaconContent> fetchInfo;
         for(BeaconContent beaconContent : beaconContents){
-            fetchInfo = beaconContentInfoCache.get(beaconContent.getStaticIdentifier());
-            if(fetchInfo == null && beaconContent instanceof BeaconEphemeralIdentifier){
-                fetchInfo = beaconContentInfoCache.get(((BeaconEphemeralIdentifier) beaconContent).getEphemeralIdentifier());
+            fetchInfo = beaconContentInfoCache.get(beaconContent.getStaticIdentifiers());
+            if(fetchInfo == null && beaconContent.hasEphemeralIdentifiers()){
+                fetchInfo = beaconContentInfoCache.get(beaconContent.getEphemeralIdentifiers().toString());
             }
             if(fetchInfo == null){
                 fetchInfo = new BeaconFetchInfo<BeaconContent>(beaconContent, mMaxBeaconCacheTime, BeaconContentFetchStatus.SUCCESS);
             }else{
                 fetchInfo.updateBeaconContent(beaconContent);
             }
-            beaconContentInfoCache.put(beaconContent.getStaticIdentifier().toString(), fetchInfo);
-            if(beaconContent instanceof  BeaconEphemeralIdentifier){
-                beaconContentInfoCache.put(((BeaconEphemeralIdentifier) beaconContent).getEphemeralIdentifier().toString(), fetchInfo);
+            beaconContentInfoCache.put(beaconContent.getStaticIdentifiers().toString(), fetchInfo);
+            if(beaconContent.hasEphemeralIdentifiers()){
+                beaconContentInfoCache.put(beaconContent.getEphemeralIdentifiers().toString(), fetchInfo);
             }
         }
     }

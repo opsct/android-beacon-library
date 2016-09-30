@@ -35,6 +35,8 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 
+import com.connecthings.altbeacon.beacon.client.batch.BeaconDataBatchProvider;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
 import com.connecthings.altbeacon.beacon.logging.Loggers;
 import com.connecthings.altbeacon.beacon.service.BeaconService;
@@ -46,9 +48,6 @@ import com.connecthings.altbeacon.beacon.service.RunningAverageRssiFilter;
 import com.connecthings.altbeacon.beacon.service.StartRMData;
 import com.connecthings.altbeacon.beacon.service.scanner.NonBeaconLeScanCallback;
 import com.connecthings.altbeacon.beacon.simulator.BeaconSimulator;
-import com.connecthings.altbeacon.beacon.client.batch.BeaconContentIdentifier;
-import com.connecthings.altbeacon.beacon.client.batch.BeaconDataBatchFetcher;
-import com.connecthings.altbeacon.beacon.client.batch.BeaconDataBatchProvider;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -477,7 +476,7 @@ public class BeaconManager {
      * @param notifier
      * @see RangeNotifier
      */
-    public void addRangeNotifier(RangeNotifier<? extends BeaconContentIdentifier> notifier){
+    public void addRangeNotifier(RangeNotifier<? extends BeaconIdentifiers> notifier){
         if(notifier != null){
             synchronized (rangeNotifiers){
                 rangeNotifiers.add(notifier);
@@ -491,7 +490,7 @@ public class BeaconManager {
      * @param notifier
      * @see RangeNotifier
      */
-    public boolean removeRangeNotifier(RangeNotifier<? extends BeaconContentIdentifier> notifier){
+    public boolean removeRangeNotifier(RangeNotifier<? extends BeaconIdentifiers> notifier){
         synchronized (rangeNotifiers){
             return rangeNotifiers.remove(notifier);
         }

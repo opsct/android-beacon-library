@@ -8,6 +8,7 @@ import com.connecthings.altbeacon.beacon.BeaconManager;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
 import com.connecthings.altbeacon.beacon.logging.Loggers;
 import com.connecthings.altbeacon.beacon.service.scanner.CycledLeScanCallback;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

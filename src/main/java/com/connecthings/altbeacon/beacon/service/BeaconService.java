@@ -40,12 +40,12 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 
-
 import com.connecthings.altbeacon.beacon.Beacon;
 import com.connecthings.altbeacon.beacon.BeaconManager;
 import com.connecthings.altbeacon.beacon.BeaconParser;
 import com.connecthings.altbeacon.beacon.BuildConfig;
 import com.connecthings.altbeacon.beacon.Region;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconDataBatchFetcher;
 import com.connecthings.altbeacon.beacon.distance.DistanceCalculator;
 import com.connecthings.altbeacon.beacon.distance.ModelSpecificDistanceCalculator;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
@@ -54,7 +54,6 @@ import com.connecthings.altbeacon.beacon.service.scanner.CycledLeScanner;
 import com.connecthings.altbeacon.beacon.service.scanner.NonBeaconLeScanCallback;
 import com.connecthings.altbeacon.beacon.startup.StartupBroadcastReceiver;
 import com.connecthings.altbeacon.bluetooth.BluetoothCrashResolver;
-import com.connecthings.altbeacon.beacon.client.batch.BeaconDataBatchFetcher;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;

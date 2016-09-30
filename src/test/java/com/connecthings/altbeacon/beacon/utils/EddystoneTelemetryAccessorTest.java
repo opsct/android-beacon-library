@@ -1,14 +1,14 @@
 package com.connecthings.altbeacon.beacon.utils;
 
+import com.connecthings.altbeacon.beacon.Beacon;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
 import java.net.MalformedURLException;
 import java.util.ArrayList;
-
-import com.connecthings.altbeacon.beacon.Beacon;
-import org.junit.Test;
-import org.robolectric.RobolectricTestRunner;
-
-import org.junit.runner.RunWith;
-import org.robolectric.annotation.Config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

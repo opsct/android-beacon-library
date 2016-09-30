@@ -1,5 +1,3 @@
-import com.android.builder.core.BuilderConstants
-
 ext {
     /*isSnapshot = !project.hasProperty('release')
     isSnapCi = System.getenv('SNAP_CI') != null

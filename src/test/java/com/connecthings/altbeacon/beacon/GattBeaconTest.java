@@ -5,6 +5,7 @@ import android.content.Context;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
 import com.connecthings.altbeacon.beacon.logging.Loggers;
 import com.connecthings.altbeacon.beacon.utils.UrlBeaconUrlCompressor;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;

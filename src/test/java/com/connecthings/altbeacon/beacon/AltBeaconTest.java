@@ -2,13 +2,12 @@ package com.connecthings.altbeacon.beacon;
 
 import android.os.Parcel;
 
-import static org.junit.Assert.assertEquals;
-
-import org.robolectric.RobolectricTestRunner;
-
-import org.junit.runner.RunWith;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
+import static org.junit.Assert.assertEquals;
 
 @Config(sdk = 18)
 

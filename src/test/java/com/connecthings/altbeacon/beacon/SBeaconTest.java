@@ -5,15 +5,15 @@ import android.bluetooth.BluetoothDevice;
 import android.os.Build;
 import android.os.Parcel;
 
+import com.connecthings.altbeacon.beacon.client.batch.BeaconIdentifiers;
 
-import com.connecthings.altbeacon.beacon.client.batch.BeaconContentIdentifier;
 import org.junit.Test;
+import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
-import org.robolectric.annotation.Config;
 
 @Config(sdk = 18)
 
@@ -45,7 +45,7 @@ public class SBeaconTest {
         return data;
     }
 
-    class SBeacon<BeaconContent extends BeaconContentIdentifier> extends Beacon<BeaconContent> {
+    class SBeacon<BeaconContent extends BeaconIdentifiers> extends Beacon<BeaconContent> {
         private static final String TAG = "SBeacon";
         private int mTime;
 

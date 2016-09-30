@@ -16,7 +16,6 @@
  */
 package com.connecthings.altbeacon.beacon.logging;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -29,7 +28,6 @@ import static android.util.Log.ERROR;
 import static android.util.Log.WARN;
 import static junit.framework.Assert.assertEquals;
 import static org.hamcrest.Matchers.empty;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 /**

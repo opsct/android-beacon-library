@@ -6,12 +6,10 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 
 import com.connecthings.altbeacon.beacon.logging.LogManager;
-import com.connecthings.altbeacon.beacon.logging.Logger;
-
 /**
  * Created by Connecthings on 27/09/16.
  */
-public class BeaconFetchInfo<BeaconContent extends BeaconContentIdentifier> implements Parcelable{
+public class BeaconFetchInfo<BeaconContent extends BeaconIdentifiers> implements Parcelable{
 
     private static final String TAG = "BeaconFetchInfo";
 
@@ -83,7 +81,7 @@ public class BeaconFetchInfo<BeaconContent extends BeaconContentIdentifier> impl
             dest.writeString("");
         }else{
             dest.writeString(content.getClass().getCanonicalName());
-            dest.writeParcelable(content, 0);
+            dest.writeParcelable((Parcelable)content, 0);
         }
     }
 

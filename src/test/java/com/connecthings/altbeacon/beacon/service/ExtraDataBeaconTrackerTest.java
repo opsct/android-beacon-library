@@ -1,6 +1,7 @@
 package com.connecthings.altbeacon.beacon.service;
 
 import com.connecthings.altbeacon.beacon.Beacon;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,11 +11,9 @@ import org.robolectric.annotation.Config;
 import java.util.ArrayList;
 import java.util.List;
 
-import dalvik.annotation.TestTargetClass;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 18)

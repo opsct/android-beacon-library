@@ -1,22 +1,20 @@
 package com.connecthings.altbeacon.beacon.org.altbeacon.beacon.simulator;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import com.connecthings.altbeacon.beacon.AltBeaconParser;
 import com.connecthings.altbeacon.beacon.Beacon;
 import com.connecthings.altbeacon.beacon.simulator.StaticBeaconSimulator;
-import org.robolectric.RobolectricTestRunner;
 
-import org.junit.runner.RunWith;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
 
-import org.robolectric.annotation.Config;
+import static org.junit.Assert.assertEquals;
 
 @Config(sdk = 18)
 

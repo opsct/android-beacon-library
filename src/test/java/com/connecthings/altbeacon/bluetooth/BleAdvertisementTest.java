@@ -3,10 +3,9 @@ package com.connecthings.altbeacon.bluetooth;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import static org.junit.Assert.assertEquals;
-
-import org.robolectric.annotation.Config;
 
 @Config(sdk = 18)
 

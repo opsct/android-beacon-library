@@ -118,4 +118,10 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         }
         batchErrorLimiter.addError();
     }
+
+    public void clearCache(){
+        synchronized (beaconsLock) {
+            beaconContentInfoCache.clear();
+        }
+    }
 }

@@ -764,6 +764,19 @@ public class BeaconManager {
         serviceMessenger.send(msg);
     }
 
+    @TargetApi(18)
+    public void clearBeaconContentCache() throws RemoteException {
+        if (android.os.Build.VERSION.SDK_INT < 18) {
+            LogManager.w(TAG, "Not supported prior to API 18.  Method invocation will be ignored");
+            return;
+        }
+        if (serviceMessenger == null) {
+            throw new RemoteException("The BeaconManager is not bound to the service.  Call beaconManager.bind(BeaconConsumer consumer) and wait for a callback to onBeaconServiceConnect()");
+        }
+        Message msg = Message.obtain(null, BeaconService.MSG_CLEAR_BEACON_CONTENT_CACHE, 0, 0);
+        serviceMessenger.send(msg);
+    }
+
     private String callbackPackageName() {
         String packageName = mContext.getPackageName();
         LogManager.d(TAG, "callback packageName: %s", packageName);

@@ -138,6 +138,7 @@ public class BeaconService extends Service {
     public static final int MSG_START_MONITORING = 4;
     public static final int MSG_STOP_MONITORING = 5;
     public static final int MSG_SET_SCAN_PERIODS = 6;
+    public static final int MSG_CLEAR_BEACON_CONTENT_CACHE = 7;
 
     static class IncomingHandler extends Handler {
         private final WeakReference<BeaconService> mService;
@@ -176,6 +177,10 @@ public class BeaconService extends Service {
                     case MSG_SET_SCAN_PERIODS:
                         LogManager.i(TAG, "set scan intervals received");
                         service.setScanPeriods(startRMData.getScanPeriod(), startRMData.getBetweenScanPeriod(), startRMData.getBackgroundFlag());
+                        break;
+                    case MSG_CLEAR_BEACON_CONTENT_CACHE:
+                        LogManager.i(TAG, "clear beacon content cache");
+                        service.clearBeaconContentCache();
                         break;
                     default:
                         super.handleMessage(msg);
@@ -345,6 +350,10 @@ public class BeaconService extends Service {
 
     public void setScanPeriods(long scanPeriod, long betweenScanPeriod, boolean backgroundFlag) {
         mCycledScanner.setScanPeriods(scanPeriod, betweenScanPeriod, backgroundFlag);
+    }
+
+    public void clearBeaconContentCache(){
+        mBeacondataBatchFetcher.clearCache();
     }
 
     protected final CycledLeScanCallback mCycledLeScanCallback = new CycledLeScanCallback() {

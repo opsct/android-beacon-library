@@ -30,7 +30,7 @@ import org.altbeacon.beacon.client.BeaconDataFactory;
 import org.altbeacon.beacon.client.NullBeaconDataFactory;
 import org.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
 import org.altbeacon.beacon.client.batch.BeaconContentSimple;
-import org.altbeacon.beacon.client.batch.BeaconFetchInfo;
+import org.altbeacon.beacon.client.batch.BeaconContentFetchInfo;
 import org.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import org.altbeacon.beacon.distance.DistanceCalculator;
 import org.altbeacon.beacon.logging.LogManager;
@@ -177,7 +177,7 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
     /**
      * A Content associate to the beacon
      */
-    protected BeaconFetchInfo<BeaconContent> mBeaconFetchInfo;
+    protected BeaconContentFetchInfo<BeaconContent> mBeaconFetchInfo;
 
     /**
      * Required for making object Parcelable.  If you override this class, you must provide an
@@ -259,7 +259,7 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
         mBluetoothName = in.readString();
         mParserIdentifier = in.readString();
         mMultiFrameBeacon = in.readByte() != 0;
-        mBeaconFetchInfo = in.readParcelable(BeaconFetchInfo.class.getClassLoader());
+        mBeaconFetchInfo = in.readParcelable(BeaconContentFetchInfo.class.getClassLoader());
     }
 
     /**
@@ -582,11 +582,11 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
         return mBeaconFetchInfo.getContent();
     }
 
-    public BeaconFetchInfo<? extends BeaconIdentifiers> getBeaconFetchInfo() {
+    public BeaconContentFetchInfo<BeaconContent> getBeaconFetchInfo() {
         return mBeaconFetchInfo;
     }
 
-    public void updateBeaconFetchInfo(BeaconFetchInfo<BeaconContent> beaconFetchInfo) {
+    public void updateBeaconFetchInfo(BeaconContentFetchInfo<BeaconContent> beaconFetchInfo) {
         this.mBeaconFetchInfo = beaconFetchInfo;
         if(beaconFetchInfo != null && beaconFetchInfo.getContent() !=null && beaconFetchInfo.getContent().hasEphemeralIdentifiers()){
             this.mStaticIdentifiers = beaconFetchInfo.getContent().getStaticIdentifiers();
@@ -739,7 +739,7 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
                 }
             }
             if(mBeacon.mBeaconFetchInfo==null) {
-                mBeacon.mBeaconFetchInfo = new BeaconFetchInfo(new BeaconContentSimple(mBeacon.mStaticIdentifiers), 5*60*1000, BeaconContentFetchStatus.IN_PROGRESS);
+                mBeacon.mBeaconFetchInfo = new BeaconContentFetchInfo(new BeaconContentSimple(mBeacon.mStaticIdentifiers), 5*60*1000, BeaconContentFetchStatus.IN_PROGRESS);
             }
             return mBeacon;
         }
@@ -764,7 +764,7 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
             return this;
         }
 
-        public Builder setBeaconFetchInfo(BeaconFetchInfo<?> beaconFetchInfo){
+        public Builder setBeaconFetchInfo(BeaconContentFetchInfo<?> beaconFetchInfo){
             this.mBeacon.mBeaconFetchInfo = beaconFetchInfo;
             return this;
         }

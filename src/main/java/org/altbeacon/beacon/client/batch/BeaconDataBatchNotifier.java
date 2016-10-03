@@ -10,8 +10,8 @@ import java.util.List;
 
 public interface BeaconDataBatchNotifier<BeaconContent extends BeaconIdentifiers> {
 
-    public void onBatchUpdate(List<BeaconContent> beaconContents);
+    public void onBatchUpdate(List<BeaconContent> beaconContents, List<Beacon<BeaconContent>> unresolvedBeacons);
 
-    public void onBatchError(List<Beacon> beacons, DataBatchProviderException providerException);
+    public void onBatchError(List<Beacon<BeaconContent>> beacons, DataBatchProviderException providerException);
 
 }

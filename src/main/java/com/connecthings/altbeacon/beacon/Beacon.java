@@ -30,10 +30,11 @@ import com.connecthings.altbeacon.beacon.client.BeaconDataFactory;
 import com.connecthings.altbeacon.beacon.client.NullBeaconDataFactory;
 import com.connecthings.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
 import com.connecthings.altbeacon.beacon.client.batch.BeaconContentSimple;
-import com.connecthings.altbeacon.beacon.client.batch.BeaconFetchInfo;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconContentFetchInfo;
 import com.connecthings.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import com.connecthings.altbeacon.beacon.distance.DistanceCalculator;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
+
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -177,7 +178,7 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
     /**
      * A Content associate to the beacon
      */
-    protected BeaconFetchInfo<BeaconContent> mBeaconFetchInfo;
+    protected BeaconContentFetchInfo<BeaconContent> mBeaconFetchInfo;
 
     /**
      * Required for making object Parcelable.  If you override this class, you must provide an
@@ -259,7 +260,7 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
         mBluetoothName = in.readString();
         mParserIdentifier = in.readString();
         mMultiFrameBeacon = in.readByte() != 0;
-        mBeaconFetchInfo = in.readParcelable(BeaconFetchInfo.class.getClassLoader());
+        mBeaconFetchInfo = in.readParcelable(BeaconContentFetchInfo.class.getClassLoader());
     }
 
     /**
@@ -582,11 +583,11 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
         return mBeaconFetchInfo.getContent();
     }
 
-    public BeaconFetchInfo<? extends BeaconIdentifiers> getBeaconFetchInfo() {
+    public BeaconContentFetchInfo<BeaconContent> getBeaconFetchInfo() {
         return mBeaconFetchInfo;
     }
 
-    public void updateBeaconFetchInfo(BeaconFetchInfo<BeaconContent> beaconFetchInfo) {
+    public void updateBeaconFetchInfo(BeaconContentFetchInfo<BeaconContent> beaconFetchInfo) {
         this.mBeaconFetchInfo = beaconFetchInfo;
         if(beaconFetchInfo != null && beaconFetchInfo.getContent() !=null && beaconFetchInfo.getContent().hasEphemeralIdentifiers()){
             this.mStaticIdentifiers = beaconFetchInfo.getContent().getStaticIdentifiers();
@@ -739,7 +740,7 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
                 }
             }
             if(mBeacon.mBeaconFetchInfo==null) {
-                mBeacon.mBeaconFetchInfo = new BeaconFetchInfo(new BeaconContentSimple(mBeacon.mStaticIdentifiers), 5*60*1000, BeaconContentFetchStatus.IN_PROGRESS);
+                mBeacon.mBeaconFetchInfo = new BeaconContentFetchInfo(new BeaconContentSimple(mBeacon.mStaticIdentifiers), 5*60*1000, BeaconContentFetchStatus.IN_PROGRESS);
             }
             return mBeacon;
         }
@@ -764,7 +765,7 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
             return this;
         }
 
-        public Builder setBeaconFetchInfo(BeaconFetchInfo<?> beaconFetchInfo){
+        public Builder setBeaconFetchInfo(BeaconContentFetchInfo<?> beaconFetchInfo){
             this.mBeacon.mBeaconFetchInfo = beaconFetchInfo;
             return this;
         }

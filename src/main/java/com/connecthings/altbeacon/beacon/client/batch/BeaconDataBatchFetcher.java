@@ -13,10 +13,11 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
 
     private BeaconDataBatchProvider mBeaconDataBatchProvider;
 
-    private FixSizeCache<String, BeaconFetchInfo<BeaconContent>> beaconContentInfoCache;
+    private FixSizeCache<String, BeaconContentFetchInfo<BeaconContent>> beaconContentInfoCache;
     private int mMaxBeaconCacheTime;
     private List<Beacon> beacons;
     private final Object beaconsLock = new Object();
+    private BeaconBatchFetchInfo<BeaconContent> lastBatchFetchInfo;
 
     public BeaconDataBatchFetcher(BeaconDataBatchProvider beaconDataBatchProvider, int cacheSize, int maxBeaconCacheTime){
         this.mBeaconDataBatchProvider = beaconDataBatchProvider;
@@ -35,7 +36,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         synchronized (beaconsLock) {
             if (mBeaconDataBatchProvider != null) {
                 List<Beacon> beaconsToFetch = new ArrayList<>(beacons.size());
-                BeaconFetchInfo<BeaconContent> fetchInfo = null;
+                BeaconContentFetchInfo<BeaconContent> fetchInfo = null;
                 String id;
                 for (Beacon beacon : beacons) {
                     if (!beacon.isExtraBeaconData()) {
@@ -55,7 +56,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
                         if (fetchInfo == null || (fetchInfo.isTimeToUpdate() && fetchInfo.getStatus() != BeaconContentFetchStatus.IN_PROGRESS)) {
                             beaconsToFetch.add(beacon);
                             if (fetchInfo == null) {
-                                fetchInfo = new BeaconFetchInfo<>(null, mMaxBeaconCacheTime, BeaconContentFetchStatus.IN_PROGRESS);
+                                fetchInfo = new BeaconContentFetchInfo<>(null, mMaxBeaconCacheTime, BeaconContentFetchStatus.IN_PROGRESS);
                             } else {
                                 fetchInfo.updateStatus(BeaconContentFetchStatus.IN_PROGRESS);
                             }
@@ -73,15 +74,15 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
     }
 
     @Override
-    public void onBatchUpdate(List<BeaconContent> beaconContents) {
-        BeaconFetchInfo<BeaconContent> fetchInfo;
+    public void onBatchUpdate(List<BeaconContent> beaconContents, List<Beacon<BeaconContent>> unresolvedBeacons) {
+        BeaconContentFetchInfo<BeaconContent> fetchInfo;
         for(BeaconContent beaconContent : beaconContents){
             fetchInfo = beaconContentInfoCache.get(beaconContent.getStaticIdentifiers());
             if(fetchInfo == null && beaconContent.hasEphemeralIdentifiers()){
                 fetchInfo = beaconContentInfoCache.get(beaconContent.getEphemeralIdentifiers().toString());
             }
             if(fetchInfo == null){
-                fetchInfo = new BeaconFetchInfo<BeaconContent>(beaconContent, mMaxBeaconCacheTime, BeaconContentFetchStatus.SUCCESS);
+                fetchInfo = new BeaconContentFetchInfo<BeaconContent>(beaconContent, mMaxBeaconCacheTime, BeaconContentFetchStatus.SUCCESS);
             }else{
                 fetchInfo.updateBeaconContent(beaconContent);
             }
@@ -90,11 +91,20 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
                 beaconContentInfoCache.put(beaconContent.getEphemeralIdentifiers().toString(), fetchInfo);
             }
         }
+        for(Beacon<BeaconContent> beacon : unresolvedBeacons){
+            fetchInfo = beaconContentInfoCache.get(beacon.getIdentifiers().toString());
+            if(fetchInfo == null){
+                fetchInfo = beaconContentInfoCache.get(beacon.getEphemeralIdentifiers().toString());
+            }
+            if(fetchInfo != null){
+                fetchInfo.updateStatus(BeaconContentFetchStatus.NO_CONTENT);
+            }
+        }
     }
 
     @Override
-    public void onBatchError(List<Beacon> beacons, DataBatchProviderException providerException) {
-        BeaconFetchInfo<BeaconContent> fetchInfo;
+    public void onBatchError(List<Beacon<BeaconContent>> beacons, DataBatchProviderException providerException) {
+        BeaconContentFetchInfo<BeaconContent> fetchInfo;
         for(Beacon beacon : beacons){
             fetchInfo = beaconContentInfoCache.get(beacon.getIdentifiers());
             if(fetchInfo == null){

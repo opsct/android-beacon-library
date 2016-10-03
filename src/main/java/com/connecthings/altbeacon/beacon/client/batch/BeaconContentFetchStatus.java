@@ -8,5 +8,6 @@ public enum BeaconContentFetchStatus {
     NO_CONTENT,
     SUCCESS,
     BACKEND_ERROR,
-    NETWORK_ERROR
+    NETWORK_ERROR,
+    DB_ERROR
 }

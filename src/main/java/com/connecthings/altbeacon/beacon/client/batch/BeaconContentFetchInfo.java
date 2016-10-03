@@ -6,10 +6,11 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 
 import com.connecthings.altbeacon.beacon.logging.LogManager;
+
 /**
  * Created by Connecthings on 27/09/16.
  */
-public class BeaconFetchInfo<BeaconContent extends BeaconIdentifiers> implements Parcelable{
+public class BeaconContentFetchInfo<BeaconContent extends BeaconIdentifiers> implements Parcelable{
 
     private static final String TAG = "BeaconFetchInfo";
 
@@ -21,18 +22,18 @@ public class BeaconFetchInfo<BeaconContent extends BeaconIdentifiers> implements
 
     private long maxCacheTime;
 
-    public BeaconFetchInfo(BeaconContent content, long maxCacheTime, BeaconContentFetchStatus status) {
+    public BeaconContentFetchInfo(BeaconContent content, long maxCacheTime, BeaconContentFetchStatus status) {
         this.content = content;
         this.maxCacheTime = maxCacheTime;
         this.status = status;
         nextUpdateTime = SystemClock.elapsedRealtime() + maxCacheTime;
     }
 
-    private BeaconFetchInfo(Parcel from){
+    private BeaconContentFetchInfo(Parcel from){
         readFromParcel(from);
     }
 
-    public BeaconFetchInfo(long maxCacheTime, BeaconContentFetchStatus status){
+    public BeaconContentFetchInfo(long maxCacheTime, BeaconContentFetchStatus status){
         this(null, maxCacheTime, status);
     }
 
@@ -99,14 +100,14 @@ public class BeaconFetchInfo<BeaconContent extends BeaconIdentifiers> implements
         }
     }
 
-    public static final Creator<BeaconFetchInfo> CREATOR
-            = new Creator<BeaconFetchInfo>() {
-        public BeaconFetchInfo createFromParcel(Parcel in) {
-            return new BeaconFetchInfo(in);
+    public static final Creator<BeaconContentFetchInfo> CREATOR
+            = new Creator<BeaconContentFetchInfo>() {
+        public BeaconContentFetchInfo createFromParcel(Parcel in) {
+            return new BeaconContentFetchInfo(in);
         }
 
-        public BeaconFetchInfo[] newArray(int size) {
-            return new BeaconFetchInfo[size];
+        public BeaconContentFetchInfo[] newArray(int size) {
+            return new BeaconContentFetchInfo[size];
         }
     };
 }

@@ -1,4 +1,4 @@
-package org.altbeacon.beacon.client.batch;
+package com.connecthings.altbeacon.beacon.client.batch;
 
 import java.util.ArrayList;
 import java.util.List;

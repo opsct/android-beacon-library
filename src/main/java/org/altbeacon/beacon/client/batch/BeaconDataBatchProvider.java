@@ -9,6 +9,6 @@ import java.util.List;
  */
 public interface BeaconDataBatchProvider<BeaconContent extends BeaconIdentifiers> {
 
-    public void fetch(List<Beacon> beacons, BeaconDataBatchNotifier<BeaconContent> beaconDataBatchNotifier);
+    public void fetch(List<Beacon<BeaconContent>> beacons, BeaconDataBatchNotifier<BeaconContent> beaconDataBatchNotifier);
 
 }

@@ -18,9 +18,11 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
     private List<Beacon> beacons;
     private final Object beaconsLock = new Object();
     private BeaconBatchFetchInfo<BeaconContent> lastBatchFetchInfo;
+    private BatchCallProviderLimiter batchErrorLimiter;
 
     public BeaconDataBatchFetcher(BeaconDataBatchProvider beaconDataBatchProvider, int cacheSize, int maxBeaconCacheTime){
         this.mBeaconDataBatchProvider = beaconDataBatchProvider;
+        this.batchErrorLimiter = new BatchCallProviderLimiter();
         beaconContentInfoCache = new FixSizeCache<>(cacheSize);
         this.mMaxBeaconCacheTime = maxBeaconCacheTime;
         beacons = new ArrayList<>(10);
@@ -34,7 +36,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
 
     public void fetch(){
         synchronized (beaconsLock) {
-            if (mBeaconDataBatchProvider != null) {
+            if (mBeaconDataBatchProvider != null && batchErrorLimiter.isTimeToCallBatchProvider()) {
                 List<Beacon> beaconsToFetch = new ArrayList<>(beacons.size());
                 BeaconContentFetchInfo<BeaconContent> fetchInfo = null;
                 String id;
@@ -114,5 +116,6 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
                 fetchInfo.updateStatus(providerException.getStatus());
             }
         }
+        batchErrorLimiter.addError();
     }
 }

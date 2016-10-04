@@ -71,7 +71,9 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
                         }
                     }
                 }
-                this.mBeaconDataBatchProvider.fetch(beaconsToFetch, this);
+                if(beaconsToFetch.size() != 0) {
+                    this.mBeaconDataBatchProvider.fetch(beaconsToFetch, this);
+                }
             }
             beacons.clear();
         }
@@ -81,12 +83,13 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
     public void onBatchUpdate(List<BeaconContent> beaconContents, List<Beacon<BeaconContent>> unresolvedBeacons) {
         BeaconContentFetchInfo<BeaconContent> fetchInfo;
         for(BeaconContent beaconContent : beaconContents){
-            fetchInfo = beaconContentInfoCache.get(beaconContent.getStaticIdentifiers());
+            fetchInfo = beaconContentInfoCache.get(beaconContent.getStaticIdentifiers().toString());
             if(fetchInfo == null && beaconContent.hasEphemeralIdentifiers()){
                 fetchInfo = beaconContentInfoCache.get(beaconContent.getEphemeralIdentifiers().toString());
             }
             if(fetchInfo == null){
                 fetchInfo = new BeaconContentFetchInfo<BeaconContent>(beaconContent, mMaxBeaconCacheTime, BeaconContentFetchStatus.SUCCESS);
+                beaconContentInfoCache.put(beaconContent.getStaticIdentifiers().size()==0?beaconContent.getStaticIdentifiers().toString():beaconContent.getEphemeralIdentifiers().toString(), fetchInfo);
             }else{
                 fetchInfo.updateBeaconContent(beaconContent);
             }

@@ -456,6 +456,10 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
         }
     }
 
+    public boolean hasStaticIdentifiers(){
+        return mStaticIdentifiers.size() != 0;
+    }
+
 
     /**
      * Provides a calculated estimate of the distance to the beacon based on a running average of

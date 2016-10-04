@@ -11,7 +11,6 @@ import java.util.List;
 /**
  * Created by Connecthings on 30/09/16.
  */
-
 public class BeaconContentSimple implements BeaconIdentifiers, Parcelable {
 
 

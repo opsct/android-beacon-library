@@ -1,9 +1,13 @@
 package org.altbeacon.beacon.client.batch;
 
+import android.util.ArraySet;
+
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.utils.FixSizeCache;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -15,7 +19,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
 
     private FixSizeCache<String, BeaconContentFetchInfo<BeaconContent>> beaconContentInfoCache;
     private int mMaxBeaconCacheTime;
-    private List<Beacon> beacons;
+    private Collection<Beacon> beacons;
     private final Object beaconsLock = new Object();
     private BeaconBatchFetchInfo<BeaconContent> lastBatchFetchInfo;
     private BatchCallProviderLimiter batchErrorLimiter;
@@ -25,7 +29,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         this.batchErrorLimiter = new BatchCallProviderLimiter();
         beaconContentInfoCache = new FixSizeCache<>(cacheSize);
         this.mMaxBeaconCacheTime = maxBeaconCacheTime;
-        beacons = new ArrayList<>(10);
+        beacons = new HashSet<>(10);
     }
 
     public void addBeacon(Beacon beacon){
@@ -59,13 +63,13 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
                             beaconsToFetch.add(beacon);
                             if (fetchInfo == null) {
                                 fetchInfo = new BeaconContentFetchInfo<>(null, mMaxBeaconCacheTime, BeaconContentFetchStatus.IN_PROGRESS);
+                                beaconContentInfoCache.put(beacon.hasStaticIdentifiers()?beacon.getIdentifiers().toString():beacon.getEphemeralIdentifiers().toString(), fetchInfo);
                             } else {
                                 fetchInfo.updateStatus(BeaconContentFetchStatus.IN_PROGRESS);
                             }
                         }
                         if (fetchInfo != null) {
                             beacon.updateBeaconFetchInfo(fetchInfo);
-
                         }
                     }
                 }

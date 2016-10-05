@@ -47,9 +47,6 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
                 if(beaconsToFetch.size() !=0) {
                     this.mBeaconDataBatchProvider.fetch(new ArrayList<Beacon>(beaconsToFetch), this);
                 }
-                if(beaconsToFetch.size() != 0) {
-                    this.mBeaconDataBatchProvider.fetch(beaconsToFetch, this);
-                }
             }
             beaconsToFetch.clear();
         }

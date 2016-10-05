@@ -1,7 +1,9 @@
 package com.connecthings.altbeacon.beacon.client.batch;
 
+
 import com.connecthings.altbeacon.beacon.Beacon;
 import com.connecthings.altbeacon.beacon.utils.FixSizeCache;
+import com.connecthings.altbeacon.beacon.logging.LogManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,6 +13,8 @@ import java.util.HashSet;
  * Created by Connecthings on 27/09/16.
  */
 public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> implements BeaconDataBatchNotifier<BeaconContent>{
+
+    private static final String TAG = "BeaconDataBatchFetcher";
 
     private BeaconDataBatchProvider mBeaconDataBatchProvider;
 

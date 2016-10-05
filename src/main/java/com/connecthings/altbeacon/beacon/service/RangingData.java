@@ -58,8 +58,8 @@ public class RangingData implements Parcelable {
     }
     public void writeToParcel(Parcel out, int flags) {
         LogManager.d(TAG, "writing RangingData");
-        out.writeParcelableArray(beacons.toArray(new Parcelable[0]), flags);
         out.writeParcelable(region, flags);
+        out.writeParcelableArray(beacons.toArray(new Parcelable[0]), flags);
         LogManager.d(TAG, "done writing RangingData");
 
     }
@@ -77,11 +77,12 @@ public class RangingData implements Parcelable {
 
     private RangingData(Parcel in) {
         LogManager.d(TAG, "parsing RangingData");
-        Parcelable[] parcelables  = in.readParcelableArray(this.getClass().getClassLoader());
+        region = in.readParcelable(Region.class.getClassLoader());
+        Parcelable[] parcelables  = in.readParcelableArray(Beacon.class.getClassLoader());
         beacons = new ArrayList<Beacon>(parcelables.length);
         for (int i = 0; i < parcelables.length; i++) {
             beacons.add((Beacon)parcelables[i]);
         }
-        region = in.readParcelable(this.getClass().getClassLoader());
+
     }
 }

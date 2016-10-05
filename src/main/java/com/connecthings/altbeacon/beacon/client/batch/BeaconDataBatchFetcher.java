@@ -1,9 +1,7 @@
 package com.connecthings.altbeacon.beacon.client.batch;
 
-
 import com.connecthings.altbeacon.beacon.Beacon;
 import com.connecthings.altbeacon.beacon.utils.FixSizeCache;
-import com.connecthings.altbeacon.beacon.logging.LogManager;
 
 import java.util.ArrayList;
 import java.util.Collection;

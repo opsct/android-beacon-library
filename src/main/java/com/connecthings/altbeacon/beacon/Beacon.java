@@ -59,7 +59,7 @@ import java.util.List;
  * @author  David G. Young
  * @see     Region#matchesBeacon(Beacon Beacon)
  */
-public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelable {
+public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelable, BeaconIdentifiers {
     private static final String TAG = "Beacon";
 
     private static final List<Long> UNMODIFIABLE_LIST_OF_LONG =
@@ -443,6 +443,11 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
         }
     }
 
+    public List<Identifier> getStaticIdentifiers(){
+        return getIdentifiers();
+    }
+
+
     /**
      * Returns the list of identifiers transmitted with the advertisement
      * @return identifier
@@ -458,6 +463,10 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
 
     public boolean hasStaticIdentifiers(){
         return mStaticIdentifiers.size() != 0;
+    }
+
+    public boolean hasEphemeralIdentifiers(){
+        return mEphemeralIdentifiers.size() != 0;
     }
 
 
@@ -721,6 +730,7 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
     public static class Builder {
         protected final Beacon mBeacon;
         private Identifier mId1, mId2, mId3;
+        private Identifier mEphemeralId1, mEphemeralId2, mEphemeralId3;
 
         /**
          * Creates a builder instance
@@ -743,6 +753,17 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
                     }
                 }
             }
+
+            if (mEphemeralId1!= null) {
+                mBeacon.mEphemeralIdentifiers.add(mEphemeralId1);
+                if (mEphemeralId2!= null) {
+                    mBeacon.mEphemeralIdentifiers.add(mEphemeralId2);
+                    if (mEphemeralId3!= null) {
+                        mBeacon.mEphemeralIdentifiers.add(mEphemeralId3);
+                    }
+                }
+            }
+
             if(mBeacon.mBeaconFetchInfo==null) {
                 mBeacon.mBeaconFetchInfo = new BeaconContentFetchInfo(new BeaconContentSimple(mBeacon.mStaticIdentifiers), 5*60*1000, BeaconContentFetchStatus.IN_PROGRESS);
             }
@@ -755,6 +776,7 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
          */
         public Builder copyBeaconFields(Beacon beacon) {
             setIdentifiers(beacon.getIdentifiers());
+            setEphemeralIdentifiers(beacon.getEphemeralIdentifiers());
             setBeaconTypeCode(beacon.getBeaconTypeCode());
             setDataFields(beacon.getDataFields());
             setBluetoothAddress(beacon.getBluetoothAddress());
@@ -788,6 +810,19 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
         }
 
         /**
+         * @see Beacon#mStaticIdentifiers
+         * @param identifiers identifiers to set
+         * @return builder
+         */
+        public Builder setEphemeralIdentifiers(List<Identifier>identifiers) {
+            mEphemeralId1 = null;
+            mEphemeralId2 = null;
+            mEphemeralId3 = null;
+            mBeacon.mEphemeralIdentifiers = identifiers;
+            return this;
+        }
+
+        /**
          * Convenience method allowing the first beacon identifier to be set as a String.  It will
          * be parsed into an Identifier object
          * @param id1String string to parse into an identifier
@@ -817,6 +852,39 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
          */
         public Builder setId3(String id3String) {
             mId3 = Identifier.parse(id3String);
+            return this;
+        }
+
+        /**
+         * Convenience method allowing the first beacon ephemeral identifier to be set as a String.  It will
+         * be parsed into an Identifier object
+         * @param id1String string to parse into an identifier
+         * @return builder
+         */
+        public Builder setEphemeralId1(String id1String) {
+            mEphemeralId1 = Identifier.parse(id1String);
+            return this;
+        }
+
+        /**
+         * Convenience method allowing the second beacon ephemeral identifier to be set as a String.  It will
+         * be parsed into an Identifier object
+         * @param id1String string to parse into an identifier
+         * @return builder
+         */
+        public Builder setEphemeralId2(String id1String) {
+            mEphemeralId2 = Identifier.parse(id1String);
+            return this;
+        }
+
+        /**
+         * Convenience method allowing the third beacon ephemeral identifier to be set as a String.  It will
+         * be parsed into an Identifier object
+         * @param id1String string to parse into an identifier
+         * @return builder
+         */
+        public Builder setEphemeralId3(String id1String) {
+            mEphemeralId3 = Identifier.parse(id1String);
             return this;
         }
 

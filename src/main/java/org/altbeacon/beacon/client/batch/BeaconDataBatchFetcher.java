@@ -1,8 +1,6 @@
 package org.altbeacon.beacon.client.batch;
 
 import org.altbeacon.beacon.Beacon;
-import org.altbeacon.beacon.logging.LogManager;
-import org.altbeacon.beacon.logging.Logger;
 import org.altbeacon.beacon.utils.FixSizeCache;
 
 import java.util.ArrayList;
@@ -88,7 +86,6 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
     }
 
     private BeaconContentFetchInfo<BeaconContent> getFetchInfo(BeaconIdentifiers beaconIdentifiers){
-        LogManager.d(TAG, "beaconId " + beaconIdentifiers.getStaticIdentifiers().toString());
         BeaconContentFetchInfo<BeaconContent> fetchInfo = beaconContentInfoCache.get(beaconIdentifiers.getStaticIdentifiers().toString());
         if(fetchInfo == null && beaconIdentifiers.hasEphemeralIdentifiers()){
             fetchInfo = beaconContentInfoCache.get(beaconIdentifiers.getEphemeralIdentifiers().toString());

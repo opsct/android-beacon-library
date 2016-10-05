@@ -2,6 +2,7 @@ package org.altbeacon.beacon.client.batch;
 
 import org.altbeacon.beacon.Beacon;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -10,8 +11,8 @@ import java.util.List;
 
 public interface BeaconDataBatchNotifier<BeaconContent extends BeaconIdentifiers> {
 
-    public void onBatchUpdate(List<BeaconContent> beaconContents, List<Beacon<BeaconContent>> unresolvedBeacons);
+    public void onBatchUpdate(Collection<BeaconContent> beaconContents, Collection<Beacon<BeaconContent>> unresolvedBeacons);
 
-    public void onBatchError(List<Beacon<BeaconContent>> beacons, DataBatchProviderException providerException);
+    public void onBatchError(Collection<Beacon<BeaconContent>> beacons, DataBatchProviderException providerException);
 
 }

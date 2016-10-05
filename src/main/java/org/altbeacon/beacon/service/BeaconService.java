@@ -139,6 +139,7 @@ public class BeaconService extends Service {
     public static final int MSG_STOP_MONITORING = 5;
     public static final int MSG_SET_SCAN_PERIODS = 6;
     public static final int MSG_CLEAR_BEACON_CONTENT_CACHE = 7;
+    public static final int MSG_FETCH_EPHEMERAL_IDS = 8;
 
     static class IncomingHandler extends Handler {
         private final WeakReference<BeaconService> mService;
@@ -356,6 +357,7 @@ public class BeaconService extends Service {
         mBeacondataBatchFetcher.clearCache();
     }
 
+
     protected final CycledLeScanCallback mCycledLeScanCallback = new CycledLeScanCallback() {
         @TargetApi(Build.VERSION_CODES.HONEYCOMB)
         @Override
@@ -373,9 +375,9 @@ public class BeaconService extends Service {
 
         @Override
         public void onCycleEnd() {
-            mBeacondataBatchFetcher.fetch();
             monitoringStatus.updateNewlyOutside();
             processRangeData();
+            mBeacondataBatchFetcher.fetch();
             // If we want to use simulated scanning data, do it here.  This is used for testing in an emulator
             if (simulatedScanData != null) {
                 // if simulatedScanData is provided, it will be seen every scan cycle.  *in addition* to anything actually seen in the air
@@ -402,7 +404,7 @@ public class BeaconService extends Service {
                         LogManager.w(TAG, "Beacon simulations provided, but ignored because we are not running in debug mode.  Please remove beacon simulations for production.");
                     }
                 } else {
-                    LogManager.w(TAG, "getBeacons is returning null. No simulated beacons to report.");
+                    LogManager.w(TAG, "getBeaconsToFetch is returning null. No simulated beacons to report.");
                 }
             }
         }
@@ -413,6 +415,8 @@ public class BeaconService extends Service {
             for (Region region : rangedRegionState.keySet()) {
                 RangeState rangeState = rangedRegionState.get(region);
                 LogManager.d(TAG, "Calling ranging callback");
+                Collection<Beacon> beacons = rangeState.finalizeBeacons();
+                mBeacondataBatchFetcher.updateContentOrAddToFetch(beacons);
                 rangeState.getCallback().call(BeaconService.this, "rangingData", new RangingData(rangeState.finalizeBeacons(), region));
             }
         }
@@ -436,7 +440,9 @@ public class BeaconService extends Service {
                         "not processing detections for GATT extra data beacon");
             }
         } else {
-            mBeacondataBatchFetcher.addBeacon(beacon);
+            if(beacon.hasEphemeralIdentifiers()) {
+                mBeacondataBatchFetcher.updateContentOrAddToFetch(beacon);
+            }
             monitoringStatus.updateNewlyInsideInRegionsContaining(beacon);
 
             List<Region> matchedRegions = null;

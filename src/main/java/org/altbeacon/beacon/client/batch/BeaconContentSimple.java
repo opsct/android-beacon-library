@@ -18,8 +18,8 @@ public class BeaconContentSimple implements BeaconIdentifiers, Parcelable {
     private List<Identifier> ephemeralIdentifiers;
 
     public BeaconContentSimple(List<Identifier> ephemeralIdentifiers, List<Identifier> staticIdentifiers) {
-        this.ephemeralIdentifiers = ephemeralIdentifiers==null?new ArrayList<Identifier>():ephemeralIdentifiers;
-        this.staticIdentifiers = staticIdentifiers;
+        this.ephemeralIdentifiers = ephemeralIdentifiers==null || ephemeralIdentifiers.size()==0?new ArrayList<Identifier>():ephemeralIdentifiers;
+        this.staticIdentifiers = staticIdentifiers == null || staticIdentifiers.size() == 0? this.ephemeralIdentifiers : staticIdentifiers;
     }
 
     public BeaconContentSimple(List<Identifier> staticIdentifiers){
@@ -42,6 +42,11 @@ public class BeaconContentSimple implements BeaconIdentifiers, Parcelable {
     @Override
     public List<Identifier> getEphemeralIdentifiers() {
         return ephemeralIdentifiers;
+    }
+
+    @Override
+    public boolean hasStaticIdentifiers() {
+        return staticIdentifiers.size() != 0;
     }
 
     @Override

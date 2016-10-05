@@ -18,4 +18,6 @@ public interface BeaconIdentifiers {
 
     boolean hasEphemeralIdentifiers();
 
+    boolean hasStaticIdentifiers();
+
 }

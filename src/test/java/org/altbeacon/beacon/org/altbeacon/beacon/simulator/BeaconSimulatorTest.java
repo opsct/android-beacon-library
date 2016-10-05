@@ -54,7 +54,7 @@ public class BeaconSimulatorTest {
         ArrayList<Beacon> beacons = new ArrayList<Beacon>();
         beacons.add(beacon);
         staticBeaconSimulator.setBeacons(beacons);
-        assertEquals("getBeacons should match values entered with setBeacons", staticBeaconSimulator.getBeacons(), beacons);
+        assertEquals("getBeaconsToFetch should match values entered with setBeacons", staticBeaconSimulator.getBeacons(), beacons);
     }
 
     @Test
@@ -62,13 +62,13 @@ public class BeaconSimulatorTest {
         StaticBeaconSimulator staticBeaconSimulator = new StaticBeaconSimulator();
         ArrayList<Beacon> beacons = new ArrayList<Beacon>();
         staticBeaconSimulator.setBeacons(beacons);
-        assertEquals("getBeacons should match values entered with setBeacons even when empty", staticBeaconSimulator.getBeacons(), beacons);
+        assertEquals("getBeaconsToFetch should match values entered with setBeacons even when empty", staticBeaconSimulator.getBeacons(), beacons);
     }
 
     @Test
     public void testSetBeaconsNull(){
         StaticBeaconSimulator staticBeaconSimulator = new StaticBeaconSimulator();
         staticBeaconSimulator.setBeacons(null);
-        assertEquals("getBeacons should return null",staticBeaconSimulator.getBeacons(), null);
+        assertEquals("getBeaconsToFetch should return null",staticBeaconSimulator.getBeacons(), null);
     }
 }

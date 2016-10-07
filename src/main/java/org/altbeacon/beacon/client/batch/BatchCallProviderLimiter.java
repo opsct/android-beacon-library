@@ -1,5 +1,7 @@
 package org.altbeacon.beacon.client.batch;
 
+import android.os.SystemClock;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +15,8 @@ public class BatchCallProviderLimiter {
 
     private List<BatchErrorLimiter> batchErrorLimiters;
 
+
+
     public BatchCallProviderLimiter(){
         batchErrorLimiters = new ArrayList<>();
         batchErrorLimiters.add(new BatchErrorLimiter(0, 5));
@@ -22,8 +26,28 @@ public class BatchCallProviderLimiter {
         batchErrorLimiters.add(new BatchErrorLimiter(12, 60 * 5));
     }
 
+    List<BatchErrorLimiter> getBatchErrorLimiters() {
+        return batchErrorLimiters;
+    }
+
+    BatchErrorLimiter getBatchErrorLimiter(int position) {
+        return batchErrorLimiters.get(position);
+    }
+
+    BatchErrorLimiter getCurrentBatchErrorLimiter() {
+        return batchErrorLimiters.get(currentPosition);
+    }
+
+    int getCountError(){
+        return countError;
+    }
+
+    int getCurrentPosition(){
+        return currentPosition;
+    }
+
     public synchronized boolean isTimeToCallBatchProvider(){
-        return nextTimeToCallBatchProvider < System.currentTimeMillis();
+        return nextTimeToCallBatchProvider < SystemClock.elapsedRealtime();
     }
 
     public synchronized void reset(){
@@ -34,26 +58,34 @@ public class BatchCallProviderLimiter {
 
     public synchronized void addError(){
         countError ++;
-        BatchErrorLimiter currentBackendErrorColler= null;
         int size = batchErrorLimiters.size();
+        BatchErrorLimiter currentBatchErrorLimiter = null;
         for(int i = currentPosition; i < size; i++){
-            currentBackendErrorColler = batchErrorLimiters.get(i);
-            if(i==currentPosition && countError==currentBackendErrorColler.minErrorNumbers){
+            currentBatchErrorLimiter = batchErrorLimiters.get(i);
+            if(i==currentPosition && countError==currentBatchErrorLimiter.minErrorNumbers){
                 break;
-            }else if(countError < currentBackendErrorColler.minErrorNumbers){
+            }else if(countError < currentBatchErrorLimiter.minErrorNumbers){
                 break;
             }
         }
-        nextTimeToCallBatchProvider = currentBackendErrorColler.timeWaitingBeforeNewCall + System.currentTimeMillis();
+        nextTimeToCallBatchProvider = currentBatchErrorLimiter.timeWaitingBeforeNewCall + SystemClock.elapsedRealtime();
     }
 
-    private class BatchErrorLimiter {
+    class BatchErrorLimiter {
         private int minErrorNumbers;
         private long timeWaitingBeforeNewCall;
 
         public BatchErrorLimiter(int maxError, long timeWaitingBeforeNewCall) {
             this.minErrorNumbers = maxError;
             this.timeWaitingBeforeNewCall = timeWaitingBeforeNewCall * 1000;
+        }
+
+        public int getMinErrorNumbers() {
+            return minErrorNumbers;
+        }
+
+        public long getTimeWaitingBeforeNewCall() {
+            return timeWaitingBeforeNewCall;
         }
     }
 

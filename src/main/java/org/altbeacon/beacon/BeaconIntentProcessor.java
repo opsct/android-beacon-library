@@ -27,6 +27,7 @@ import android.annotation.TargetApi;
 import android.app.IntentService;
 import android.content.Intent;
 
+import org.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
 import org.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import org.altbeacon.beacon.logging.LogManager;
 import org.altbeacon.beacon.service.MonitoringData;
@@ -62,14 +63,26 @@ public class BeaconIntentProcessor extends IntentService {
             if (rangingData.getBeacons() == null) {
                 LogManager.w(TAG, "Ranging data has a null beacons collection");
             }
-            Set<RangeNotifier<? extends BeaconIdentifiers>> notifiers = BeaconManager.getInstanceForApplication(this).getRangingNotifiers();
             java.util.Collection<Beacon> beacons = rangingData.getBeacons();
+            java.util.Collection<?> contents = rangingData.getContents();
+            Region region = rangingData.getRegion();
+            BeaconContentFetchStatus status = rangingData.getStatus();
+            Set<RangeNotifier<? extends BeaconIdentifiers>> notifiers = BeaconManager.getInstanceForApplication(this).getRangingNotifiers();
             if (notifiers != null) {
                 for(RangeNotifier notifier : notifiers){
-                    notifier.didRangeBeaconsInRegion(beacons, rangingData.getRegion());
+                    notifier.didRangeBeaconsInRegion(beacons, region));
                 }
             }
             else {
+                LogManager.d(TAG, "but ranging notifier is null, so we're dropping it.");
+            }
+            Set<RangeContentNotifier<? extends BeaconIdentifiers>> contentNotifiers = BeaconManager.getInstanceForApplication(this).getRangingContentNotifiers();
+
+            if (contentNotifiers != null) {
+                for(RangeContentNotifier notifier : contentNotifiers){
+                    notifier.didRangeBeaconsInRegion(beacons, contents, status, rangingData.getRegion());
+                }
+            } else {
                 LogManager.d(TAG, "but ranging notifier is null, so we're dropping it.");
             }
             RangeNotifier dataNotifier = BeaconManager.getInstanceForApplication(this).getDataRequestNotifier();

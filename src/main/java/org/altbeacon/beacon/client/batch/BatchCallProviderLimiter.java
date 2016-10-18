@@ -59,13 +59,19 @@ public class BatchCallProviderLimiter {
     public synchronized void addError(){
         countError ++;
         int size = batchErrorLimiters.size();
+        BatchErrorLimiter nextBatchErrorLimiter = null;
         BatchErrorLimiter currentBatchErrorLimiter = null;
         for(int i = currentPosition; i < size; i++){
-            currentBatchErrorLimiter = batchErrorLimiters.get(i);
-            if(i==currentPosition && countError==currentBatchErrorLimiter.minErrorNumbers){
-                break;
-            }else if(countError < currentBatchErrorLimiter.minErrorNumbers){
-                break;
+            if( i == (size -1)){
+                currentBatchErrorLimiter = batchErrorLimiters.get(i);
+                currentPosition = i;
+            }else{
+                nextBatchErrorLimiter = batchErrorLimiters.get(i+1);
+                if(countError < nextBatchErrorLimiter.minErrorNumbers){
+                    currentPosition = i;
+                    currentBatchErrorLimiter = batchErrorLimiters.get(i);
+                    break;
+                }
             }
         }
         nextTimeToCallBatchProvider = currentBatchErrorLimiter.timeWaitingBeforeNewCall + SystemClock.elapsedRealtime();

@@ -82,12 +82,17 @@ public class BeaconDataBatchFetcherTest {
         //first fetch will launch task to get the content
         batchFetcher.fetch();
 
-        Beacon beacon = null;
+
+        BeaconContentFetchInfo<BeaconContentSimple> contentFetchInfo = null;
         for(int i = 0;i<beacons.size();i++){
-            beacon = beacons.get(i);
-            assertTrue( "Status is " + beacon.getBeaconFetchInfo().getStatus() + " for the beacon " + i + " while it's expected to be SUCCESS", beacon.getBeaconFetchInfo().getStatus() == BeaconContentFetchStatus.SUCCESS);
-            assertNotNull("BeaconContent is null", beacon.getBeaconContent());
+            contentFetchInfo = batchFetcher.getFetchInfo(beacons.get(i));
+            assertTrue( "Status is "  + contentFetchInfo.getStatus() + " for the beacon " + i + " while it's expected to be SUCCESS", contentFetchInfo.getStatus() == BeaconContentFetchStatus.SUCCESS);
+            assertNotNull("BeaconContent is null", contentFetchInfo.getContent());
         }
+
+        BeaconBatchFetchInfo<BeaconContentSimple> fetchInfo = batchFetcher.updateContentOrAddToFetch(beacons);
+        assertEquals("Test status that must be success", BeaconContentFetchStatus.SUCCESS, fetchInfo.getFetchStatus());
+        assertEquals("test size ", beacons.size(), fetchInfo.getContents().size());
     }
 
     @Test
@@ -108,13 +113,16 @@ public class BeaconDataBatchFetcherTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        Beacon beacon = null;
-
+        BeaconContentFetchInfo<BeaconContentSimple> contentFetchInfo = null;
         for(int i = 0;i<beacons.size();i++){
-            beacon = beacons.get(i);
-            assertTrue( "Status is " + beacon.getBeaconFetchInfo().getStatus() + " for the beacon " + i + " while it's expected to be BACKEND_ERROR", beacon.getBeaconFetchInfo().getStatus() == BeaconContentFetchStatus.BACKEND_ERROR);
-            assertNull("BeaconContent is not null", beacon.getBeaconContent());
+            contentFetchInfo = batchFetcher.getFetchInfo(beacons.get(i));
+            assertTrue( "Status is "  + contentFetchInfo.getStatus() + " for the beacon " + i + " while it's expected to be ERROR", contentFetchInfo.getStatus() == BeaconContentFetchStatus.BACKEND_ERROR);
+            assertNull("BeaconContent is null", contentFetchInfo.getContent());
         }
+
+        BeaconBatchFetchInfo<BeaconContentSimple> fetchInfo = batchFetcher.updateContentOrAddToFetch(beacons);
+        assertEquals("Test status that must be success", BeaconContentFetchStatus.BACKEND_ERROR, fetchInfo.getFetchStatus());
+        assertEquals("test size ", 0, fetchInfo.getContents().size());
     }
 
 
@@ -148,44 +156,48 @@ public class BeaconDataBatchFetcherTest {
             e.printStackTrace();
         }
 
-        testBeacons(beacons, 2,2,2);
+        testBeacons(batchFetcher, beacons, 2,2,2);
 
 
         beacons = generateBeaconList();
         batchFetcher.updateContentOrAddToFetch(beacons);
         assertTrue("The list of beacons to fetch is not empty",batchFetcher.getBeaconsToFetch().size() == 0);
-        testBeacons(beacons, 2,2,2);
+        testBeacons(batchFetcher, beacons, 2,2,2);
 
         SystemClock.setCurrentTimeMillis(3200);
         long t = SystemClock.elapsedRealtime();
-        Beacon beacon;
+        BeaconContentFetchInfo<BeaconContentSimple> contentFetchInfo = null;
         for(int i = 0;i<beacons.size();i++){
-            beacon = beacons.get(i);
-            assertTrue("FetchInfo - content is not out of date ", beacon.getBeaconFetchInfo().isTimeToUpdate());
+            contentFetchInfo = batchFetcher.getFetchInfo(beacons.get(i));
+            assertTrue("FetchInfo - content is not out of date ", contentFetchInfo.isTimeToUpdate());
         }
 
 
         beacons = generateBeaconList();
-        batchFetcher.updateContentOrAddToFetch(beacons);
+        BeaconBatchFetchInfo<BeaconContentSimple> fetchInfo = batchFetcher.updateContentOrAddToFetch(beacons);
         assertTrue("The list of beacons to fetch is empty while beacons are out of date",batchFetcher.getBeaconsToFetch().size() == beacons.size());
         for(int i = 0;i<beacons.size();i++){
-            beacon = beacons.get(i);
-            assertTrue("Status is " + beacon.getBeaconFetchInfo().getStatus() + " for the beacon " + i + " while it's expected to be IN_PROGRESS", beacon.getBeaconFetchInfo().getStatus() == BeaconContentFetchStatus.IN_PROGRESS);
+            contentFetchInfo = batchFetcher.getFetchInfo(beacons.get(i));
+            assertTrue("Status is " + contentFetchInfo.getStatus() + " for the beacon " + i + " while it's expected to be IN_PROGRESS", contentFetchInfo.getStatus() == BeaconContentFetchStatus.IN_PROGRESS);
         }
+        assertEquals("status is in progress", BeaconContentFetchStatus.IN_PROGRESS, fetchInfo.getFetchStatus());
+        assertEquals("more then 2 contents found", 2, fetchInfo.getContents().size());
     }
 
-    private void testBeacons(List<Beacon> beacons, int expectedCountSuccess, int expectedCountNoContent, int exepectedCountContent){
+    private void testBeacons(BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher, List<Beacon> beacons, int expectedCountSuccess, int expectedCountNoContent, int exepectedCountContent){
         int countSuccess = 0;
         int countContent = 0;
         int countNoContent = 0;
+        BeaconContentFetchInfo<BeaconContentSimple> contentFetchInfo = null;
         for(Beacon beacon : beacons){
-            if(beacon.getBeaconContent() != null){
+            contentFetchInfo = batchFetcher.getFetchInfo(beacon);
+            if(contentFetchInfo.getContent() != null){
                 countContent++;
             }
-            if(beacon.getBeaconFetchInfo().getStatus() == BeaconContentFetchStatus.SUCCESS){
+            if(contentFetchInfo.getStatus() == BeaconContentFetchStatus.SUCCESS){
                 countSuccess++;
             }
-            if(beacon.getBeaconFetchInfo().getStatus() == BeaconContentFetchStatus.NO_CONTENT){
+            if(contentFetchInfo.getStatus() == BeaconContentFetchStatus.NO_CONTENT){
                 countNoContent++;
             }
         }
@@ -221,15 +233,15 @@ public class BeaconDataBatchFetcherTest {
             }
         }
 
-        Beacon beacon = null;
+        BeaconContentFetchInfo<BeaconContentSimple> contentFetchInfo = null;
         for(int i = 0;i<beacons.size();i++){
-            beacon = beacons.get(i);
+            contentFetchInfo = batchFetcher.getFetchInfo(beacons.get(i));
             if(i<=1) {
-                assertTrue("Status is " + beacon.getBeaconFetchInfo().getStatus() + " for the beacon " + i + " while it's expected to be SUCCESS", beacon.getBeaconFetchInfo().getStatus() == BeaconContentFetchStatus.SUCCESS);
-                assertNotNull("BeaconContent is null", beacon.getBeaconContent());
+                assertTrue("Status is " + contentFetchInfo.getStatus() + " for the beacon " + i + " while it's expected to be SUCCESS", contentFetchInfo.getStatus() == BeaconContentFetchStatus.SUCCESS);
+                assertNotNull("BeaconContent is null", contentFetchInfo.getContent());
             }else{
-                assertTrue("Status is " + beacon.getBeaconFetchInfo().getStatus() + " for the beacon " + i + " while it's expected to be NO_CONTENT", beacon.getBeaconFetchInfo().getStatus() == BeaconContentFetchStatus.NO_CONTENT);
-                assertNull("BeaconContent is null", beacon.getBeaconContent());
+                assertTrue("Status is " + contentFetchInfo.getStatus() + " for the beacon " + i + " while it's expected to be NO_CONTENT", contentFetchInfo.getStatus() == BeaconContentFetchStatus.NO_CONTENT);
+                assertNull("BeaconContent is null", contentFetchInfo.getContent());
             }
         }
 
@@ -264,7 +276,7 @@ public class BeaconDataBatchFetcherTest {
             }
         }
 
-       testBeacons(beacons, 2, 2, 2);
+       testBeacons(batchFetcher, beacons, 2, 2, 2);
 
     }
 

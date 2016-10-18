@@ -45,6 +45,8 @@ import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.BuildConfig;
 import org.altbeacon.beacon.Region;
+import org.altbeacon.beacon.client.batch.BeaconBatchFetchInfo;
+import org.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
 import org.altbeacon.beacon.client.batch.BeaconDataBatchFetcher;
 import org.altbeacon.beacon.distance.DistanceCalculator;
 import org.altbeacon.beacon.distance.ModelSpecificDistanceCalculator;
@@ -416,8 +418,8 @@ public class BeaconService extends Service {
                 RangeState rangeState = rangedRegionState.get(region);
                 LogManager.d(TAG, "Calling ranging callback");
                 Collection<Beacon> beacons = rangeState.finalizeBeacons();
-                mBeacondataBatchFetcher.updateContentOrAddToFetch(beacons);
-                rangeState.getCallback().call(BeaconService.this, "rangingData", new RangingData(rangeState.finalizeBeacons(), region));
+                BeaconBatchFetchInfo<?> fetchInfo = mBeacondataBatchFetcher.updateContentOrAddToFetch(beacons);
+                rangeState.getCallback().call(BeaconService.this, "rangingData", new RangingData(rangeState.finalizeBeacons(), fetchInfo.getContents(), fetchInfo.getFetchStatus(), region));
             }
         }
     }

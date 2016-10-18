@@ -34,6 +34,21 @@ public class BeaconContentSimple implements BeaconIdentifiers, Parcelable {
         }
     }
 
+    public boolean equals(Object o){
+        if(o instanceof BeaconContentSimple){
+            BeaconContentSimple beaconContentSimple = (BeaconContentSimple) o;
+            if(beaconContentSimple.getStaticIdentifiers().size() == this.staticIdentifiers.size()){
+                for(int i = 0 ; i<this.staticIdentifiers.size(); i++){
+                    if(!this.getStaticIdentifiers().get(i).equals(beaconContentSimple.getStaticIdentifiers().get(i))){
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public List<Identifier> getStaticIdentifiers() {
         return staticIdentifiers;

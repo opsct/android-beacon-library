@@ -36,9 +36,10 @@ public class BatchCallProviderLimiterTest {
             batchCallProviderLimiter.addError();
             nextBatchErrorPosition = position == batchCallProviderLimiter.getBatchErrorLimiters().size() -1 ? position : position +1;
             if(batchCallProviderLimiter.getCountError() < batchCallProviderLimiter.getBatchErrorLimiter(nextBatchErrorPosition).getMinErrorNumbers()){
-                assertTrue("batchErrorLimiter have been updated and it's the time", batchCallProviderLimiter.getCurrentBatchErrorLimiter() == batchCallProviderLimiter.getBatchErrorLimiter(position));
-            }else{
-                assertTrue("batchErrorLimiter has not been updated while it's the time", batchCallProviderLimiter.getCurrentBatchErrorLimiter() == batchCallProviderLimiter.getBatchErrorLimiter(nextBatchErrorPosition));
+                assertTrue("batchErrorLimiter have been updated and it's the time - nb error: " + batchCallProviderLimiter.getCountError(), batchCallProviderLimiter.getCurrentBatchErrorLimiter() == batchCallProviderLimiter.getBatchErrorLimiter(position));
+            }else if(position != batchCallProviderLimiter.getBatchErrorLimiters().size() -1){
+                assertTrue("batchErrorLimiter has not been updated while it's the time - nb error: " + batchCallProviderLimiter.getCountError(), batchCallProviderLimiter.getCurrentBatchErrorLimiter() == batchCallProviderLimiter.getBatchErrorLimiter(nextBatchErrorPosition));
+                position = nextBatchErrorPosition;
             }
         }
     }

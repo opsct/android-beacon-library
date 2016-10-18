@@ -11,55 +11,22 @@ import java.util.List;
 /**
  * Created by Connecthings on 03/10/16.
  */
-public class BeaconBatchFetchInfo<BeaconContent extends BeaconIdentifiers> implements Parcelable{
+public class BeaconBatchFetchInfo<BeaconContent extends BeaconIdentifiers> {
 
     private BeaconContentFetchStatus fetchStatus;
 
-    private List<Beacon<BeaconContent>> unresolvedBeacons;
+    private List<BeaconContent> contents;
 
-    public BeaconBatchFetchInfo(BeaconContentFetchStatus fetchStatus, List<Beacon<BeaconContent>> unresolvedBeacons){
+    public BeaconBatchFetchInfo(BeaconContentFetchStatus fetchStatus, List<BeaconContent> contents){
         this.fetchStatus = fetchStatus;
-        this.unresolvedBeacons = unresolvedBeacons==null?new ArrayList<Beacon<BeaconContent>>():unresolvedBeacons;
+        this.contents = contents;
     }
 
-    private BeaconBatchFetchInfo(Parcel from){
-        readFromParcel(from);
+    public List<BeaconContent> getContents() {
+        return contents;
     }
 
     public BeaconContentFetchStatus getFetchStatus() {
         return fetchStatus;
     }
-
-    public List<Beacon<BeaconContent>> getUnresolvedBeacons() {
-        return unresolvedBeacons;
-    }
-
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(fetchStatus.toString());
-        dest.writeList(unresolvedBeacons);
-    }
-
-    private void readFromParcel(Parcel from){
-        fetchStatus = BeaconContentFetchStatus.valueOf(from.readString());
-        unresolvedBeacons = new ArrayList<>(from.readArrayList(Beacon.class.getClassLoader()));
-    }
-
-    public static final Parcelable.Creator<BeaconBatchFetchInfo> CREATOR
-            = new Parcelable.Creator<BeaconBatchFetchInfo>() {
-        public BeaconBatchFetchInfo createFromParcel(Parcel in) {
-            return new BeaconBatchFetchInfo(in);
-        }
-
-        public BeaconBatchFetchInfo[] newArray(int size) {
-            return new BeaconBatchFetchInfo[size];
-        }
-    };
-
 }

@@ -115,6 +115,7 @@ public class BeaconManager {
     private final ConcurrentMap<BeaconConsumer, ConsumerInfo> consumers = new ConcurrentHashMap<BeaconConsumer,ConsumerInfo>();
     private Messenger serviceMessenger = null;
     protected final Set<RangeNotifier<?>> rangeNotifiers = new CopyOnWriteArraySet<>();
+    protected final Set<RangeContentNotifier<?>> rangeContentNotifiers = new CopyOnWriteArraySet<>();
     protected RangeNotifier dataRequestNotifier = null;
     protected Set<MonitorNotifier> monitorNotifiers = new CopyOnWriteArraySet<>();
     private final ArrayList<Region> monitoredRegions = new ArrayList<Region>();
@@ -506,6 +507,46 @@ public class BeaconManager {
     }
 
     /**
+     * Specifies a class that should be called each time the <code>BeaconService</code> gets ranging
+     * data, which is nominally once per second when beacons are detected.
+     * <p/>
+     * Permits to register several <code>RangeNotifier</code> objects.
+     * <p/>
+     *The notifier must be unregistered using (@link #removeRangeNotifier)
+     *
+     * @param notifier
+     * @see RangeNotifier
+     */
+    public void addRangeContentNotifier(RangeContentNotifier<? extends BeaconIdentifiers> notifier){
+        if(notifier != null){
+            synchronized (rangeContentNotifiers){
+                rangeContentNotifiers.add(notifier);
+            }
+        }
+    }
+
+    /**
+     * Specifies a class to remove from the array of <code>RangeNotifier</code>
+     *
+     * @param notifier
+     * @see RangeNotifier
+     */
+    public boolean removeRangeContentNotifier(RangeContentNotifier<? extends BeaconIdentifiers> notifier){
+        synchronized (rangeContentNotifiers){
+            return rangeContentNotifiers.remove(notifier);
+        }
+    }
+
+    /**
+     * Remove all the Range Notifiers
+     */
+    public void removeAllRangeContentNotifiers(){
+        synchronized (rangeContentNotifiers){
+            rangeContentNotifiers.clear();
+        }
+    }
+
+    /**
      * Specifies a class that should be called each time the <code>BeaconService</code> sees
      * or stops seeing a Region of beacons.
      * <p/>
@@ -823,6 +864,13 @@ public class BeaconManager {
      */
     public Set<RangeNotifier<?>> getRangingNotifiers(){
         return rangeNotifiers;
+    }
+
+    /**
+     * @return the list of registered rangeContentNotifier
+     */
+    public Set<RangeContentNotifier<?>> getRangingContentNotifiers(){
+        return rangeContentNotifiers;
     }
 
     /**

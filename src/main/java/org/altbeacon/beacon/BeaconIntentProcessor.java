@@ -70,7 +70,7 @@ public class BeaconIntentProcessor extends IntentService {
             Set<RangeNotifier<? extends BeaconIdentifiers>> notifiers = BeaconManager.getInstanceForApplication(this).getRangingNotifiers();
             if (notifiers != null) {
                 for(RangeNotifier notifier : notifiers){
-                    notifier.didRangeBeaconsInRegion(beacons, region));
+                    notifier.didRangeBeaconsInRegion(beacons, region);
                 }
             }
             else {

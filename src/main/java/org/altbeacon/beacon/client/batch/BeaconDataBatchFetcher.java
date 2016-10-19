@@ -34,7 +34,6 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
 
     public BeaconContentFetchInfo updateContentOrAddToFetch(Beacon beacon){
         if(!beacon.isExtraBeaconData() && ((!mBeaconDataBatchProvider.fetchEphemeralIds() && !beacon.hasEphemeralIdentifiers()) || (mBeaconDataBatchProvider.fetchEphemeralIds()))) {
-            //beacon.updateBeaconFetchInfo(findFetchInfoOrAddToFetch(beacon));
             return findFetchInfoOrAddToFetch(beacon);
         }
         return null;
@@ -75,6 +74,10 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         synchronized (beaconsLock) {
             if (mBeaconDataBatchProvider != null && batchErrorLimiter.isTimeToCallBatchProvider()
                         && beaconsToFetch.size() != 0) {
+                List<Beacon> beacons = new ArrayList<>(beaconsToFetch);
+                for(Beacon beacon : beacons) {
+                    updateFetchInfo(beacon, BeaconContentFetchStatus.IN_PROGRESS);
+                }
                 this.mBeaconDataBatchProvider.fetch(new ArrayList<Beacon>(beaconsToFetch), this);
             }
             beaconsToFetch.clear();
@@ -108,9 +111,15 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
     private BeaconContentFetchInfo findFetchInfoOrAddToFetch(Beacon beacon){
         BeaconContentFetchInfo<BeaconContent> fetchInfo = getFetchInfo(beacon);
         synchronized (beaconsLock) {
-            if (fetchInfo == null || (fetchInfo.isTimeToUpdate() && fetchInfo.getStatus() != BeaconContentFetchStatus.IN_PROGRESS)) {
+            if (fetchInfo == null
+                    || (fetchInfo.isTimeToUpdate()
+                        || fetchInfo.getStatus() == BeaconContentFetchStatus.BACKEND_ERROR
+                            || fetchInfo.getStatus() == BeaconContentFetchStatus.DB_ERROR
+                                || fetchInfo.getStatus() == BeaconContentFetchStatus.NETWORK_ERROR)) {
                 beaconsToFetch.add(beacon);
-                fetchInfo = updateFetchInfo(beacon, BeaconContentFetchStatus.IN_PROGRESS);
+                if(fetchInfo == null){
+                    fetchInfo = createFetchInfo(beacon);
+                }
             }
         }
         return fetchInfo;
@@ -124,6 +133,17 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         return fetchInfo;
     }
 
+    private BeaconContentFetchInfo<BeaconContent> createFetchInfo(BeaconIdentifiers beaconIdentifiers){
+        BeaconContentFetchInfo<BeaconContent> fetchInfo = new BeaconContentFetchInfo<BeaconContent>(null, mMaxBeaconCacheTime, BeaconContentFetchStatus.IN_PROGRESS);
+        if(beaconIdentifiers.hasStaticIdentifiers()) {
+            beaconContentInfoCache.put(beaconIdentifiers.getStaticIdentifiers().toString(), fetchInfo);
+        }
+        if(beaconIdentifiers.hasEphemeralIdentifiers()){
+            beaconContentInfoCache.put(beaconIdentifiers.getEphemeralIdentifiers().toString(), fetchInfo);
+        }
+        return fetchInfo;
+    }
+
     private BeaconContentFetchInfo<BeaconContent> updateFetchInfo(BeaconIdentifiers beaconIdentifiers, BeaconContentFetchStatus status){
         BeaconContentFetchInfo<BeaconContent> fetchInfo = getFetchInfo(beaconIdentifiers);
         BeaconContent content = beaconIdentifiers instanceof Beacon? null: (BeaconContent) beaconIdentifiers;
@@ -133,6 +153,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         } else if(content == null){
             fetchInfo.updateStatus(status);
         } else {
+            fetchInfo.updateStatus(BeaconContentFetchStatus.SUCCESS);
             fetchInfo.updateBeaconContent(content);
         }
         if(beaconIdentifiers.hasStaticIdentifiers()) {

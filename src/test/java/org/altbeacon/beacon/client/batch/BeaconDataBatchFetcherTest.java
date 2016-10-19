@@ -93,6 +93,24 @@ public class BeaconDataBatchFetcherTest {
         BeaconBatchFetchInfo<BeaconContentSimple> fetchInfo = batchFetcher.updateContentOrAddToFetch(beacons);
         assertEquals("Test status that must be success", BeaconContentFetchStatus.SUCCESS, fetchInfo.getFetchStatus());
         assertEquals("test size ", beacons.size(), fetchInfo.getContents().size());
+
+
+    }
+
+    @Test
+    public void testNoContentWithUpdate() {
+        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceed(), 5000, 200);
+        List<Beacon> beacons = generateBeaconList();
+        BeaconBatchFetchInfo<BeaconContentSimple> fetchInfo = batchFetcher.updateContentOrAddToFetch(beacons);
+        assertEquals("Test status that must be in progress", BeaconContentFetchStatus.IN_PROGRESS, fetchInfo.getFetchStatus());
+        assertEquals("test size ", 0, fetchInfo.getContents().size());
+        //first fetch will launch task to get the content
+        batchFetcher.fetch();
+        testBeacons(batchFetcher, beacons, 2,2,2);
+        fetchInfo = batchFetcher.updateContentOrAddToFetch(beacons);
+        assertEquals("Test status that must be success", BeaconContentFetchStatus.SUCCESS, fetchInfo.getFetchStatus());
+        assertEquals("test size ", 2, fetchInfo.getContents().size());
+        testBeacons(batchFetcher, beacons, 2,2,2);
     }
 
     @Test
@@ -121,7 +139,7 @@ public class BeaconDataBatchFetcherTest {
         }
 
         BeaconBatchFetchInfo<BeaconContentSimple> fetchInfo = batchFetcher.updateContentOrAddToFetch(beacons);
-        assertEquals("Test status that must be success", BeaconContentFetchStatus.BACKEND_ERROR, fetchInfo.getFetchStatus());
+        assertEquals("Test status that must be backendError", BeaconContentFetchStatus.BACKEND_ERROR, fetchInfo.getFetchStatus());
         assertEquals("test size ", 0, fetchInfo.getContents().size());
     }
 
@@ -172,16 +190,14 @@ public class BeaconDataBatchFetcherTest {
             assertTrue("FetchInfo - content is not out of date ", contentFetchInfo.isTimeToUpdate());
         }
 
-
         beacons = generateBeaconList();
         BeaconBatchFetchInfo<BeaconContentSimple> fetchInfo = batchFetcher.updateContentOrAddToFetch(beacons);
         assertTrue("The list of beacons to fetch is empty while beacons are out of date",batchFetcher.getBeaconsToFetch().size() == beacons.size());
-        for(int i = 0;i<beacons.size();i++){
-            contentFetchInfo = batchFetcher.getFetchInfo(beacons.get(i));
-            assertTrue("Status is " + contentFetchInfo.getStatus() + " for the beacon " + i + " while it's expected to be IN_PROGRESS", contentFetchInfo.getStatus() == BeaconContentFetchStatus.IN_PROGRESS);
-        }
-        assertEquals("status is in progress", BeaconContentFetchStatus.IN_PROGRESS, fetchInfo.getFetchStatus());
-        assertEquals("more then 2 contents found", 2, fetchInfo.getContents().size());
+        testBeacons(batchFetcher, beacons, 2,2,2);
+        assertEquals("status is in progress", BeaconContentFetchStatus.SUCCESS, fetchInfo.getFetchStatus());
+        assertEquals("2 beacons content must be found", 2, fetchInfo.getContents().size());
+
+
     }
 
     private void testBeacons(BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher, List<Beacon> beacons, int expectedCountSuccess, int expectedCountNoContent, int exepectedCountContent){

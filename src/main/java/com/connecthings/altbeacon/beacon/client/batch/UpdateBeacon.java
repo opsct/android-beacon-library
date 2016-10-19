@@ -1,6 +1,6 @@
 package com.connecthings.altbeacon.beacon.client.batch;
 
-import org.altbeacon.beacon.Beacon;
+import com.connecthings.altbeacon.beacon.Beacon;
 
 /**
  * Created by Connecthings on 19/10/16.

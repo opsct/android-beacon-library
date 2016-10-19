@@ -417,8 +417,8 @@ public class BeaconService extends Service {
                 RangeState rangeState = rangedRegionState.get(region);
                 LogManager.d(TAG, "Calling ranging callback");
                 Collection<Beacon> beacons = rangeState.finalizeBeacons();
-                BeaconBatchFetchInfo<?> fetchInfo = mBeacondataBatchFetcher.updateContentOrAddToFetch(beacons);
-                rangeState.getCallback().call(BeaconService.this, "rangingData", new RangingData(rangeState.finalizeBeacons(), fetchInfo.getContents(), fetchInfo.getFetchStatus(), region));
+                BeaconBatchFetchInfo<?> batchFetchInfo = mBeacondataBatchFetcher.updateContentOrAddToFetch(beacons);
+                rangeState.getCallback().call(BeaconService.this, "rangingData", new RangingData(rangeState.finalizeBeacons(), batchFetchInfo, region));
             }
         }
     }

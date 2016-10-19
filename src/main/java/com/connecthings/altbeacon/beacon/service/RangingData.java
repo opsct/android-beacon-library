@@ -70,8 +70,8 @@ public class RangingData<BeaconContent extends BeaconIdentifiers> implements Par
     public void writeToParcel(Parcel out, int flags) {
         LogManager.d(TAG, "writing RangingData");
         out.writeParcelable(region, flags);
-        out.writeParcelableArray(beacons.toArray(new Parcelable[0]), flags);
         out.writeParcelable(batchFetchInfo, flags);
+        out.writeParcelableArray(beacons.toArray(new Parcelable[0]), flags);
         LogManager.d(TAG, "done writing RangingData");
 
     }
@@ -79,15 +79,14 @@ public class RangingData<BeaconContent extends BeaconIdentifiers> implements Par
     RangingData(Parcel in) {
         LogManager.d(TAG, "parsing RangingData");
         region = in.readParcelable(Region.class.getClassLoader());
+        LogManager.d(TAG, "parsing batch fetch info start");
+        batchFetchInfo = in.readParcelable(BeaconBatchFetchInfo.class.getClassLoader());
         LogManager.d(TAG, "parsing rd beacons start");
         Parcelable[] parcelables  = in.readParcelableArray(Beacon.class.getClassLoader());
         beacons = new ArrayList<Beacon>(parcelables.length);
         for (int i = 0; i < parcelables.length; i++) {
             beacons.add((Beacon)parcelables[i]);
         }
-        LogManager.d(TAG, "parsing batch fetch info");
-        batchFetchInfo = in.readParcelable(BeaconBatchFetchInfo.class.getClassLoader());
-        LogManager.d(TAG, "parsing batch fetch info");
     }
 
     public static final Parcelable.Creator<RangingData> CREATOR

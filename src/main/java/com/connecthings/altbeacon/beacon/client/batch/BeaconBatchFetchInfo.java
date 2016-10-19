@@ -64,12 +64,12 @@ public class BeaconBatchFetchInfo<BeaconContent extends BeaconIdentifiers> imple
         String className = in.readString();
         if(!TextUtils.isEmpty(className)){
             try {
-                in.readArrayList(Class.forName(className).getClassLoader());
+                contents = in.readArrayList(Class.forName(className).getClassLoader());
             } catch (ClassNotFoundException e) {
                 LogManager.e(TAG, "impossible to find class to unparcel the content");
             }
         }
-        in.readArrayList(Beacon.class.getClassLoader());
+        beaconWithNoContents = in.readArrayList(Beacon.class.getClassLoader());
         fetchStatus = BeaconContentFetchStatus.valueOf(in.readString());
     }
 

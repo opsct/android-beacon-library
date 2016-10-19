@@ -40,7 +40,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
     }
 
     public BeaconBatchFetchInfo<BeaconContent> updateContentOrAddToFetch(Collection<Beacon> beacons){
-        BeaconContentFetchStatus globalStatus = BeaconContentFetchStatus.IN_PROGRESS;
+        BeaconContentFetchStatus globalStatus = null;
         List<BeaconContent> contents = new ArrayList<>(beacons.size());
         List<Beacon> beaconsWithNoContent = new ArrayList<>();
         int countError = 0;
@@ -72,10 +72,12 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
                 }
             }
         }
-        if(countError == 0 && countInProgress ==0){
+        if(countError == 0 && countInProgress == 0){
             globalStatus = BeaconContentFetchStatus.SUCCESS;
         }else if(countError != 0){
             globalStatus = errorStatus;
+        }else{
+            globalStatus = BeaconContentFetchStatus.IN_PROGRESS;
         }
         return new BeaconBatchFetchInfo<BeaconContent>(contents, beaconsWithNoContent, globalStatus);
     }

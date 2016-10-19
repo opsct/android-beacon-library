@@ -28,10 +28,13 @@ import android.annotation.TargetApi;
 import android.app.IntentService;
 import android.content.Intent;
 
+
+import com.connecthings.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
 import com.connecthings.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
 import com.connecthings.altbeacon.beacon.service.MonitoringData;
 import com.connecthings.altbeacon.beacon.service.RangingData;
+
 
 import java.util.Set;
 
@@ -63,11 +66,14 @@ public class BeaconIntentProcessor extends IntentService {
             if (rangingData.getBeacons() == null) {
                 LogManager.w(TAG, "Ranging data has a null beacons collection");
             }
-            Set<RangeNotifier<? extends BeaconIdentifiers>> notifiers = BeaconManager.getInstanceForApplication(this).getRangingNotifiers();
             java.util.Collection<Beacon> beacons = rangingData.getBeacons();
+            java.util.Collection<?> contents = rangingData.getContents();
+            Region region = rangingData.getRegion();
+            BeaconContentFetchStatus status = rangingData.getStatus();
+            Set<RangeNotifier<? extends BeaconIdentifiers>> notifiers = BeaconManager.getInstanceForApplication(this).getRangingNotifiers();
             if (notifiers != null) {
                 for(RangeNotifier notifier : notifiers){
-                    notifier.didRangeBeaconsInRegion(beacons, rangingData.getRegion());
+                    notifier.didRangeBeaconsInRegion(beacons, region);
                 }
             }
             else {
@@ -77,6 +83,16 @@ public class BeaconIntentProcessor extends IntentService {
             if (dataNotifier != null) {
                 dataNotifier.didRangeBeaconsInRegion(beacons, rangingData.getRegion());
             }
+
+            Set<RangeContentNotifier<? extends BeaconIdentifiers>> contentNotifiers = BeaconManager.getInstanceForApplication(this).getRangingContentNotifiers();
+            if (contentNotifiers != null) {
+                for(RangeContentNotifier notifier : contentNotifiers){
+                    notifier.didRangeBeaconsInRegion(beacons, contents, status, rangingData.getRegion());
+                }
+            } else {
+                LogManager.d(TAG, "but ranging content notifier is null, so we're dropping it.");
+            }
+
         }
 
         if (monitoringData != null) {

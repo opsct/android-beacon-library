@@ -6,6 +6,7 @@ import com.connecthings.altbeacon.beacon.utils.FixSizeCache;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Created by Connecthings on 27/09/16.
@@ -20,7 +21,6 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
     private int mMaxBeaconCacheTime;
     private Collection<Beacon> beaconsToFetch;
     private final Object beaconsLock = new Object();
-    private BeaconBatchFetchInfo<BeaconContent> lastBatchFetchInfo;
     private BatchCallProviderLimiter batchErrorLimiter;
 
     public BeaconDataBatchFetcher(BeaconDataBatchProvider beaconDataBatchProvider, int cacheSize, int maxBeaconCacheTime){
@@ -31,24 +31,51 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         beaconsToFetch = new HashSet<>(10);
     }
 
-    public void updateContentOrAddToFetch(Beacon beacon){
+
+    public BeaconContentFetchInfo updateContentOrAddToFetch(Beacon beacon){
         if(!beacon.isExtraBeaconData() && ((!mBeaconDataBatchProvider.fetchEphemeralIds() && !beacon.hasEphemeralIdentifiers()) || (mBeaconDataBatchProvider.fetchEphemeralIds()))) {
-            beacon.updateBeaconFetchInfo(findFetchInfoOrAddToFetch(beacon));
+            //beacon.updateBeaconFetchInfo(findFetchInfoOrAddToFetch(beacon));
+            return findFetchInfoOrAddToFetch(beacon);
         }
+        return null;
     }
 
-    public void updateContentOrAddToFetch(Collection<Beacon> beacons){
+    public BeaconBatchFetchInfo<BeaconContent> updateContentOrAddToFetch(Collection<Beacon> beacons){
+        BeaconContentFetchStatus globalStatus = BeaconContentFetchStatus.IN_PROGRESS;
+        List<BeaconContent> contents = new ArrayList<>(beacons.size());
+        int countError = 0;
+        int countInProgress = 0;
+        BeaconContentFetchStatus errorStatus = null;
         for(Beacon beacon : beacons) {
-            updateContentOrAddToFetch(beacon);
+            BeaconContentFetchInfo<BeaconContent> beaconContentFetchInfo = updateContentOrAddToFetch(beacon);
+            if(beaconContentFetchInfo != null) {
+                if(beaconContentFetchInfo.getContent() != null){
+                    contents.add(beaconContentFetchInfo.getContent());
+                }
+
+                if(beaconContentFetchInfo.getStatus() == BeaconContentFetchStatus.IN_PROGRESS){
+                    countInProgress++;
+                }else if(beaconContentFetchInfo.getStatus() == BeaconContentFetchStatus.BACKEND_ERROR
+                        || beaconContentFetchInfo.getStatus() == BeaconContentFetchStatus.NETWORK_ERROR
+                        || beaconContentFetchInfo.getStatus() == BeaconContentFetchStatus.DB_ERROR){
+                    countError++;
+                    errorStatus = beaconContentFetchInfo.getStatus();
+                }
+            }
         }
+        if(countError == 0 && countInProgress ==0){
+            globalStatus = BeaconContentFetchStatus.SUCCESS;
+        }else if(countError != 0){
+            globalStatus = errorStatus;
+        }
+        return new BeaconBatchFetchInfo<BeaconContent>(globalStatus, contents);
     }
 
     public void fetch(){
         synchronized (beaconsLock) {
-            if (mBeaconDataBatchProvider != null && batchErrorLimiter.isTimeToCallBatchProvider()) {
-                if(beaconsToFetch.size() !=0) {
-                    this.mBeaconDataBatchProvider.fetch(new ArrayList<Beacon>(beaconsToFetch), this);
-                }
+            if (mBeaconDataBatchProvider != null && batchErrorLimiter.isTimeToCallBatchProvider()
+                        && beaconsToFetch.size() != 0) {
+                this.mBeaconDataBatchProvider.fetch(new ArrayList<Beacon>(beaconsToFetch), this);
             }
             beaconsToFetch.clear();
         }
@@ -71,7 +98,11 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         for(Beacon beacon : beacons){
             updateFetchInfo(beacon, providerException.getStatus());
         }
-        batchErrorLimiter.addError();
+        //Limit the call to the Provider only if it's backend error or on SQL error
+        //because NETWORK ERROR can be detected before any WS call
+        if(providerException.getStatus() != BeaconContentFetchStatus.NETWORK_ERROR) {
+            batchErrorLimiter.addError();
+        }
     }
 
     private BeaconContentFetchInfo findFetchInfoOrAddToFetch(Beacon beacon){
@@ -85,7 +116,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         return fetchInfo;
     }
 
-    private BeaconContentFetchInfo<BeaconContent> getFetchInfo(BeaconIdentifiers beaconIdentifiers){
+    BeaconContentFetchInfo<BeaconContent> getFetchInfo(BeaconIdentifiers beaconIdentifiers){
         BeaconContentFetchInfo<BeaconContent> fetchInfo = beaconContentInfoCache.get(beaconIdentifiers.getStaticIdentifiers().toString());
         if(fetchInfo == null && beaconIdentifiers.hasEphemeralIdentifiers()){
             fetchInfo = beaconContentInfoCache.get(beaconIdentifiers.getEphemeralIdentifiers().toString());

@@ -40,11 +40,13 @@ import java.util.Collection;
  *
  */
 public interface RangeContentNotifier<BeaconContent extends BeaconIdentifiers> {
+
     /**
-     * Called once per second to give an estimate of the mDistance to visible beacons
-     * @param beacons a collection of <code>Beacon<code> objects that have been seen in the past second
-     * @param beacons a collection of <code>Beacon<code> objects that have been seen in the past second
-     * @param region the <code>Region</code> object that defines the criteria for the ranged beacons
+     *
+     * @param contents
+     * @param noContentAssociateToBeacons
+     * @param fetchStatus
+     * @param region
      */
-    public void didRangeBeaconsInRegion(Collection<Beacon<BeaconContent>> beacons, Collection<BeaconContent> contents, BeaconContentFetchStatus fetchStatus, Region region);
+    public void didRangeBeaconsInRegion(Collection<BeaconContent> contents, Collection<Beacon> noContentAssociateToBeacons, BeaconContentFetchStatus fetchStatus, Region region);
 }

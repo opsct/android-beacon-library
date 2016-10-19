@@ -12,6 +12,6 @@ public interface BeaconDataBatchProvider<BeaconContent extends BeaconIdentifiers
 
     public boolean fetchEphemeralIds();
 
-    public void fetch(Collection<Beacon<BeaconContent>> beacons, BeaconDataBatchNotifier<BeaconContent> beaconDataBatchNotifier);
+    public void fetch(Collection<Beacon> beacons, BeaconDataBatchNotifier<BeaconContent> beaconDataBatchNotifier);
 
 }

@@ -42,14 +42,22 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
     public BeaconBatchFetchInfo<BeaconContent> updateContentOrAddToFetch(Collection<Beacon> beacons){
         BeaconContentFetchStatus globalStatus = BeaconContentFetchStatus.IN_PROGRESS;
         List<BeaconContent> contents = new ArrayList<>(beacons.size());
+        List<Beacon> beaconsWithNoContent = new ArrayList<>();
         int countError = 0;
         int countInProgress = 0;
         BeaconContentFetchStatus errorStatus = null;
         for(Beacon beacon : beacons) {
             BeaconContentFetchInfo<BeaconContent> beaconContentFetchInfo = updateContentOrAddToFetch(beacon);
             if(beaconContentFetchInfo != null) {
-                if(beaconContentFetchInfo.getContent() != null){
-                    contents.add(beaconContentFetchInfo.getContent());
+                BeaconContent content = beaconContentFetchInfo.getContent();
+                if(content != null){
+                    if(content instanceof UpdateBeacon){
+                        ((UpdateBeacon) content).updateBeacon(beacon);
+                    }
+                    if(beacon.hasEphemeralIdentifiers()){
+                        beacon.setStaticIdentifiers(content.getStaticIdentifiers());
+                    }
+                    contents.add(content);
                 }
 
                 if(beaconContentFetchInfo.getStatus() == BeaconContentFetchStatus.IN_PROGRESS){
@@ -59,6 +67,8 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
                         || beaconContentFetchInfo.getStatus() == BeaconContentFetchStatus.DB_ERROR){
                     countError++;
                     errorStatus = beaconContentFetchInfo.getStatus();
+                }else if(beaconContentFetchInfo.getStatus() == BeaconContentFetchStatus.NO_CONTENT){
+                    beaconsWithNoContent.add(beacon);
                 }
             }
         }
@@ -67,7 +77,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         }else if(countError != 0){
             globalStatus = errorStatus;
         }
-        return new BeaconBatchFetchInfo<BeaconContent>(globalStatus, contents);
+        return new BeaconBatchFetchInfo<BeaconContent>(contents, beaconsWithNoContent, globalStatus);
     }
 
     public void fetch(){
@@ -85,18 +95,18 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
     }
 
     @Override
-    public void onBatchUpdate(Collection<BeaconContent> beaconContents, Collection<Beacon<BeaconContent>> unresolvedBeacons) {
+    public void onBatchUpdate(Collection<BeaconContent> beaconContents, Collection<Beacon> unresolvedBeacons) {
         BeaconContentFetchInfo<BeaconContent> fetchInfo;
         for(BeaconContent beaconContent : beaconContents){
             updateFetchInfo(beaconContent, BeaconContentFetchStatus.SUCCESS);
         }
-        for(Beacon<BeaconContent> beacon : unresolvedBeacons){
+        for(Beacon beacon : unresolvedBeacons){
             updateFetchInfo(beacon, BeaconContentFetchStatus.NO_CONTENT);
         }
     }
 
     @Override
-    public void onBatchError(Collection<Beacon<BeaconContent>> beacons, DataBatchProviderException providerException) {
+    public void onBatchError(Collection<Beacon> beacons, DataBatchProviderException providerException) {
         BeaconContentFetchInfo<BeaconContent> fetchInfo;
         for(Beacon beacon : beacons){
             updateFetchInfo(beacon, providerException.getStatus());

@@ -45,7 +45,7 @@ public class SBeaconTest {
         return data;
     }
 
-    class SBeacon<BeaconContent extends BeaconIdentifiers> extends Beacon<BeaconContent> {
+    class SBeacon extends Beacon {
         private static final String TAG = "SBeacon";
         private int mTime;
 

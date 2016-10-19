@@ -305,7 +305,7 @@ public class BeaconDataBatchFetcherTest {
         }
 
         @Override
-        public void fetch(final Collection<Beacon<BeaconContentSimple>> beacons, final BeaconDataBatchNotifier<BeaconContentSimple> beaconDataBatchNotifier) {
+        public void fetch(final Collection<Beacon> beacons, final BeaconDataBatchNotifier<BeaconContentSimple> beaconDataBatchNotifier) {
             beaconDataBatchNotifier.onBatchError(beacons, new DataBatchProviderException(BeaconContentFetchStatus.BACKEND_ERROR));
         }
     }
@@ -318,12 +318,12 @@ public class BeaconDataBatchFetcherTest {
         }
 
         @Override
-        public void fetch(final Collection<Beacon<BeaconContentSimple>> beacons, final BeaconDataBatchNotifier<BeaconContentSimple> beaconDataBatchNotifier) {
+        public void fetch(final Collection<Beacon> beacons, final BeaconDataBatchNotifier<BeaconContentSimple> beaconDataBatchNotifier) {
             List<BeaconContentSimple> contentSimples = new ArrayList<>();
-            List<Beacon<BeaconContentSimple>> unresolved = new ArrayList<>();
+            List<Beacon> unresolved = new ArrayList<>();
             int size = beacons.size();
             int i = 0;
-            for(Beacon<BeaconContentSimple> beacon : beacons){
+            for(Beacon beacon : beacons){
                 if(i<=1) {
                     contentSimples.add(new BeaconContentSimple(beacon.getEphemeralIdentifiers(), beacon.getIdentifiers()));
                 }else {
@@ -353,16 +353,16 @@ public class BeaconDataBatchFetcherTest {
         }
 
         @Override
-        public void fetch(final Collection<Beacon<BeaconContentSimple>> beacons, final BeaconDataBatchNotifier<BeaconContentSimple> beaconDataBatchNotifier) {
+        public void fetch(final Collection<Beacon> beacons, final BeaconDataBatchNotifier<BeaconContentSimple> beaconDataBatchNotifier) {
             Runnable runnable = new Runnable(){
 
                 @Override
                 public void run() {
                     List<BeaconContentSimple> contentSimples = new ArrayList<>();
-                    List<Beacon<BeaconContentSimple>> unresolved = new ArrayList<>();
+                    List<Beacon> unresolved = new ArrayList<>();
                     int size = beacons.size();
                     int i = 0;
-                    for(Beacon<BeaconContentSimple> beacon : beacons){
+                    for(Beacon beacon : beacons){
                         if(i<=1) {
                             contentSimples.add(new BeaconContentSimple(beacon.getEphemeralIdentifiers(), beacon.getIdentifiers()));
                         }else {

@@ -59,7 +59,7 @@ import java.util.List;
  * @author  David G. Young
  * @see     Region#matchesBeacon(Beacon Beacon)
  */
-public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelable, BeaconIdentifiers {
+public class Beacon implements Parcelable, BeaconIdentifiers {
     private static final String TAG = "Beacon";
 
     private static final List<Long> UNMODIFIABLE_LIST_OF_LONG =
@@ -175,10 +175,6 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
      */
     protected boolean mMultiFrameBeacon = false;
 
-    /**
-     * A Content associate to the beacon
-     */
-    protected BeaconContentFetchInfo<BeaconContent> mBeaconFetchInfo;
 
     /**
      * Required for making object Parcelable.  If you override this class, you must provide an
@@ -260,7 +256,6 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
         mBluetoothName = in.readString();
         mParserIdentifier = in.readString();
         mMultiFrameBeacon = in.readByte() != 0;
-        mBeaconFetchInfo = in.readParcelable(BeaconContentFetchInfo.class.getClassLoader());
     }
 
     /**
@@ -282,7 +277,6 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
         this.mServiceUuid = otherBeacon.getServiceUuid();
         this.mBluetoothName = otherBeacon.mBluetoothName;
         this.mParserIdentifier = otherBeacon.mParserIdentifier;
-        this.mBeaconFetchInfo = otherBeacon.mBeaconFetchInfo;
     }
 
     /**
@@ -447,7 +441,9 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
         return getIdentifiers();
     }
 
-
+    public void setStaticIdentifiers(List<Identifier> staticIdentifiers){
+        mStaticIdentifiers = staticIdentifiers;
+    }
     /**
      * Returns the list of identifiers transmitted with the advertisement
      * @return identifier
@@ -589,23 +585,6 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
         return toStringBuilder().toString();
     }
 
-    public BeaconContent getBeaconContent(){
-        if(mBeaconFetchInfo == null){
-            return null;
-        }
-        return mBeaconFetchInfo.getContent();
-    }
-
-    public BeaconContentFetchInfo<BeaconContent> getBeaconFetchInfo() {
-        return mBeaconFetchInfo;
-    }
-
-    public void updateBeaconFetchInfo(BeaconContentFetchInfo<BeaconContent> beaconFetchInfo) {
-        this.mBeaconFetchInfo = beaconFetchInfo;
-        if(beaconFetchInfo != null && beaconFetchInfo.getContent() !=null && beaconFetchInfo.getContent().hasEphemeralIdentifiers()){
-            this.mStaticIdentifiers = beaconFetchInfo.getContent().getStaticIdentifiers();
-        }
-    }
 
     private void identifierToStringBuilder(List<Identifier> identifiers, StringBuilder sb, boolean isEphemeral){
         int i = 1;
@@ -682,7 +661,6 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
         out.writeString(mBluetoothName);
         out.writeString(mParserIdentifier);
         out.writeByte((byte) (mMultiFrameBeacon ? 1: 0));
-        out.writeParcelable(mBeaconFetchInfo, 0);
     }
 
     /**
@@ -763,10 +741,6 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
                     }
                 }
             }
-
-            if(mBeacon.mBeaconFetchInfo==null) {
-                mBeacon.mBeaconFetchInfo = new BeaconContentFetchInfo(new BeaconContentSimple(mBeacon.mStaticIdentifiers), 5*60*1000, BeaconContentFetchStatus.IN_PROGRESS);
-            }
             return mBeacon;
         }
 
@@ -787,12 +761,6 @@ public class Beacon<BeaconContent extends BeaconIdentifiers> implements Parcelab
             setRssi(beacon.getRssi());
             setServiceUuid(beacon.getServiceUuid());
             setMultiFrameBeacon(beacon.isMultiFrameBeacon());
-            setBeaconFetchInfo((beacon.getBeaconFetchInfo()));
-            return this;
-        }
-
-        public Builder setBeaconFetchInfo(BeaconContentFetchInfo<?> beaconFetchInfo){
-            this.mBeacon.mBeaconFetchInfo = beaconFetchInfo;
             return this;
         }
 

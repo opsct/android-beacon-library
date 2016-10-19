@@ -42,7 +42,7 @@ import java.util.ArrayList;
  *
  * @author  David G. Young
  */
-public class AltBeacon<BeaconContent extends BeaconIdentifiers> extends Beacon<BeaconContent> {
+public class AltBeacon extends Beacon {
     private static final String TAG = "AltBeacon";
 
     /**
@@ -73,7 +73,6 @@ public class AltBeacon<BeaconContent extends BeaconIdentifiers> extends Beacon<B
         this.mDistance = beacon.mDistance;
         this.mRssi = beacon.mRssi;
         this.mTxPower = beacon.mTxPower;
-        this.mBeaconFetchInfo = beacon.mBeaconFetchInfo;
     }
 
     /**

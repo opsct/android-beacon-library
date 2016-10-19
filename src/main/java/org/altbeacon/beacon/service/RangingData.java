@@ -29,25 +29,26 @@ import java.util.Collection;
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.Region;
+import org.altbeacon.beacon.client.batch.BeaconBatchFetchInfo;
 import org.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
+import org.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import org.altbeacon.beacon.logging.LogManager;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class RangingData<BeaconContent extends Parcelable> implements Parcelable {
+public class RangingData<BeaconContent extends BeaconIdentifiers> implements Parcelable {
     private static final String TAG = "RangingData";
     private final Collection<Beacon> beacons;
-    private final Collection<BeaconContent> contents;
-    private final BeaconContentFetchStatus status;
+    private BeaconBatchFetchInfo<BeaconContent> batchFetchInfo;
     private final Region region;
 
-    public RangingData (Collection<Beacon> beacons, Collection<BeaconContent> contents, BeaconContentFetchStatus status, Region region) {
+
+    public RangingData (Collection<Beacon> beacons, BeaconBatchFetchInfo<BeaconContent> batchFetchInfo, Region region) {
         synchronized (beacons) {
             this.beacons =  beacons;
         }
-        this.contents = contents;
-        this.status = status;
+        this.batchFetchInfo = batchFetchInfo;
         this.region = region;
     }
 
@@ -58,12 +59,8 @@ public class RangingData<BeaconContent extends Parcelable> implements Parcelable
         return region;
     }
 
-    public BeaconContentFetchStatus getStatus() {
-        return status;
-    }
-
-    public Collection<BeaconContent> getContents() {
-        return contents;
+    public BeaconBatchFetchInfo<BeaconContent> getBatchFetchInfo() {
+        return batchFetchInfo;
     }
 
     @Override
@@ -73,9 +70,8 @@ public class RangingData<BeaconContent extends Parcelable> implements Parcelable
     public void writeToParcel(Parcel out, int flags) {
         LogManager.d(TAG, "writing RangingData");
         out.writeParcelable(region, flags);
-        out.writeString(status.toString());
         out.writeParcelableArray(beacons.toArray(new Parcelable[0]), flags);
-        out.writeParcelableArray(contents.toArray(new Parcelable[0]), flags);
+        out.writeParcelable(batchFetchInfo, flags);
         LogManager.d(TAG, "done writing RangingData");
 
     }
@@ -83,20 +79,15 @@ public class RangingData<BeaconContent extends Parcelable> implements Parcelable
     RangingData(Parcel in) {
         LogManager.d(TAG, "parsing RangingData");
         region = in.readParcelable(Region.class.getClassLoader());
-        status = BeaconContentFetchStatus.valueOf(in.readString());
         LogManager.d(TAG, "parsing rd beacons start");
         Parcelable[] parcelables  = in.readParcelableArray(Beacon.class.getClassLoader());
         beacons = new ArrayList<Beacon>(parcelables.length);
         for (int i = 0; i < parcelables.length; i++) {
             beacons.add((Beacon)parcelables[i]);
         }
-        LogManager.d(TAG, "parsing rd beacons end");
-        parcelables  = in.readParcelableArray(Parcelable.class.getClassLoader());
-        contents = new ArrayList<BeaconContent>(parcelables.length);
-        for (int i = 0; i < parcelables.length; i++) {
-            contents.add((BeaconContent) parcelables[i]);
-        }
-        LogManager.d(TAG, "parsing rd contents end");
+        LogManager.d(TAG, "parsing batch fetch info");
+        batchFetchInfo = in.readParcelable(BeaconBatchFetchInfo.class.getClassLoader());
+        LogManager.d(TAG, "parsing batch fetch info");
     }
 
     public static final Parcelable.Creator<RangingData> CREATOR

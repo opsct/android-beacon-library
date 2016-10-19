@@ -67,7 +67,7 @@ public class BeaconIntentProcessor extends IntentService {
             java.util.Collection<?> contents = rangingData.getContents();
             Region region = rangingData.getRegion();
             BeaconContentFetchStatus status = rangingData.getStatus();
-            Set<RangeNotifier<? extends BeaconIdentifiers>> notifiers = BeaconManager.getInstanceForApplication(this).getRangingNotifiers();
+            Set<RangeNotifier> notifiers = BeaconManager.getInstanceForApplication(this).getRangingNotifiers();
             if (notifiers != null) {
                 for(RangeNotifier notifier : notifiers){
                     notifier.didRangeBeaconsInRegion(beacons, region);
@@ -84,7 +84,7 @@ public class BeaconIntentProcessor extends IntentService {
             Set<RangeContentNotifier<? extends BeaconIdentifiers>> contentNotifiers = BeaconManager.getInstanceForApplication(this).getRangingContentNotifiers();
             if (contentNotifiers != null) {
                 for(RangeContentNotifier notifier : contentNotifiers){
-                    notifier.didRangeBeaconsInRegion(beacons, contents, status, rangingData.getRegion());
+                    notifier.didRangeBeaconsInRegion(contents, beacons, status, rangingData.getRegion());
                 }
             } else {
                 LogManager.d(TAG, "but ranging content notifier is null, so we're dropping it.");

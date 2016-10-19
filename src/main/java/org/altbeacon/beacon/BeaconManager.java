@@ -114,7 +114,7 @@ public class BeaconManager {
     protected static BeaconManager client = null;
     private final ConcurrentMap<BeaconConsumer, ConsumerInfo> consumers = new ConcurrentHashMap<BeaconConsumer,ConsumerInfo>();
     private Messenger serviceMessenger = null;
-    protected final Set<RangeNotifier<?>> rangeNotifiers = new CopyOnWriteArraySet<>();
+    protected final Set<RangeNotifier> rangeNotifiers = new CopyOnWriteArraySet<>();
     protected final Set<RangeContentNotifier<?>> rangeContentNotifiers = new CopyOnWriteArraySet<>();
     protected RangeNotifier dataRequestNotifier = null;
     protected Set<MonitorNotifier> monitorNotifiers = new CopyOnWriteArraySet<>();
@@ -477,7 +477,7 @@ public class BeaconManager {
      * @param notifier
      * @see RangeNotifier
      */
-    public void addRangeNotifier(RangeNotifier<? extends BeaconIdentifiers> notifier){
+    public void addRangeNotifier(RangeNotifier notifier){
         if(notifier != null){
             synchronized (rangeNotifiers){
                 rangeNotifiers.add(notifier);
@@ -491,7 +491,7 @@ public class BeaconManager {
      * @param notifier
      * @see RangeNotifier
      */
-    public boolean removeRangeNotifier(RangeNotifier<? extends BeaconIdentifiers> notifier){
+    public boolean removeRangeNotifier(RangeNotifier notifier){
         synchronized (rangeNotifiers){
             return rangeNotifiers.remove(notifier);
         }
@@ -862,7 +862,7 @@ public class BeaconManager {
     /**
      * @return the list of registered rangeNotifier
      */
-    public Set<RangeNotifier<?>> getRangingNotifiers(){
+    public Set<RangeNotifier> getRangingNotifiers(){
         return rangeNotifiers;
     }
 

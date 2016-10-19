@@ -186,11 +186,6 @@ public class BeaconTest {
         assertEquals("manufacturer is same after deserialization", beacon.getManufacturer(), beacon2.getManufacturer());
         assertEquals("data field 0 is the same after deserialization", beacon.getDataFields().get(0), beacon2.getDataFields().get(0));
         assertEquals("data field 0 is the right value", beacon.getDataFields().get(0), (Long) 100l);
-        assertNotEquals("beaconFetchInfo beacon is defined", beacon.getBeaconFetchInfo(), null);
-        assertNotEquals("beaconFetchInfo beacon2 is defined", beacon2.getBeaconFetchInfo(), null);
-        assertEquals("beaconContent id1 is the same after deserialization", beacon2.getBeaconFetchInfo().getContent().getStaticIdentifiers().get(0), beacon.getBeaconFetchInfo().getContent().getStaticIdentifiers().get(0));
-        assertEquals("beaconContent id2 is the same after deserialization", beacon2.getBeaconFetchInfo().getContent().getStaticIdentifiers().get(1), beacon.getBeaconFetchInfo().getContent().getStaticIdentifiers().get(1));
-        assertEquals("beaconContent id3 is the same after deserialization", beacon2.getBeaconFetchInfo().getContent().getStaticIdentifiers().get(2), beacon.getBeaconFetchInfo().getContent().getStaticIdentifiers().get(2));
     }
 
     @Test

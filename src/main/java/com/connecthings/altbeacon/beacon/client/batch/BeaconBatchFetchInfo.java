@@ -62,7 +62,9 @@ public class BeaconBatchFetchInfo<BeaconContent extends BeaconIdentifiers> imple
 
     private void readFromParcel(Parcel in){
         String className = in.readString();
-        if(!TextUtils.isEmpty(className)){
+        if(TextUtils.isEmpty(className)) {
+            contents = new ArrayList<>();
+        }else{
             try {
                 contents = in.readArrayList(Class.forName(className).getClassLoader());
             } catch (ClassNotFoundException e) {

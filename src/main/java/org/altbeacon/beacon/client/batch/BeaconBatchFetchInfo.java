@@ -6,9 +6,6 @@ import android.text.TextUtils;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.logging.LogManager;
-import org.altbeacon.beacon.logging.Logger;
-import org.altbeacon.beacon.logging.Loggers;
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -48,5 +48,5 @@ public interface RangeContentNotifier<BeaconContent extends BeaconIdentifiers> {
      * @param fetchStatus
      * @param region
      */
-    public void didRangeBeaconsInRegion(Collection<BeaconContent> contents, Collection<Beacon> noContentAssociateToBeacons, BeaconContentFetchStatus fetchStatus, Region region);
+    public void didRangeBeaconsInRegion(Collection<Beacon> beacons,Collection<BeaconContent> contents, Collection<Beacon> noContentAssociateToBeacons, BeaconContentFetchStatus fetchStatus, Region region);
 }

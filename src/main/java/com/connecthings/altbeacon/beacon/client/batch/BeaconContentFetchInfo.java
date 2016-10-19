@@ -43,11 +43,11 @@ public class BeaconContentFetchInfo<BeaconContent extends BeaconIdentifiers> imp
 
     public void updateStatus(BeaconContentFetchStatus status){
         this.status = status;
+        nextUpdateTime = SystemClock.elapsedRealtime() + maxCacheTime;
     }
 
     public void updateBeaconContent(BeaconContent beaconContent){
         content = beaconContent;
-        status = BeaconContentFetchStatus.SUCCESS;
         nextUpdateTime = SystemClock.elapsedRealtime() + maxCacheTime;
     }
 

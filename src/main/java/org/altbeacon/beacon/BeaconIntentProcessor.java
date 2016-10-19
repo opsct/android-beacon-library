@@ -27,6 +27,7 @@ import android.annotation.TargetApi;
 import android.app.IntentService;
 import android.content.Intent;
 
+import org.altbeacon.beacon.client.batch.BeaconBatchFetchInfo;
 import org.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
 import org.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import org.altbeacon.beacon.logging.LogManager;
@@ -64,9 +65,8 @@ public class BeaconIntentProcessor extends IntentService {
                 LogManager.w(TAG, "Ranging data has a null beacons collection");
             }
             java.util.Collection<Beacon> beacons = rangingData.getBeacons();
-            java.util.Collection<?> contents = rangingData.getContents();
+
             Region region = rangingData.getRegion();
-            BeaconContentFetchStatus status = rangingData.getStatus();
             Set<RangeNotifier> notifiers = BeaconManager.getInstanceForApplication(this).getRangingNotifiers();
             if (notifiers != null) {
                 for(RangeNotifier notifier : notifiers){
@@ -80,14 +80,16 @@ public class BeaconIntentProcessor extends IntentService {
             if (dataNotifier != null) {
                 dataNotifier.didRangeBeaconsInRegion(beacons, rangingData.getRegion());
             }
-
-            Set<RangeContentNotifier<? extends BeaconIdentifiers>> contentNotifiers = BeaconManager.getInstanceForApplication(this).getRangingContentNotifiers();
-            if (contentNotifiers != null) {
-                for(RangeContentNotifier notifier : contentNotifiers){
-                    notifier.didRangeBeaconsInRegion(contents, beacons, status, rangingData.getRegion());
+            BeaconBatchFetchInfo<? extends BeaconIdentifiers> batchFetchInfo = rangingData.getBatchFetchInfo();
+            if(batchFetchInfo != null) {
+                Set<RangeContentNotifier<? extends BeaconIdentifiers>> contentNotifiers = BeaconManager.getInstanceForApplication(this).getRangingContentNotifiers();
+                if (contentNotifiers != null) {
+                    for (RangeContentNotifier notifier : contentNotifiers) {
+                        notifier.didRangeBeaconsInRegion(batchFetchInfo.getContents(), batchFetchInfo.getBeaconWithNoContents(), batchFetchInfo.getFetchStatus(), rangingData.getRegion());
+                    }
+                } else {
+                    LogManager.d(TAG, "but ranging content notifier is null, so we're dropping it.");
                 }
-            } else {
-                LogManager.d(TAG, "but ranging content notifier is null, so we're dropping it.");
             }
 
         }

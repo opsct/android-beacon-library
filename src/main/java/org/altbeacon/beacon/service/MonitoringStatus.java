@@ -6,7 +6,6 @@ import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.logging.LogManager;
-import org.altbeacon.beacon.service.scanner.optimizer.CycledMonitorNotifier;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,8 +36,6 @@ public class MonitoringStatus {
 
     private boolean mStatePreservationIsOn = true;
 
-    private CycledMonitorNotifier mCycledMonitorNotifier;
-
     public static MonitoringStatus getInstanceForApplication(Context context) {
         if (sInstance == null) {
             synchronized (MonitoringStatus.class) {
@@ -52,11 +49,6 @@ public class MonitoringStatus {
 
     public MonitoringStatus(Context context) {
         this.mContext = context;
-        restoreMonitoringStatus();
-    }
-
-    public void setCycledMonitorNotifier(CycledMonitorNotifier cycledMonitorNotifier){
-        this.mCycledMonitorNotifier = cycledMonitorNotifier;
     }
 
     public synchronized void addRegion(Region region) {
@@ -110,11 +102,6 @@ public class MonitoringStatus {
                 needsMonitoringStateSaving = true;
                 LogManager.d(TAG, "found a monitor that expired: %s", region);
                 state.getCallback().call(mContext, "monitoringData", new MonitoringData(state.getInside(), region));
-                if(mCycledMonitorNotifier != null){
-                    mCycledMonitorNotifier.didExitRegion(region);
-                }
-            }else if(mCycledMonitorNotifier != null && state.getInside()){
-                mCycledMonitorNotifier.regionWithBeaconInside(region);
             }
         }
         if (needsMonitoringStateSaving) {
@@ -133,11 +120,6 @@ public class MonitoringStatus {
             if (state != null && state.markInside()) {
                 needsMonitoringStateSaving = true;
                 state.getCallback().call(mContext, "monitoringData", new MonitoringData(state.getInside(), region));
-                if(mCycledMonitorNotifier != null){
-                    mCycledMonitorNotifier.didEnterRegion(region);
-                }
-            }else if(mCycledMonitorNotifier!=null && state.getInside()){
-                mCycledMonitorNotifier.regionWithBeaconInside(region);
             }
         }
         if (needsMonitoringStateSaving) {

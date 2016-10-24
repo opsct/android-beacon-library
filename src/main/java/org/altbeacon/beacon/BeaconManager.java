@@ -49,7 +49,6 @@ import org.altbeacon.beacon.service.RunningAverageRssiFilter;
 import org.altbeacon.beacon.service.StartRMData;
 import org.altbeacon.beacon.service.scanner.ScanPeriods;
 import org.altbeacon.beacon.service.scanner.NonBeaconLeScanCallback;
-import org.altbeacon.beacon.service.scanner.optimizer.CycledMonitorNotifier;
 import org.altbeacon.beacon.simulator.BeaconSimulator;
 
 import java.util.ArrayList;

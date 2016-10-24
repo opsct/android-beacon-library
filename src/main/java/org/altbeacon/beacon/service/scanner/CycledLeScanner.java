@@ -397,8 +397,7 @@ public class CycledLeScanner implements Parcelable{
                         LogManager.d(TAG, "Not stopping scan because this is Android N and we" +
                                 " keep scanning for a minimum of 6 seconds at a time. "+
                                  "We will stop in "+(ANDROID_N_MIN_SCAN_CYCLE_MILLIS-(now-mLastScanStopTime))+" millisconds.");
-                    }
-                    else {
+                    } else {
                         try {
                             LogManager.d(TAG, "stopping bluetooth le scan");
                             finishScan();

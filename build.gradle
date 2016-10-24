@@ -20,7 +20,7 @@ def getVersionName = {
         println("Can't get version from git: " + e);
         return "adhoc"
     }*/
-    return "2.8.1-CS5"
+    return "2.9.1-CS5"
 }
 
 buildscript {
@@ -73,11 +73,11 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
 
-    sourceSets {
+   /* sourceSets {
         androidTest {
             setRoot('src/test')
         }
-    }
+    }*/
 
     lintOptions {
         abortOnError false

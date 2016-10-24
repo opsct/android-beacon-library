@@ -54,7 +54,6 @@ import org.altbeacon.beacon.service.scanner.CycledLeScanCallback;
 import org.altbeacon.beacon.service.scanner.CycledLeScanner;
 import org.altbeacon.beacon.service.scanner.NonBeaconLeScanCallback;
 import org.altbeacon.beacon.service.scanner.RecordDetectionListener;
-import org.altbeacon.beacon.service.scanner.optimizer.CycledMonitorNotifier;
 import org.altbeacon.beacon.service.scanner.screenstate.ScreenStateBroadcastReceiver;
 import org.altbeacon.beacon.service.scanner.screenstate.ScreenStateInstance;
 import org.altbeacon.beacon.startup.StartupBroadcastReceiver;
@@ -234,9 +233,7 @@ public class BeaconService extends Service {
         defaultDistanceCalculator =  new ModelSpecificDistanceCalculator(this, BeaconManager.getDistanceModelUpdateUrl());
         Beacon.setDistanceCalculator(defaultDistanceCalculator);
 
-        CycledMonitorNotifier cycledMonitorNotifier = mCycledScanner instanceof CycledMonitorNotifier?(CycledMonitorNotifier)mCycledScanner:null;
         monitoringStatus = MonitoringStatus.getInstanceForApplication(getApplicationContext());
-        monitoringStatus.setCycledMonitorNotifier(cycledMonitorNotifier);
 
         // Look for simulated scan data
         try {

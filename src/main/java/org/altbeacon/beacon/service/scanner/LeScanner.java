@@ -31,8 +31,8 @@ public abstract class LeScanner implements RecordDetectionListener{
         this.mCycledLeScanCallback = cycledLeScanCallback;
         this.mBluetoothCrashResolver = bluetoothCrashResolver;
         mScanThread = new HandlerThread("CycledLeScannerThread");
-        mScanHandler = new Handler(mScanThread.getLooper());
         mScanThread.start();
+        mScanHandler = new Handler(mScanThread.getLooper());
     }
 
     void onBackground(){

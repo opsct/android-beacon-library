@@ -98,7 +98,7 @@ public class CycledLeScannerScreenState extends CycledLeScanner implements Scree
     }
 
     protected CycledLeScannerScreenState(Parcel in){
-        super(in, mScanThread);
+        super(in);
         mActiveScanPeriodOnScreenStateSwitch = in.readInt();
     }
 

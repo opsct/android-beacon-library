@@ -1,24 +1,15 @@
 package org.altbeacon.beacon.service.scanner;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.SystemClock;
 
-import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.logging.LogManager;
-import org.altbeacon.beacon.startup.StartupBroadcastReceiver;
 import org.altbeacon.bluetooth.BluetoothCrashResolver;
-
-import java.util.Date;
 
 @TargetApi(18)
 public abstract class LeScanner implements RecordDetectionListener{
@@ -32,11 +23,16 @@ public abstract class LeScanner implements RecordDetectionListener{
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mBackgroundFlag;
     private long mLastDetectionTime = 0l;
+    private final Handler mScanHandler;
+    private final HandlerThread mScanThread;
 
     public LeScanner(Context context,CycledLeScanCallback cycledLeScanCallback, BluetoothCrashResolver bluetoothCrashResolver) {
         this.mContext = context;
         this.mCycledLeScanCallback = cycledLeScanCallback;
         this.mBluetoothCrashResolver = bluetoothCrashResolver;
+        mScanThread = new HandlerThread("CycledLeScannerThread");
+        mScanHandler = new Handler(mScanThread.getLooper());
+        mScanThread.start();
     }
 
     void onBackground(){
@@ -47,6 +43,28 @@ public abstract class LeScanner implements RecordDetectionListener{
         this.mBackgroundFlag = false;
     }
 
+    void onDestroy(){
+        mScanThread.quit();
+    }
+
+    protected Handler getScanHandler(){
+        return mScanHandler;
+    }
+
+    protected void postStopLeScan() {
+        final BluetoothAdapter bluetoothAdapter = getBluetoothAdapter();
+        if (bluetoothAdapter == null) {
+            return;
+        }
+        mScanHandler.removeCallbacksAndMessages(null);
+        mScanHandler.post(generateStopScanRunnable());
+    }
+
+    protected void postStartLeScan() {
+        mScanHandler.removeCallbacksAndMessages(null);
+        mScanHandler.post(generateStartScanRunnable());
+    }
+
     abstract boolean onDeferScanIfNeeded(boolean isDefer);
 
     abstract void stopScan();
@@ -55,6 +73,10 @@ public abstract class LeScanner implements RecordDetectionListener{
 
     abstract void finishScan();
 
+    abstract Runnable generateStopScanRunnable();
+
+    abstract Runnable generateStartScanRunnable();
+
     protected boolean getBackgroundFlag(){
         return mBackgroundFlag;
     }
@@ -62,6 +84,7 @@ public abstract class LeScanner implements RecordDetectionListener{
     protected CycledLeScanCallback getCycledLeScanCallback() {
         return mCycledLeScanCallback;
     }
+
 
     protected BluetoothCrashResolver getBluetoothCrashResolver() {
         return mBluetoothCrashResolver;

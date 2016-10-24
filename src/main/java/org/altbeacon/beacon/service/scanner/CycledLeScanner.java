@@ -14,6 +14,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.HandlerThread;
+import android.os.Looper;
 import android.os.SystemClock;
 
 import org.altbeacon.beacon.BeaconManager;
@@ -56,8 +58,6 @@ public class CycledLeScanner implements Parcelable{
     private ScanPeriods mCurrentScanPeriods;
     private ScanPeriods mReferenceScanPeriods;
 
-    private final Handler mHandler = new Handler();
-
     private BluetoothCrashResolver mBluetoothCrashResolver;
     private CycledLeScanCallback mCycledLeScanCallback;
 
@@ -80,6 +80,7 @@ public class CycledLeScanner implements Parcelable{
         }
     };
 
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
 
     public CycledLeScanner(ScanPeriods activeScanPeriods, ScanPeriods passiveScanPeriods) {
         this.mActiveScanPeriods = activeScanPeriods;
@@ -238,11 +239,13 @@ public class CycledLeScanner implements Parcelable{
     public void onDestroy(){
         mBluetoothCrashResolver.stop();
         this.stop();
+        mLeScanner.onDestroy();
     }
 
     private void stopScan(){
         mLeScanner.stopScan();
     }
+
 
     protected long calculateNextDelayDefault(long referenceTime1, long referenceTime2){
         long realTime = SystemClock.elapsedRealtime();
@@ -467,9 +470,7 @@ public class CycledLeScanner implements Parcelable{
 
     protected PendingIntent getWakeUpOperation() {
         if (mWakeUpOperation == null) {
-            Intent wakeupIntent = new Intent();
-            //intent.setFlags(Intent.FLAG_UPDATE_CURRENT);
-            wakeupIntent.setClassName(mContext, StartupBroadcastReceiver.class.getName());
+            Intent wakeupIntent = new Intent(mContext, StartupBroadcastReceiver.class);
             wakeupIntent.putExtra("wakeup", true);
             mWakeUpOperation = PendingIntent.getBroadcast(mContext, 0, wakeupIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         }

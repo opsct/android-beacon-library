@@ -3,6 +3,7 @@ package org.altbeacon.beacon.service.scanner;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.BluetoothLeScanner;
 import android.content.Context;
 import android.os.SystemClock;
 
@@ -22,14 +23,47 @@ public class LeScannerForJellyBeanMr2 extends LeScanner {
     @SuppressWarnings("deprecation")
     @Override
     void stopScan() {
-        try {
-            BluetoothAdapter bluetoothAdapter = getBluetoothAdapter();
-            if (bluetoothAdapter != null) {
-                bluetoothAdapter.stopLeScan(getLeScanCallback());
+        postStopLeScan();
+    }
+
+    @Override
+    Runnable generateStartScanRunnable() {
+        final BluetoothAdapter bluetoothAdapter = getBluetoothAdapter();
+        final BluetoothAdapter.LeScanCallback scanCallback = getLeScanCallback();
+        return new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (bluetoothAdapter == null) {
+                        LogManager.w(TAG, "BluetoothAdapter is null. Can't stop scan");
+                    }else{
+                        bluetoothAdapter.startLeScan(scanCallback);
+                    }
+                } catch (Exception e) {
+                    LogManager.e(e, TAG, "Internal Android exception scanning for beacons");
+                }
             }
-        } catch (Exception e) {
-            LogManager.e(e, TAG, "Internal Android exception scanning for beacons");
-        }
+        };
+    }
+
+    @Override
+    Runnable generateStopScanRunnable() {
+        final BluetoothAdapter bluetoothAdapter = getBluetoothAdapter();
+        final BluetoothAdapter.LeScanCallback scanCallback = getLeScanCallback();
+        return new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (bluetoothAdapter == null) {
+                        LogManager.w(TAG, "BluetoothAdapter is null. Can't stop scan");
+                    }else{
+                        bluetoothAdapter.stopLeScan(scanCallback);
+                    }
+                } catch (Exception e) {
+                    LogManager.e(e, TAG, "Internal Android exception scanning for beacons");
+                }
+            }
+        };
     }
 
     @Override
@@ -40,7 +74,7 @@ public class LeScannerForJellyBeanMr2 extends LeScanner {
     @SuppressWarnings("deprecation")
     @Override
     void startScan() {
-        getBluetoothAdapter().startLeScan(getLeScanCallback());
+        postStopLeScan();
     }
 
     @SuppressWarnings("deprecation")
@@ -49,7 +83,7 @@ public class LeScannerForJellyBeanMr2 extends LeScanner {
         getBluetoothAdapter().stopLeScan(getLeScanCallback());
     }
 
-    private BluetoothAdapter.LeScanCallback getLeScanCallback() {
+    BluetoothAdapter.LeScanCallback getLeScanCallback() {
         if (leScanCallback == null) {
             leScanCallback =
                     new BluetoothAdapter.LeScanCallback() {

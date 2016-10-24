@@ -285,6 +285,7 @@ public class BeaconService extends Service {
         unregisterReceiver(screenStateBroadcastReceiver);
         LogManager.i(TAG, "onDestroy called.  stopping scanning");
         handler.removeCallbacksAndMessages(null);
+
         mCycledScanner.onDestroy();
         monitoringStatus.stopStatusPreservation();
     }
@@ -303,8 +304,7 @@ public class BeaconService extends Service {
     }
 
     private PendingIntent getRestartIntent() {
-        Intent restartIntent = new Intent();
-        restartIntent.setClassName(getApplicationContext(), StartupBroadcastReceiver.class.getName());
+        Intent restartIntent = new Intent(getApplicationContext(), StartupBroadcastReceiver.class);
         return getBroadcast(getApplicationContext(), 1, restartIntent, FLAG_ONE_SHOT);
     }
 

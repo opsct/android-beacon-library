@@ -8,7 +8,6 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
-import android.os.Build;
 import android.os.ParcelUuid;
 import android.os.SystemClock;
 
@@ -38,20 +37,7 @@ public class LeScannerForLollipop extends LeScanner {
 
     @Override
     protected void stopScan() {
-        try {
-            if (getScanner() != null) {
-                try {
-                    getScanner().stopScan((ScanCallback) getNewLeScanCallback());
-                }
-                catch (NullPointerException npe) {
-                    // Necessary because of https://code.google.com/p/android/issues/detail?id=160503
-                    LogManager.e(TAG, "Cannot stop scan.  Unexpected NPE.", npe);
-                }
-            }
-        }
-        catch (IllegalStateException e) {
-            LogManager.w(TAG, "Cannot stop scan.  Bluetooth may be turned off.");
-        }
+        postStopLeScan();
     }
 
     /*
@@ -157,6 +143,34 @@ public class LeScannerForLollipop extends LeScanner {
 
     @Override
     protected void startScan() {
+        postStartLeScan();
+    }
+
+    Runnable generateStopScanRunnable(){
+        final BluetoothLeScanner scanner = getScanner();
+        final ScanCallback scanCallback = getNewLeScanCallback();
+        return new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (getScanner() == null) {
+                        LogManager.w(TAG, "Scanner is null. Cannot stop scan");
+                    }else{
+                        try {
+                            getScanner().stopScan((ScanCallback) getNewLeScanCallback());
+                        }catch (NullPointerException npe) {
+                            // Necessary because of https://code.google.com/p/android/issues/detail?id=160503
+                            LogManager.e(TAG, "Cannot stop scan.  Unexpected NPE.", npe);
+                        }
+                    }
+                } catch (IllegalStateException e) {
+                    LogManager.w(TAG, "Cannot stop scan.  Bluetooth may be turned off.");
+                }
+            }
+        };
+    }
+
+    protected Runnable generateStartScanRunnable(){
         List<ScanFilter> filters = new ArrayList<ScanFilter>();
         ScanSettings settings;
 
@@ -170,21 +184,29 @@ public class LeScannerForLollipop extends LeScanner {
             settings = (new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)).build();
         }
 
-        try {
-            if (getScanner() != null) {
-                ScanCallback callback = getNewLeScanCallback();
-                try {
-                    getScanner().startScan(filters, settings, callback);
-                }
-                catch (NullPointerException npe) {
-                    // Necessary because of https://code.google.com/p/android/issues/detail?id=160503
-                    LogManager.w(TAG, "Cannot start scan.  Unexpected NPE.", npe);
+        return generateStartScanRunnable(filters, settings);
+    }
+
+    private Runnable generateStartScanRunnable(final List<ScanFilter> filters, final ScanSettings settings) {
+        final BluetoothLeScanner scanner = getScanner();
+        final ScanCallback scanCallback = getNewLeScanCallback();
+        return new Runnable() {
+            @Override
+            public void run() {
+                if(scanner == null){
+                    LogManager.w(TAG, "Scanner is null. Cannot start scan");
+                }else {
+                    try {
+                        scanner.startScan(filters, settings, scanCallback);
+                    } catch (IllegalStateException e) {
+                        LogManager.w(TAG, "Cannot start scan. Bluetooth may be turned off.");
+                    } catch (NullPointerException npe) {
+                        // Necessary because of https://code.google.com/p/android/issues/detail?id=160503
+                        LogManager.e(TAG, "Cannot start scan. Unexpected NPE.", npe);
+                    }
                 }
             }
-        }
-        catch (IllegalStateException e) {
-            LogManager.w(TAG, "Cannot start scan.  Bluetooth may be turned off.");
-        }
+        };
     }
 
     @Override
@@ -207,7 +229,7 @@ public class LeScannerForLollipop extends LeScanner {
         return mScanner;
     }
 
-    private ScanCallback getNewLeScanCallback() {
+     private ScanCallback getNewLeScanCallback() {
         if (leScanCallback == null) {
             leScanCallback = new ScanCallback() {
 
@@ -249,4 +271,5 @@ public class LeScannerForLollipop extends LeScanner {
         }
         return leScanCallback;
     }
+
 }

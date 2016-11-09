@@ -34,7 +34,18 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
 
     public BeaconContentFetchInfo updateContentOrAddToFetch(Beacon beacon){
         if(!beacon.isExtraBeaconData() && ((!mBeaconDataBatchProvider.fetchEphemeralIds() && !beacon.hasEphemeralIdentifiers()) || (mBeaconDataBatchProvider.fetchEphemeralIds()))) {
-            return findFetchInfoOrAddToFetch(beacon);
+            BeaconContentFetchInfo<BeaconContent> beaconContentFetchInfo = findFetchInfoOrAddToFetch(beacon);
+            if(beaconContentFetchInfo != null) {
+                BeaconContent content = beaconContentFetchInfo.getContent();
+                if (content != null) {
+                    if (content instanceof UpdateBeacon) {
+                        ((UpdateBeacon) content).updateBeacon(beacon);
+                    }
+                    if (beacon.hasEphemeralIdentifiers()) {
+                        beacon.setStaticIdentifiers(content.getStaticIdentifiers());
+                    }
+                }
+            }
         }
         return null;
     }
@@ -50,13 +61,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
             BeaconContentFetchInfo<BeaconContent> beaconContentFetchInfo = updateContentOrAddToFetch(beacon);
             if(beaconContentFetchInfo != null) {
                 BeaconContent content = beaconContentFetchInfo.getContent();
-                if(content != null){
-                    if(content instanceof UpdateBeacon){
-                        ((UpdateBeacon) content).updateBeacon(beacon);
-                    }
-                    if(beacon.hasEphemeralIdentifiers()){
-                        beacon.setStaticIdentifiers(content.getStaticIdentifiers());
-                    }
+                if(content != null) {
                     contents.add(content);
                 }
 

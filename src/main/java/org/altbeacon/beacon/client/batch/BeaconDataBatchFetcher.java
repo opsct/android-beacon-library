@@ -33,7 +33,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
 
 
     public BeaconContentFetchInfo updateContentOrAddToFetch(Beacon beacon){
-        BeaconContentFetchInfo<BeaconContent> beaconContentFetchInfo = null
+        BeaconContentFetchInfo<BeaconContent> beaconContentFetchInfo = null;
         if(!beacon.isExtraBeaconData() && ((!mBeaconDataBatchProvider.fetchEphemeralIds() && !beacon.hasEphemeralIdentifiers()) || (mBeaconDataBatchProvider.fetchEphemeralIds()))) {
             beaconContentFetchInfo = findFetchInfoOrAddToFetch(beacon);
             if(beaconContentFetchInfo != null) {

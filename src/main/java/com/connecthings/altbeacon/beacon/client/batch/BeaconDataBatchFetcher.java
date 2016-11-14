@@ -96,7 +96,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
                 for(Beacon beacon : beacons) {
                     updateFetchInfo(beacon, BeaconContentFetchStatus.IN_PROGRESS);
                 }
-                this.mBeaconDataBatchProvider.fetch(new ArrayList<Beacon>(beaconsToFetch), this);
+                this.mBeaconDataBatchProvider.fetch(beacons, this);
             }
             beaconsToFetch.clear();
         }

@@ -1,8 +1,13 @@
 package org.altbeacon.beacon.client.batch;
 
+import android.os.Handler;
+import android.os.Message;
+
 import org.altbeacon.beacon.Beacon;
+import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.utils.FixSizeCache;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -22,6 +27,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
     private Collection<Beacon> beaconsToFetch;
     private final Object beaconsLock = new Object();
     private BatchCallProviderLimiter batchErrorLimiter;
+    private Handler mFetchHandler;
 
     public BeaconDataBatchFetcher(BeaconDataBatchProvider beaconDataBatchProvider, int cacheSize, int maxBeaconCacheTime){
         this.mBeaconDataBatchProvider = beaconDataBatchProvider;
@@ -29,6 +35,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         beaconContentInfoCache = new FixSizeCache<>(cacheSize);
         this.mMaxBeaconCacheTime = maxBeaconCacheTime;
         beaconsToFetch = new HashSet<>(10);
+        mFetchHandler = new FetchHandler(this);
     }
 
 
@@ -88,7 +95,17 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         return new BeaconBatchFetchInfo<BeaconContent>(contents, beaconsWithNoContent, globalStatus);
     }
 
-    public void fetch(){
+    public void planFetch(){
+        if(mBeaconDataBatchProvider != null) {
+            mFetchHandler.sendEmptyMessageAtTime(0, BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD);
+        }
+    }
+
+    public void stopFetch(){
+        mFetchHandler.removeCallbacksAndMessages(null);
+    }
+
+    private void fetch(){
         synchronized (beaconsLock) {
             if (mBeaconDataBatchProvider != null && batchErrorLimiter.isTimeToCallBatchProvider()
                         && beaconsToFetch.size() != 0) {
@@ -99,6 +116,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
                 this.mBeaconDataBatchProvider.fetch(beacons, this);
             }
             beaconsToFetch.clear();
+            planFetch();
         }
     }
 
@@ -194,6 +212,24 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
     public void clearCache(){
         synchronized (beaconsLock) {
             beaconContentInfoCache.clear();
+        }
+    }
+
+
+    private class FetchHandler extends Handler{
+        WeakReference<BeaconDataBatchFetcher<BeaconContent>> weakReference;
+
+        public FetchHandler(BeaconDataBatchFetcher<BeaconContent> beaconDataBatchFetcher){
+            weakReference = new WeakReference<BeaconDataBatchFetcher<BeaconContent>>(beaconDataBatchFetcher);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            BeaconDataBatchFetcher<BeaconContent> fetcher = weakReference.get();
+            if(fetcher == null){
+                return;
+            }
+            fetcher.fetch();
         }
     }
 

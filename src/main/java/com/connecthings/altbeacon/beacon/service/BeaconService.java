@@ -225,7 +225,7 @@ public class BeaconService extends Service {
         }
 
         mBeacondataBatchFetcher = new BeaconDataBatchFetcher(beaconManager.getBeaconDataBatchProvider(), beaconManager.getMaxDataCacheSize(), beaconManager.getMaxDataCacheTime());
-
+        mBeacondataBatchFetcher.planFetch();
         //initialize the extra data beacon tracker
         mExtraDataBeaconTracker = new ExtraDataBeaconTracker(matchBeaconsByServiceUUID);
 
@@ -285,6 +285,7 @@ public class BeaconService extends Service {
         handler.removeCallbacksAndMessages(null);
         mCycledScanner.stop();
         monitoringStatus.stopStatusPreservation();
+        mBeacondataBatchFetcher.stopFetch();
     }
 
     @Override
@@ -378,7 +379,6 @@ public class BeaconService extends Service {
         public void onCycleEnd() {
             monitoringStatus.updateNewlyOutside();
             processRangeData();
-            mBeacondataBatchFetcher.fetch();
             // If we want to use simulated scanning data, do it here.  This is used for testing in an emulator
             if (simulatedScanData != null) {
                 // if simulatedScanData is provided, it will be seen every scan cycle.  *in addition* to anything actually seen in the air
@@ -445,7 +445,6 @@ public class BeaconService extends Service {
                 mBeacondataBatchFetcher.updateContentOrAddToFetch(beacon);
             }
             monitoringStatus.updateNewlyInsideInRegionsContaining(beacon);
-
             List<Region> matchedRegions = null;
             Iterator<Region> matchedRegionIterator;
             LogManager.d(TAG, "looking for ranging region matches for this beacon");
@@ -458,9 +457,13 @@ public class BeaconService extends Service {
                     RangeState rangeState = rangedRegionState.get(region);
                     if (rangeState != null) {
                         rangeState.addBeacon(beacon);
+                        if(!beacon.hasEphemeralIdentifiers()){
+                            mBeacondataBatchFetcher.updateContentOrAddToFetch(beacon);
+                        }
                     }
                 }
             }
+
         }
     }
 

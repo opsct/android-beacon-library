@@ -96,7 +96,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
 
     public void planFetch(){
         if(mBeaconDataBatchProvider != null) {
-            mFetchHandler.sendEmptyMessageAtTime(0, BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD);
+            mFetchHandler.sendEmptyMessageDelayed(0, BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD * 2);
         }
     }
 

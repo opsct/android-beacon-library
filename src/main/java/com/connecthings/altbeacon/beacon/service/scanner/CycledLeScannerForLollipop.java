@@ -173,9 +173,13 @@ public class CycledLeScannerForLollipop extends CycledLeScanner {
 
         if (mBackgroundFlag && !mMainScanCycleActive) {
             LogManager.d(TAG, "starting filtered scan in SCAN_MODE_LOW_POWER");
-            settings = (new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)).build();
-            filters = new ScanFilterUtils().createScanFiltersForBeaconParsers(
-                    mBeaconManager.getBeaconParsers());
+            /**
+             * Disable low power mode -> get wrong entry/exit region information on Android 7.
+             */
+            //settings = (new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)).build();
+            /*filters = new ScanFilterUtils().createScanFiltersForBeaconParsers(
+                    mBeaconManager.getBeaconParsers());*/
+            return;
         } else {
             LogManager.d(TAG, "starting non-filtered scan in SCAN_MODE_LOW_LATENCY");
             settings = (new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)).build();

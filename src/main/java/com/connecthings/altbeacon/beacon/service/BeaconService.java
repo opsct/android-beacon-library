@@ -273,6 +273,7 @@ public class BeaconService extends Service {
         LogManager.i(TAG, "onDestroy called.  stopping scanning");
         handler.removeCallbacksAndMessages(null);
         mCycledScanner.stop();
+        mCycledScanner.destroy();
         monitoringStatus.stopStatusPreservation();
     }
 
@@ -290,8 +291,7 @@ public class BeaconService extends Service {
     }
 
     private PendingIntent getRestartIntent() {
-        Intent restartIntent = new Intent();
-        restartIntent.setClassName(getApplicationContext(), StartupBroadcastReceiver.class.getName());
+        Intent restartIntent = new Intent(getApplicationContext(), StartupBroadcastReceiver.class);
         return getBroadcast(getApplicationContext(), 1, restartIntent, FLAG_ONE_SHOT);
     }
 
@@ -325,7 +325,7 @@ public class BeaconService extends Service {
 
     public void startMonitoringBeaconsInRegion(Region region, Callback callback) {
         LogManager.d(TAG, "startMonitoring called");
-        monitoringStatus.addRegion(region);
+        monitoringStatus.addRegion(region, callback);
         LogManager.d(TAG, "Currently monitoring %s regions.", monitoringStatus.regionsCount());
         mCycledScanner.start();
     }

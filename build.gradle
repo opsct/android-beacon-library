@@ -79,8 +79,7 @@ allprojects {
 
 android {
     compileSdkVersion 24
-    buildToolsVersion "23.0.2"
-//    buildToolsVersion "23.0.3"
+    buildToolsVersion "24.0.2"
 
     defaultConfig {
         minSdkVersion 7
@@ -88,6 +87,7 @@ android {
         versionCode 1
         versionName version
         testInstrumentationRunner "com.google.android.apps.common.testing.testrunner.GoogleInstrumentationTestRunner"
+        consumerProguardFiles 'proguard-rules.pro'
     }
 
     compileOptions {

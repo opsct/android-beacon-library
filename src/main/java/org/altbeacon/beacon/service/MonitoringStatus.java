@@ -50,7 +50,7 @@ public class MonitoringStatus {
         this.mContext = context;
     }
 
-    public synchronized void addRegion(Region region) {
+    public synchronized void addRegion(Region region, Callback callback) {
         if (getRegionsStateMap().containsKey(region)) {
             // if the region definition hasn't changed, becasue if it has, we need to clear state
             // otherwise a region with the same uniqueId can never be changed
@@ -70,7 +70,7 @@ public class MonitoringStatus {
                 }
             }
         }
-        getRegionsStateMap().put(region, new RegionMonitoringState(new Callback(mContext.getPackageName())));
+        getRegionsStateMap().put(region, new RegionMonitoringState(callback));
         saveMonitoringStatusIfOn();
     }
 
@@ -219,6 +219,18 @@ public class MonitoringStatus {
             for (Region region : obj.keySet()) {
                 LogManager.d(TAG, "Region  "+region+" uniqueId: "+region.getUniqueId()+" state: "+obj.get(region));
             }
+
+            // RegionMonitoringState objects only get serialized to the status preservation file when they are first inside,
+            // therefore, their {@link RegionMonitoringState#lastSeenTime will be when they were first "inside".
+            // Mark all beacons that were inside again so they don't trigger as a new exit - enter.
+            for (RegionMonitoringState regionMonitoringState : obj.values())
+            {
+                if (regionMonitoringState.getInside())
+                {
+                    regionMonitoringState.markInside();
+                }
+            }
+
             mRegionsStatesMap.putAll(obj);
 
         } catch (IOException | ClassNotFoundException | ClassCastException e) {

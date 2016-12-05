@@ -15,6 +15,8 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
+import java.util.Collection;
+
 
 import static org.junit.Assert.assertEquals;
 
@@ -39,7 +41,7 @@ public class MonitoringStatusTest {
         MonitoringStatus monitoringStatus = new MonitoringStatus(context);
         for (int i = 0; i < 50; i++) {
             Region region = new Region(""+i, null, null, null);
-            monitoringStatus.addRegion(region);
+            monitoringStatus.addRegion(region, null);
         }
         monitoringStatus.saveMonitoringStatusIfOn();
         MonitoringStatus monitoringStatus2 = new MonitoringStatus(context);
@@ -53,7 +55,7 @@ public class MonitoringStatusTest {
         MonitoringStatus monitoringStatus = new MonitoringStatus(context);
         for (int i = 0; i < 51; i++) {
             Region region = new Region(""+i, null, null, null);
-            monitoringStatus.addRegion(region);
+            monitoringStatus.addRegion(region, null);
         }
         monitoringStatus.saveMonitoringStatusIfOn();
         MonitoringStatus monitoringStatus2 = new MonitoringStatus(context);
@@ -67,7 +69,7 @@ public class MonitoringStatusTest {
         MonitoringStatus monitoringStatus = new MonitoringStatus(context);
         for (int i = 0; i < 50; i++) {
             Region region = new Region(""+i, null, null, null);
-            monitoringStatus.addRegion(region);
+            monitoringStatus.addRegion(region, null);
         }
         monitoringStatus.saveMonitoringStatusIfOn();
         // Set update time to one hour ago
@@ -75,5 +77,21 @@ public class MonitoringStatusTest {
         MonitoringStatus monitoringStatus2 = new MonitoringStatus(context);
         assertEquals("restored regions should be none", 0, monitoringStatus2.regions().size());
     }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    @Test
+    public void allowsAccessToRegionsAfterRestore() throws Exception {
+        Context context = ShadowApplication.getInstance().getApplicationContext();
+        MonitoringStatus monitoringStatus = new MonitoringStatus(context);
+        for (int i = 0; i < 50; i++) {
+            Region region = new Region(""+i, null, null, null);
+            monitoringStatus.addRegion(region, null);
+        }
+        monitoringStatus.saveMonitoringStatusIfOn();
+        BeaconManager beaconManager = BeaconManager.getInstanceForApplication(context);
+        Collection<Region> regions = beaconManager.getMonitoredRegions();
+        assertEquals("beaconManager should return restored regions", 50, regions.size());
+    }
+
 
 }

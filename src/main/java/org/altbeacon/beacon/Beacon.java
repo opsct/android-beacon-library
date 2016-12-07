@@ -28,9 +28,6 @@ import android.os.Parcelable;
 
 import org.altbeacon.beacon.client.BeaconDataFactory;
 import org.altbeacon.beacon.client.NullBeaconDataFactory;
-import org.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
-import org.altbeacon.beacon.client.batch.BeaconContentSimple;
-import org.altbeacon.beacon.client.batch.BeaconContentFetchInfo;
 import org.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import org.altbeacon.beacon.distance.DistanceCalculator;
 import org.altbeacon.beacon.logging.LogManager;

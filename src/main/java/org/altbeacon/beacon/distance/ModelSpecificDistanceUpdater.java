@@ -2,14 +2,11 @@ package org.altbeacon.beacon.distance;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.pm.PackageInfo;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.Settings;
-import android.util.Log;
 
 import org.altbeacon.beacon.BuildConfig;
-import org.json.JSONObject;
 
 /**
  * Created by dyoung on 9/12/14.

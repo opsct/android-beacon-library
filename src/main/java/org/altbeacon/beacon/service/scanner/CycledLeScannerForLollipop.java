@@ -16,7 +16,6 @@ import org.altbeacon.beacon.logging.LogManager;
 import org.altbeacon.beacon.service.DetectionTracker;
 import org.altbeacon.bluetooth.BluetoothCrashResolver;
 
-import java.security.Security;
 import java.util.ArrayList;
 import java.util.List;
 

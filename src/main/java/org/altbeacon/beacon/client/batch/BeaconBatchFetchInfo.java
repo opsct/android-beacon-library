@@ -2,6 +2,7 @@ package org.altbeacon.beacon.client.batch;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import org.altbeacon.beacon.Beacon;
@@ -11,16 +12,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * To sumarize the fetch information
+ *
  * Created by Connecthings on 03/10/16.
  */
 public class BeaconBatchFetchInfo<BeaconContent extends BeaconIdentifiers> implements Parcelable{
 
     private static final String TAG = "BeaconBatchFetchInfo";
 
+    /**
+     * A global status about the fetch
+     * An error status indicates that at least one content can't be downloaded because of an error
+     * The IN_PROGRESS status indicates that at least one content has be retrieved
+     * The SUCCESS status indicates that all the content has been retrieved
+     *
+     * An error (BACKEND_ERROR, NETWORK_ERROR, DB_ERROR) status is prioritory on the IN_PROGRESS status and the SUCCESS status
+     * The IN_PROGRESS status is prioritary on the SUCESS status
+     */
     private BeaconContentFetchStatus fetchStatus;
 
+    /**
+     * The contents already retrieved
+     */
     private List<BeaconContent> contents;
 
+    /**
+     * Beacons with no content attached.
+     */
     private List<Beacon> beaconWithNoContents;
 
     public BeaconBatchFetchInfo(List<BeaconContent> contents, List<Beacon> beaconWithNoContents, BeaconContentFetchStatus fetchStatus){
@@ -33,15 +51,15 @@ public class BeaconBatchFetchInfo<BeaconContent extends BeaconIdentifiers> imple
         readFromParcel(in);
     }
 
-    public List<BeaconContent> getContents() {
+    public @NonNull List<BeaconContent> getContents() {
         return contents;
     }
 
-    public List<Beacon> getBeaconWithNoContents() {
+    public @NonNull List<Beacon> getBeaconWithNoContents() {
         return beaconWithNoContents;
     }
 
-    public BeaconContentFetchStatus getFetchStatus() {
+    public @NonNull BeaconContentFetchStatus getFetchStatus() {
         return fetchStatus;
     }
 

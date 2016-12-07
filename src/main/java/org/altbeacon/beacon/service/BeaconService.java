@@ -46,7 +46,6 @@ import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.BuildConfig;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.client.batch.BeaconBatchFetchInfo;
-import org.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
 import org.altbeacon.beacon.client.batch.BeaconDataBatchFetcher;
 import org.altbeacon.beacon.distance.DistanceCalculator;
 import org.altbeacon.beacon.distance.ModelSpecificDistanceCalculator;

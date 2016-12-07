@@ -23,19 +23,17 @@
  */
 package org.altbeacon.beacon.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import org.altbeacon.beacon.Beacon;
-import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.client.batch.BeaconBatchFetchInfo;
-import org.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
 import org.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import org.altbeacon.beacon.logging.LogManager;
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class RangingData<BeaconContent extends BeaconIdentifiers> implements Parcelable {
     private static final String TAG = "RangingData";

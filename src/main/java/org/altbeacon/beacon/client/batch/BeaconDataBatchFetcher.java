@@ -2,6 +2,7 @@ package org.altbeacon.beacon.client.batch;
 
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.Nullable;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
@@ -14,6 +15,8 @@ import java.util.HashSet;
 import java.util.List;
 
 /**
+ * Return the
+ *
  * Created by Connecthings on 27/09/16.
  */
 public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> implements BeaconDataBatchNotifier<BeaconContent>{
@@ -38,8 +41,18 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         mFetchHandler = new FetchHandler(this);
     }
 
-
-    public BeaconContentFetchInfo updateContentOrAddToFetch(Beacon beacon){
+    /**
+     * Search the {@link BeaconContentFetchInfo} associated to the beacon
+     * If no {@link BeaconContentFetchInfo} is found or the {@link BeaconContentFetchInfo} has reached is cached time limit, the beacon is added to the list of beacons
+     * If the Beacon is using an ephemeral beacon id, and a {@link BeaconContentFetchInfo} is found with a BeaconContent, the beacon is updated with the
+     * static identifier from the BeaconContent. This permits to the library to work a usual with beacon regions on static identifier.
+     * @param beacon
+     * @return the BeaconContentFetchInfo associated to the beacon
+     */
+    public @Nullable BeaconContentFetchInfo updateContentOrAddToFetch(Beacon beacon){
+        if(mBeaconDataBatchProvider == null){
+            return null;
+        }
         BeaconContentFetchInfo<BeaconContent> beaconContentFetchInfo = null;
         if(!beacon.isExtraBeaconData() && ((!mBeaconDataBatchProvider.fetchEphemeralIds() && !beacon.hasEphemeralIdentifiers()) || (mBeaconDataBatchProvider.fetchEphemeralIds()))) {
             beaconContentFetchInfo = findFetchInfoOrAddToFetch(beacon);
@@ -58,7 +71,16 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         return beaconContentFetchInfo;
     }
 
-    public BeaconBatchFetchInfo<BeaconContent> updateContentOrAddToFetch(Collection<Beacon> beacons){
+    /**
+     * Search the BeaconContents associated to a list of Beacons.
+     * If no BeaconContent has been found, the beacon is added to the list of beacons in which a content has to be fetched
+     * @param beacons
+     * @return a summarize information, with the list of BeaconContent, the list of beacon with no content attached, and the current global fetch status
+     */
+    public @Nullable BeaconBatchFetchInfo<BeaconContent> updateContentOrAddToFetch(Collection<Beacon> beacons){
+        if(mBeaconDataBatchProvider == null){
+            return null;
+        }
         BeaconContentFetchStatus globalStatus = null;
         List<BeaconContent> contents = new ArrayList<>(beacons.size());
         List<Beacon> beaconsWithNoContent = new ArrayList<>();
@@ -97,7 +119,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
 
     public void planFetch(){
         if(mBeaconDataBatchProvider != null) {
-            mFetchHandler.sendEmptyMessageDelayed(0, BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD * 2);
+            mFetchHandler.sendEmptyMessageDelayed(0, BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD);
         }
     }
 
@@ -105,7 +127,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         mFetchHandler.removeCallbacksAndMessages(null);
     }
 
-    private void fetch(){
+    protected void fetch(){
         synchronized (beaconsLock) {
             if (mBeaconDataBatchProvider != null && batchErrorLimiter.isTimeToCallBatchProvider()
                         && beaconsToFetch.size() != 0) {
@@ -122,6 +144,9 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
 
     @Override
     public void onBatchUpdate(Collection<BeaconContent> beaconContents, Collection<Beacon> unresolvedBeacons) {
+        synchronized (beaconsLock){
+            batchErrorLimiter.reset();
+        }
         BeaconContentFetchInfo<BeaconContent> fetchInfo;
         for(BeaconContent beaconContent : beaconContents){
             updateFetchInfo(beaconContent, BeaconContentFetchStatus.SUCCESS);
@@ -140,7 +165,9 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         //Limit the call to the Provider only if it's backend error or on SQL error
         //because NETWORK ERROR can be detected before any WS call
         if(providerException.getStatus() != BeaconContentFetchStatus.NETWORK_ERROR) {
-            batchErrorLimiter.addError();
+            synchronized (beaconsLock){
+                batchErrorLimiter.addError();
+            }
         }
     }
 

@@ -1,10 +1,7 @@
 package org.altbeacon.beacon.service.scanner;
 
 import android.annotation.TargetApi;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanFilter;
-import android.bluetooth.le.ScanRecord;
-import android.bluetooth.le.ScanResult;
 import android.os.ParcelUuid;
 
 import org.altbeacon.beacon.BeaconParser;

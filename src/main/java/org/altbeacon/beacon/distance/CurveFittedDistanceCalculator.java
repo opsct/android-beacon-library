@@ -1,6 +1,5 @@
 package org.altbeacon.beacon.distance;
 
-import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.logging.LogManager;
 
 /**

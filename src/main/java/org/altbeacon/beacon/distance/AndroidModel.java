@@ -1,7 +1,7 @@
 package org.altbeacon.beacon.distance;
 
 import android.os.Build;
-import org.altbeacon.beacon.BeaconManager;
+
 import org.altbeacon.beacon.logging.LogManager;
 
 /**

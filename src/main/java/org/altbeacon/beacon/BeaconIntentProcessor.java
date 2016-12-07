@@ -28,7 +28,6 @@ import android.app.IntentService;
 import android.content.Intent;
 
 import org.altbeacon.beacon.client.batch.BeaconBatchFetchInfo;
-import org.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
 import org.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import org.altbeacon.beacon.logging.LogManager;
 import org.altbeacon.beacon.service.MonitoringData;

@@ -35,8 +35,8 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 
-import org.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import org.altbeacon.beacon.client.batch.BeaconDataBatchProvider;
+import org.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import org.altbeacon.beacon.logging.LogManager;
 import org.altbeacon.beacon.logging.Loggers;
 import org.altbeacon.beacon.service.BeaconService;

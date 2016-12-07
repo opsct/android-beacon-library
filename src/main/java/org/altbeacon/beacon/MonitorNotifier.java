@@ -23,6 +23,8 @@
  */
 package org.altbeacon.beacon;
 
+import android.support.annotation.NonNull;
+
 /**
  * This interface is implemented by classes that receive beacon monitoring notifications
  *
@@ -46,13 +48,13 @@ public interface MonitorNotifier {
      * Called when at least one beacon in a <code>Region</code> is visible.
      * @param region a Region that defines the criteria of beacons to look for
      */
-    public void didEnterRegion(Region region);
+    public void didEnterRegion(@NonNull Region region);
 
     /**
      * Called when no beacons in a <code>Region</code> are visible.
      * @param region a Region that defines the criteria of beacons to look for
      */
-    public void didExitRegion(Region region);
+    public void didExitRegion(@NonNull Region region);
 
     /**
      * Called with a state value of MonitorNotifier.INSIDE when at least one beacon in a <code>Region</code> is visible.
@@ -60,5 +62,5 @@ public interface MonitorNotifier {
      * @param state either MonitorNotifier.INSIDE or MonitorNotifier.OUTSIDE
      * @param region a Region that defines the criteria of beacons to look for
      */
-    public void didDetermineStateForRegion(int state, Region region);
+    public void didDetermineStateForRegion(int state, @NonNull Region region);
 }

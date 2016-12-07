@@ -8,6 +8,12 @@ import android.text.TextUtils;
 import org.altbeacon.beacon.logging.LogManager;
 
 /**
+ * Object that manages the BeaconContent and the current {@link BeaconContentFetchStatus}
+ *
+ * Permits to the {@link BeaconDataBatchFetcher} to return to good information about the fetching status and the contents attached to the beacon
+ *
+ * This object is kept in cache by the {@link BeaconDataBatchFetcher}.
+ *
  * Created by Connecthings on 27/09/16.
  */
 public class BeaconContentFetchInfo<BeaconContent extends BeaconIdentifiers> implements Parcelable{

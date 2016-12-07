@@ -25,7 +25,6 @@ package org.altbeacon.beacon;
 
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothDevice;
-import android.util.Log;
 
 /**
  * A specific beacon parser designed to parse only AltBeacons from raw BLE packets detected by

@@ -16,7 +16,7 @@ import org.altbeacon.beacon.logging.LogManager;
  *
  * Created by Connecthings on 27/09/16.
  */
-public class BeaconContentFetchInfo<BeaconContent extends BeaconIdentifiers> implements Parcelable{
+public class BeaconContentFetchInfo<BeaconContent extends BeaconIdentifiers> implements Parcelable, BeaconDataCacheManagement{
 
     private static final String TAG = "BeaconFetchInfo";
 
@@ -26,21 +26,30 @@ public class BeaconContentFetchInfo<BeaconContent extends BeaconIdentifiers> imp
 
     private long nextUpdateTime;
 
-    private long maxCacheTime;
+    private long cacheTime;
 
-    public BeaconContentFetchInfo(BeaconContent content, long maxCacheTime, BeaconContentFetchStatus status) {
+    private boolean isContentAvailableWhenCacheTimeOver;
+
+    public BeaconContentFetchInfo(BeaconContent content, long cacheTime, boolean isContentAvailableWhenCacheTimeOver, BeaconContentFetchStatus status) {
         this.content = content;
-        this.maxCacheTime = maxCacheTime;
         this.status = status;
-        nextUpdateTime = SystemClock.elapsedRealtime() + maxCacheTime;
+        if(content instanceof BeaconDataCacheManagement){
+            BeaconDataCacheManagement cacheManagement = (BeaconDataCacheManagement) content;
+            this.cacheTime = cacheManagement.getCacheTime();
+            this.isContentAvailableWhenCacheTimeOver = cacheManagement.isContentAvailableWhenCacheTimeExpired();
+        }else {
+            this.cacheTime = cacheTime;
+            this.isContentAvailableWhenCacheTimeOver = isContentAvailableWhenCacheTimeOver;
+        }
+        nextUpdateTime = SystemClock.elapsedRealtime() + cacheTime;
     }
 
     private BeaconContentFetchInfo(Parcel from){
         readFromParcel(from);
     }
 
-    public BeaconContentFetchInfo(long maxCacheTime, BeaconContentFetchStatus status){
-        this(null, maxCacheTime, status);
+    public BeaconContentFetchInfo(long maxCacheTime, boolean isContentAvailableWhenCacheTimeOver, BeaconContentFetchStatus status){
+        this(null, maxCacheTime, isContentAvailableWhenCacheTimeOver, status);
     }
 
     public boolean isTimeToUpdate(){
@@ -49,12 +58,12 @@ public class BeaconContentFetchInfo<BeaconContent extends BeaconIdentifiers> imp
 
     public void updateStatus(BeaconContentFetchStatus status){
         this.status = status;
-        nextUpdateTime = SystemClock.elapsedRealtime() + maxCacheTime;
+        nextUpdateTime = SystemClock.elapsedRealtime() + cacheTime;
     }
 
     public void updateBeaconContent(BeaconContent beaconContent){
         content = beaconContent;
-        nextUpdateTime = SystemClock.elapsedRealtime() + maxCacheTime;
+        nextUpdateTime = SystemClock.elapsedRealtime() + cacheTime;
     }
 
 
@@ -62,8 +71,15 @@ public class BeaconContentFetchInfo<BeaconContent extends BeaconIdentifiers> imp
         return content;
     }
 
-    public long getMaxCacheTime() {
-        return maxCacheTime;
+
+    @Override
+    public long getCacheTime() {
+        return cacheTime;
+    }
+
+    @Override
+    public boolean isContentAvailableWhenCacheTimeExpired() {
+        return isContentAvailableWhenCacheTimeOver;
     }
 
     public long getNextUpdateTime() {
@@ -82,7 +98,7 @@ public class BeaconContentFetchInfo<BeaconContent extends BeaconIdentifiers> imp
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(status.toString());
-        dest.writeLong(maxCacheTime);
+        dest.writeLong(cacheTime);
         dest.writeLong(nextUpdateTime);
         if(content == null){
             dest.writeString("");
@@ -94,7 +110,7 @@ public class BeaconContentFetchInfo<BeaconContent extends BeaconIdentifiers> imp
 
     public void readFromParcel(Parcel from){
         status = BeaconContentFetchStatus.valueOf(from.readString());
-        maxCacheTime = from.readLong();
+        cacheTime = from.readLong();
         nextUpdateTime = from.readLong();
         String className = from.readString();
         if(!TextUtils.isEmpty(className)){

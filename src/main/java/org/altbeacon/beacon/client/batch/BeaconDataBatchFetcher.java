@@ -5,7 +5,6 @@ import android.os.Message;
 import android.support.annotation.Nullable;
 
 import org.altbeacon.beacon.Beacon;
-import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.utils.FixSizeCache;
 
 import java.lang.ref.WeakReference;
@@ -27,16 +26,21 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
 
     private FixSizeCache<String, BeaconContentFetchInfo<BeaconContent>> beaconContentInfoCache;
     private int mMaxBeaconCacheTime;
+    private boolean mIsContentAvailableWhenCacheTimeOver;
+    private long mFetchDelay;
     private Collection<Beacon> beaconsToFetch;
     private final Object beaconsLock = new Object();
     private BatchCallProviderLimiter batchErrorLimiter;
     private Handler mFetchHandler;
 
-    public BeaconDataBatchFetcher(BeaconDataBatchProvider beaconDataBatchProvider, int cacheSize, int maxBeaconCacheTime){
+    public BeaconDataBatchFetcher(BeaconDataBatchProvider beaconDataBatchProvider, int cacheSize, int maxBeaconCacheTime, boolean isContentAvailableWhenCacheTimeOver,long fetchDelay){
         this.mBeaconDataBatchProvider = beaconDataBatchProvider;
         this.batchErrorLimiter = new BatchCallProviderLimiter();
         beaconContentInfoCache = new FixSizeCache<>(cacheSize);
         this.mMaxBeaconCacheTime = maxBeaconCacheTime;
+        this.mIsContentAvailableWhenCacheTimeOver = isContentAvailableWhenCacheTimeOver;
+        this.mFetchDelay = fetchDelay;
+
         beaconsToFetch = new HashSet<>(10);
         mFetchHandler = new FetchHandler(this);
     }
@@ -117,9 +121,13 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         return new BeaconBatchFetchInfo<BeaconContent>(contents, beaconsWithNoContent, globalStatus);
     }
 
+    /**
+     * The contents associated to beacon is fetched at a regular interval.
+     * This method permits to launch the planning process.
+     */
     public void planFetch(){
         if(mBeaconDataBatchProvider != null) {
-            mFetchHandler.sendEmptyMessageDelayed(0, BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD);
+            mFetchHandler.sendEmptyMessageDelayed(0, mFetchDelay);
         }
     }
 
@@ -180,7 +188,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
                             || fetchInfo.getStatus() == BeaconContentFetchStatus.DB_ERROR
                                 || fetchInfo.getStatus() == BeaconContentFetchStatus.NETWORK_ERROR)) {
                 beaconsToFetch.add(beacon);
-                if(fetchInfo == null){
+                if(fetchInfo == null || (fetchInfo.isTimeToUpdate() && !fetchInfo.isContentAvailableWhenCacheTimeExpired())){
                     fetchInfo = createFetchInfo(beacon);
                 }
             }
@@ -197,7 +205,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
     }
 
     private BeaconContentFetchInfo<BeaconContent> createFetchInfo(BeaconIdentifiers beaconIdentifiers){
-        BeaconContentFetchInfo<BeaconContent> fetchInfo = new BeaconContentFetchInfo<BeaconContent>(null, mMaxBeaconCacheTime, BeaconContentFetchStatus.IN_PROGRESS);
+        BeaconContentFetchInfo<BeaconContent> fetchInfo = new BeaconContentFetchInfo<BeaconContent>(mMaxBeaconCacheTime, mIsContentAvailableWhenCacheTimeOver, BeaconContentFetchStatus.IN_PROGRESS);
         if(beaconIdentifiers.hasStaticIdentifiers()) {
             beaconContentInfoCache.put(beaconIdentifiers.getStaticIdentifiers().toString(), fetchInfo);
         }
@@ -212,7 +220,7 @@ public class BeaconDataBatchFetcher<BeaconContent extends BeaconIdentifiers> imp
         BeaconContent content = beaconIdentifiers instanceof Beacon? null: (BeaconContent) beaconIdentifiers;
 
         if (fetchInfo == null) {
-            fetchInfo = new BeaconContentFetchInfo<BeaconContent>(content, mMaxBeaconCacheTime, status);
+            fetchInfo = new BeaconContentFetchInfo<BeaconContent>(content, mMaxBeaconCacheTime, mIsContentAvailableWhenCacheTimeOver, status);
         } else if(content == null){
             fetchInfo.updateStatus(status);
         } else {

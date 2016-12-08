@@ -224,7 +224,7 @@ public class BeaconService extends Service {
             }
         }
 
-        mBeacondataBatchFetcher = new BeaconDataBatchFetcher(beaconManager.getBeaconDataBatchProvider(), beaconManager.getMaxDataCacheSize(), beaconManager.getMaxDataCacheTime());
+        mBeacondataBatchFetcher = new BeaconDataBatchFetcher(beaconManager.getBeaconDataBatchProvider(), beaconManager.getMaxDataCacheSize(), beaconManager.getMaxDataCacheTime(), beaconManager.isContentAvailableWhenCacheTimeExpired(), BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD);
         mBeacondataBatchFetcher.planFetch();
         //initialize the extra data beacon tracker
         mExtraDataBeaconTracker = new ExtraDataBeaconTracker(matchBeaconsByServiceUUID);

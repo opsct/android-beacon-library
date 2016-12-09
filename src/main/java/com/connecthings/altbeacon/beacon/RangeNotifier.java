@@ -23,7 +23,8 @@
  */
 package com.connecthings.altbeacon.beacon;
 
-import com.connecthings.altbeacon.beacon.client.batch.BeaconIdentifiers;
+import android.support.annotation.NonNull;
+
 
 import java.util.Collection;
 /**
@@ -43,5 +44,5 @@ public interface RangeNotifier {
      * @param beacons a collection of <code>Beacon<code> objects that have been seen in the past second
      * @param region the <code>Region</code> object that defines the criteria for the ranged beacons
      */
-    public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region);
+    public void didRangeBeaconsInRegion(@NonNull Collection<Beacon> beacons, @NonNull Region region);
 }

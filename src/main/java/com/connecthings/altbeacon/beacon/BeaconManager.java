@@ -49,6 +49,7 @@ import com.connecthings.altbeacon.beacon.service.StartRMData;
 import com.connecthings.altbeacon.beacon.service.scanner.NonBeaconLeScanCallback;
 import com.connecthings.altbeacon.beacon.simulator.BeaconSimulator;
 
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -180,6 +181,7 @@ public class BeaconManager {
     private long backgroundBetweenScanPeriod = DEFAULT_BACKGROUND_BETWEEN_SCAN_PERIOD;
     private int maxDataCacheSize = MAX_DATA_CACHE_SIZE;
     private int maxDataCacheTime = MAX_DATA_CACHE_TIME;
+    private boolean isContentAvailableWhenCacheTimeExpired = true;
 
     public int getMaxDataCacheSize() {
         return maxDataCacheSize;
@@ -195,6 +197,14 @@ public class BeaconManager {
 
     public void setMaxDataCacheTime(int maxDataCacheTime) {
         this.maxDataCacheTime = maxDataCacheTime;
+    }
+
+    public void setContentAvailableWhenCacheTimeExpired(boolean contentAvailableWhenCacheTimeExpired) {
+        isContentAvailableWhenCacheTimeExpired = contentAvailableWhenCacheTimeExpired;
+    }
+
+    public boolean isContentAvailableWhenCacheTimeExpired() {
+        return isContentAvailableWhenCacheTimeExpired;
     }
 
     public BeaconDataBatchProvider getBeaconDataBatchProvider() {

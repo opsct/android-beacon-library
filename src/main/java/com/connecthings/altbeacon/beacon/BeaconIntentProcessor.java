@@ -23,20 +23,17 @@
  */
 package com.connecthings.altbeacon.beacon;
 
-
 import android.annotation.TargetApi;
 import android.app.IntentService;
 import android.content.Intent;
 
 import com.connecthings.altbeacon.beacon.client.batch.BeaconBatchFetchInfo;
-import com.connecthings.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
 import com.connecthings.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
 import com.connecthings.altbeacon.beacon.service.MonitoringData;
 import com.connecthings.altbeacon.beacon.service.RangingData;
 
 import java.util.Set;
-
 /**
  * Converts internal intents to notifier callbacks
  */

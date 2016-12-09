@@ -28,7 +28,7 @@ public class BeaconDataBatchFetcherTest {
 
     @Test
     public void testEphemeralIdsToFetchIfNotEnable(){
-        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceedThread(false), 50, 3000);
+        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceedThread(false), 50, 3000, true, 1000);
         Beacon beacon = new Beacon.Builder().setEphemeralId1("12").setEphemeralId2("5").setEphemeralId3("6").build();
         batchFetcher.updateContentOrAddToFetch(beacon);
         assertTrue("The list of beacons to fetch is not empty", batchFetcher.getBeaconsToFetch().size() == 0);
@@ -36,7 +36,7 @@ public class BeaconDataBatchFetcherTest {
 
     @Test
     public void testEphemeralIdsToFetchIfEnable(){
-        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceedThread(true), 50, 3000);
+        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceedThread(true), 50, 3000,true, 1000);
         Beacon beacon = new Beacon.Builder().setEphemeralId1("12").setEphemeralId2("5").setEphemeralId3("6").build();
         batchFetcher.updateContentOrAddToFetch(beacon);
         assertTrue("The list of beacons to fetch is empty", batchFetcher.getBeaconsToFetch().size() == 1);
@@ -44,7 +44,7 @@ public class BeaconDataBatchFetcherTest {
 
     @Test
     public void testIdsToFetchIfEphemeralEnable(){
-        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceedThread(true), 50, 3000);
+        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceedThread(true), 50, 3000, true,1000);
         Beacon beacon = new Beacon.Builder().setId1("12").setId2("5").setId3("6").build();
         batchFetcher.updateContentOrAddToFetch(beacon);
         assertTrue("The list of beacons to fetch is empty", batchFetcher.getBeaconsToFetch().size() == 1);
@@ -52,7 +52,7 @@ public class BeaconDataBatchFetcherTest {
 
     @Test
     public void testIdsToFetchIfEphemeralDisable(){
-        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceedThread(false), 50, 3000);
+        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceedThread(false), 50, 3000,true, 1000);
         Beacon beacon = new Beacon.Builder().setId1("12").setId2("5").setId3("6").build();
         batchFetcher.updateContentOrAddToFetch(beacon);
         assertTrue("The list of beacons to fetch is empty", batchFetcher.getBeaconsToFetch().size() == 1);
@@ -60,7 +60,7 @@ public class BeaconDataBatchFetcherTest {
 
     @Test
     public void testIdsToFetchIfDuplicate(){
-        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceedThread(false), 50, 3000);
+        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceedThread(false), 50, 3000, true, 1000);
         Beacon beacon1 = new Beacon.Builder().setId1("12").setId2("5").setId3("6").build();
         batchFetcher.updateContentOrAddToFetch(beacon1);
         Beacon beacon2 = new Beacon.Builder().setId1("12").setId2("5").setId3("6").build();
@@ -71,7 +71,7 @@ public class BeaconDataBatchFetcherTest {
 
     @Test
     public void testFindContentSuccess() {
-        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceed(), 5000, 200);
+        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceed(), 5000, 200, true, 1000);
         List<Beacon> beacons = new ArrayList<>();
         Beacon beacon1 = new Beacon.Builder().setId1("1").setId2("1").setId3("3").build();
         beacons.add(beacon1);
@@ -99,7 +99,7 @@ public class BeaconDataBatchFetcherTest {
 
     @Test
     public void testNoContentWithUpdate() {
-        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceed(), 5000, 200);
+        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceed(), 5000, 200, true, 1000);
         List<Beacon> beacons = generateBeaconList();
         BeaconBatchFetchInfo<BeaconContentSimple> fetchInfo = batchFetcher.updateContentOrAddToFetch(beacons);
         assertEquals("Test status that must be in progress", BeaconContentFetchStatus.IN_PROGRESS, fetchInfo.getFetchStatus());
@@ -115,7 +115,7 @@ public class BeaconDataBatchFetcherTest {
 
     @Test
     public void testFindContentError() {
-        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderError(), 5000, 200);
+        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderError(), 5000, 200, true, 1000);
         List<Beacon> beacons = new ArrayList<>();
         Beacon beacon1 = new Beacon.Builder().setId1("1").setId2("1").setId3("3").build();
         beacons.add(beacon1);
@@ -162,7 +162,7 @@ public class BeaconDataBatchFetcherTest {
 
     @Test
     public void testFinContentSuccessAgain(){
-        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceedThread(true), 50, 3000);
+        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(new BatchProviderSucceedThread(true), 50, 3000, true, 1000);
         List<Beacon> beacons = generateBeaconList();
         batchFetcher.updateContentOrAddToFetch(beacons);
         //first fetch will launch task to get the content
@@ -224,7 +224,7 @@ public class BeaconDataBatchFetcherTest {
 
 
     private void testFindContentSuccessAndUnresolved(BeaconDataBatchProvider<BeaconContentSimple> batchProvider) {
-        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(batchProvider, 5000, 200);
+        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(batchProvider, 5000, 200, true, 1000);
         List<Beacon> beacons = new ArrayList<>();
         Beacon beacon1 = new Beacon.Builder().setId1("11").setId2("1").setId3("3").build();
         beacons.add(beacon1);
@@ -278,7 +278,7 @@ public class BeaconDataBatchFetcherTest {
     }
 
     private void testFindContentSuccessAndUnresolvedList(BeaconDataBatchProvider<BeaconContentSimple> batchProvider) {
-        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(batchProvider, 5000, 200);
+        BeaconDataBatchFetcher<BeaconContentSimple> batchFetcher = new BeaconDataBatchFetcher<>(batchProvider, 5000, 200, true, 1000);
         List<Beacon> beacons = generateBeaconList();
         batchFetcher.updateContentOrAddToFetch(beacons);
         //first fetch will launch task to get the content

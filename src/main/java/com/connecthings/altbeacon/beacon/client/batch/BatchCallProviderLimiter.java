@@ -6,6 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+<<<<<<< HEAD:src/main/java/com/connecthings/altbeacon/beacon/client/batch/BatchCallProviderLimiter.java
+=======
+ * Permits to limit the call to the {@link BeaconDataBatchProvider} in case of error.
+ *
+ * This is particularly useful if the backend service is down
+ *
+>>>>>>> batchFetcher:src/main/java/org/altbeacon/beacon/client/batch/BatchCallProviderLimiter.java
  * Created by Connecthings on 03/10/16.
  */
 public class BatchCallProviderLimiter {
@@ -15,8 +22,6 @@ public class BatchCallProviderLimiter {
     private long nextTimeToCallBatchProvider;
 
     private List<BatchErrorLimiter> batchErrorLimiters;
-
-
 
     public BatchCallProviderLimiter(){
         batchErrorLimiters = new ArrayList<>();

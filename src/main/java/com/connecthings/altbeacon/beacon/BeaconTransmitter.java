@@ -1,5 +1,6 @@
 package com.connecthings.altbeacon.beacon;
 
+
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
@@ -12,6 +13,7 @@ import android.content.pm.PackageManager;
 import android.os.ParcelUuid;
 
 import com.connecthings.altbeacon.beacon.logging.LogManager;
+
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

@@ -1,5 +1,10 @@
 package com.connecthings.altbeacon.beacon.client.batch;
 
+/**
+ * Utility Class to manage the potentiel batch exception
+ *
+ * Created by Connecthings on 19/10/16.
+ */
 public class DataBatchProviderException extends Exception {
 
     private BeaconContentFetchStatus status;

@@ -4,6 +4,7 @@ import android.os.Build;
 
 import com.connecthings.altbeacon.beacon.logging.LogManager;
 
+
 /**
  * Represents a specific Android device model based on the available device build information
  *

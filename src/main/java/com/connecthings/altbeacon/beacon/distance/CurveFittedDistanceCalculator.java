@@ -2,6 +2,7 @@ package com.connecthings.altbeacon.beacon.distance;
 
 import com.connecthings.altbeacon.beacon.logging.LogManager;
 
+
 /**
  * This class estimates the distance between the mobile device and a BLE beacon based on the measured
  * RSSI and a txPower calibration value that represents the expected RSSI for an iPhone 5 receiving

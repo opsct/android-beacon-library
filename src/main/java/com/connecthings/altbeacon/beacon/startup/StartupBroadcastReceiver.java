@@ -8,6 +8,7 @@ import android.content.Intent;
 import com.connecthings.altbeacon.beacon.BeaconManager;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
 
+
 @TargetApi(4)
 public class StartupBroadcastReceiver extends BroadcastReceiver
 {

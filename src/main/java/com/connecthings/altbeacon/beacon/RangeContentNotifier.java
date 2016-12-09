@@ -23,13 +23,16 @@
  */
 package com.connecthings.altbeacon.beacon;
 
+
 import com.connecthings.altbeacon.beacon.client.batch.BeaconContentFetchStatus;
 import com.connecthings.altbeacon.beacon.client.batch.BeaconIdentifiers;
+import android.support.annotation.NonNull;
+
 
 import java.util.Collection;
 
 /**
- * This interface is implemented by classes that receive beacon ranging notifications
+ * This interface is implemented by classes that receive beacon ranging notifications with the content associated to the beacons
  *
  * @see BeaconManager#addRangeContentNotifier(RangeContentNotifier)
  * @see BeaconManager#startRangingBeaconsInRegion(Region region)
@@ -48,5 +51,5 @@ public interface RangeContentNotifier<BeaconContent extends BeaconIdentifiers> {
      * @param fetchStatus
      * @param region
      */
-    public void didRangeBeaconsInRegion(Collection<Beacon> beacons,Collection<BeaconContent> contents, Collection<Beacon> noContentAssociateToBeacons, BeaconContentFetchStatus fetchStatus, Region region);
+    public void didRangeBeaconsInRegion(@NonNull Collection<Beacon> beacons, @NonNull Collection<BeaconContent> contents, @NonNull Collection<Beacon> noContentAssociateToBeacons, @NonNull BeaconContentFetchStatus fetchStatus, @NonNull Region region);
 }

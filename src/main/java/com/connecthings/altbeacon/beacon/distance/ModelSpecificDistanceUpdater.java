@@ -8,6 +8,7 @@ import android.provider.Settings;
 
 import com.connecthings.altbeacon.beacon.BuildConfig;
 
+
 /**
  * Created by dyoung on 9/12/14.
  */

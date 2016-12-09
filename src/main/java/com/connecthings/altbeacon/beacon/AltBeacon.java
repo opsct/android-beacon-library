@@ -25,9 +25,6 @@ package com.connecthings.altbeacon.beacon;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-
-import com.connecthings.altbeacon.beacon.client.batch.BeaconIdentifiers;
-
 import java.util.ArrayList;
 
 /**

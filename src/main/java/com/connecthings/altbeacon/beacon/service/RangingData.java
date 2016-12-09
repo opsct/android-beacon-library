@@ -21,7 +21,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package com.connecthings.altbeacon.beacon.service;
 
 
@@ -33,8 +32,11 @@ import com.connecthings.altbeacon.beacon.Region;
 import com.connecthings.altbeacon.beacon.client.batch.BeaconBatchFetchInfo;
 import com.connecthings.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
+
 import java.util.ArrayList;
 import java.util.Collection;
+
+
 
 
 public class RangingData<BeaconContent extends BeaconIdentifiers> implements Parcelable {

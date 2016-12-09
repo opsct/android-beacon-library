@@ -35,7 +35,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 
-import com.connecthings.altbeacon.beacon.client.batch.BeaconDataBatchProvider;
+import com.connecthings.altbeacon.beacon.client.batch.BeaconDataBatchFetcher;
 import com.connecthings.altbeacon.beacon.client.batch.BeaconIdentifiers;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
 import com.connecthings.altbeacon.beacon.logging.Loggers;
@@ -48,7 +48,6 @@ import com.connecthings.altbeacon.beacon.service.RunningAverageRssiFilter;
 import com.connecthings.altbeacon.beacon.service.StartRMData;
 import com.connecthings.altbeacon.beacon.service.scanner.NonBeaconLeScanCallback;
 import com.connecthings.altbeacon.beacon.simulator.BeaconSimulator;
-
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -124,7 +123,7 @@ public class BeaconManager {
     private NonBeaconLeScanCallback mNonBeaconLeScanCallback;
     private boolean mBackgroundMode = false;
     private boolean mBackgroundModeUninitialized = true;
-    private BeaconDataBatchProvider beaconDataBatchProvider;
+    private BeaconDataBatchFetcher<?> beaconDataBatchFetcher;
 
 
     private static boolean sAndroidLScanningDisabled = false;
@@ -179,39 +178,12 @@ public class BeaconManager {
     private long foregroundBetweenScanPeriod = DEFAULT_FOREGROUND_BETWEEN_SCAN_PERIOD;
     private long backgroundScanPeriod = DEFAULT_BACKGROUND_SCAN_PERIOD;
     private long backgroundBetweenScanPeriod = DEFAULT_BACKGROUND_BETWEEN_SCAN_PERIOD;
-    private int maxDataCacheSize = MAX_DATA_CACHE_SIZE;
-    private int maxDataCacheTime = MAX_DATA_CACHE_TIME;
-    private boolean isContentAvailableWhenCacheTimeExpired = true;
 
-    public int getMaxDataCacheSize() {
-        return maxDataCacheSize;
+    public BeaconDataBatchFetcher<?> getDataBeaconDataBatchFetcher() {
+        return beaconDataBatchFetcher;
     }
-
-    public void setMaxDataCacheSize(int maxDataCacheSize) {
-        this.maxDataCacheSize = maxDataCacheSize;
-    }
-
-    public int getMaxDataCacheTime() {
-        return maxDataCacheTime;
-    }
-
-    public void setMaxDataCacheTime(int maxDataCacheTime) {
-        this.maxDataCacheTime = maxDataCacheTime;
-    }
-
-    public void setContentAvailableWhenCacheTimeExpired(boolean contentAvailableWhenCacheTimeExpired) {
-        isContentAvailableWhenCacheTimeExpired = contentAvailableWhenCacheTimeExpired;
-    }
-
-    public boolean isContentAvailableWhenCacheTimeExpired() {
-        return isContentAvailableWhenCacheTimeExpired;
-    }
-
-    public BeaconDataBatchProvider getBeaconDataBatchProvider() {
-        return beaconDataBatchProvider;
-    }
-    public void setBeaconDataBatchProvider(BeaconDataBatchProvider beaconDataBatchProvider) {
-        this.beaconDataBatchProvider = beaconDataBatchProvider;
+    public void setBeaconDataBatchFetcher(BeaconDataBatchFetcher beaconDataBatchFetcher) {
+        this.beaconDataBatchFetcher = beaconDataBatchFetcher;
     }
     /**
      * Sets the duration in milliseconds of each Bluetooth LE scan cycle to look for beacons.

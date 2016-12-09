@@ -39,6 +39,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.support.annotation.Nullable;
 
 import com.connecthings.altbeacon.beacon.Beacon;
 import com.connecthings.altbeacon.beacon.BeaconManager;
@@ -93,7 +94,7 @@ public class BeaconService extends Service {
     private boolean mBackgroundFlag = false;
     private ExtraDataBeaconTracker mExtraDataBeaconTracker;
     private ExecutorService mExecutor;
-    private BeaconDataBatchFetcher mBeacondataBatchFetcher;
+    private @Nullable BeaconDataBatchFetcher mBeacondataBatchFetcher;
 
     /*
      * The scan period is how long we wait between restarting the BLE advertisement scans
@@ -224,8 +225,10 @@ public class BeaconService extends Service {
             }
         }
 
-        mBeacondataBatchFetcher = new BeaconDataBatchFetcher(beaconManager.getBeaconDataBatchProvider(), beaconManager.getMaxDataCacheSize(), beaconManager.getMaxDataCacheTime(), beaconManager.isContentAvailableWhenCacheTimeExpired(), BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD);
-        mBeacondataBatchFetcher.planFetch();
+        mBeacondataBatchFetcher = beaconManager.getDataBeaconDataBatchFetcher();
+        if(mBeacondataBatchFetcher != null) {
+            mBeacondataBatchFetcher.planFetch();
+        }
         //initialize the extra data beacon tracker
         mExtraDataBeaconTracker = new ExtraDataBeaconTracker(matchBeaconsByServiceUUID);
 
@@ -286,7 +289,9 @@ public class BeaconService extends Service {
         mCycledScanner.stop();
         mCycledScanner.destroy();
         monitoringStatus.stopStatusPreservation();
-        mBeacondataBatchFetcher.stopFetch();
+        if(mBeacondataBatchFetcher != null){
+            mBeacondataBatchFetcher.stopFetch();
+        }
     }
 
     @Override
@@ -356,7 +361,9 @@ public class BeaconService extends Service {
     }
 
     public void clearBeaconContentCache(){
-        mBeacondataBatchFetcher.clearCache();
+        if(mBeacondataBatchFetcher != null) {
+            mBeacondataBatchFetcher.clearCache();
+        }
     }
 
 
@@ -417,7 +424,7 @@ public class BeaconService extends Service {
                 RangeState rangeState = rangedRegionState.get(region);
                 LogManager.d(TAG, "Calling ranging callback");
                 Collection<Beacon> beacons = rangeState.finalizeBeacons();
-                BeaconBatchFetchInfo<?> batchFetchInfo = mBeacondataBatchFetcher.updateContentOrAddToFetch(beacons);
+                BeaconBatchFetchInfo<?> batchFetchInfo = mBeacondataBatchFetcher==null?null:mBeacondataBatchFetcher.updateContentOrAddToFetch(beacons);
                 rangeState.getCallback().call(BeaconService.this, "rangingData", new RangingData(rangeState.finalizeBeacons(), batchFetchInfo, region));
             }
         }
@@ -441,7 +448,7 @@ public class BeaconService extends Service {
                         "not processing detections for GATT extra data beacon");
             }
         } else {
-            if(beacon.hasEphemeralIdentifiers()) {
+            if(mBeacondataBatchFetcher != null && beacon.hasEphemeralIdentifiers()) {
                 mBeacondataBatchFetcher.updateContentOrAddToFetch(beacon);
             }
             monitoringStatus.updateNewlyInsideInRegionsContaining(beacon);
@@ -457,7 +464,7 @@ public class BeaconService extends Service {
                     RangeState rangeState = rangedRegionState.get(region);
                     if (rangeState != null) {
                         rangeState.addBeacon(beacon);
-                        if(!beacon.hasEphemeralIdentifiers()){
+                        if(mBeacondataBatchFetcher != null && !beacon.hasEphemeralIdentifiers()){
                             mBeacondataBatchFetcher.updateContentOrAddToFetch(beacon);
                         }
                     }

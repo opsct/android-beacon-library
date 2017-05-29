@@ -30,6 +30,7 @@ import com.connecthings.altbeacon.beacon.client.BeaconDataFactory;
 import com.connecthings.altbeacon.beacon.client.NullBeaconDataFactory;
 import com.connecthings.altbeacon.beacon.distance.DistanceCalculator;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
+import com.connecthings.connectplace.provider.model.Place;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,7 +55,7 @@ import java.util.List;
  * @author  David G. Young
  * @see     Region#matchesBeacon(Beacon Beacon)
  */
-public class Beacon implements Parcelable {
+public class Beacon implements Parcelable, Place {
     private static final String TAG = "Beacon";
 
     private static final List<Long> UNMODIFIABLE_LIST_OF_LONG =
@@ -259,6 +260,10 @@ public class Beacon implements Parcelable {
         this.mServiceUuid = otherBeacon.getServiceUuid();
         this.mBluetoothName = otherBeacon.mBluetoothName;
         this.mParserIdentifier = otherBeacon.mParserIdentifier;
+    }
+
+    public String getId(){
+        return toString();
     }
 
     /**

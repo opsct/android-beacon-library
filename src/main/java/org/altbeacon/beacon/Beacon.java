@@ -31,8 +31,10 @@ import org.altbeacon.beacon.client.NullBeaconDataFactory;
 import org.altbeacon.beacon.distance.DistanceCalculator;
 import org.altbeacon.beacon.logging.LogManager;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+
 import java.util.List;
 
 /**
@@ -54,7 +56,7 @@ import java.util.List;
  * @author  David G. Young
  * @see     Region#matchesBeacon(Beacon Beacon)
  */
-public class Beacon implements Parcelable {
+public class Beacon implements Parcelable, Serializable {
     private static final String TAG = "Beacon";
 
     private static final List<Long> UNMODIFIABLE_LIST_OF_LONG =
@@ -168,6 +170,7 @@ public class Beacon implements Parcelable {
      * Required for making object Parcelable.  If you override this class, you must provide an
      * equivalent version of this method.
      */
+    @Deprecated
     public static final Parcelable.Creator<Beacon> CREATOR
             = new Parcelable.Creator<Beacon>() {
         public Beacon createFromParcel(Parcel in) {
@@ -205,10 +208,15 @@ public class Beacon implements Parcelable {
         sHardwareEqualityEnforced = e;
     }
 
+    public static boolean getHardwareEqualityEnforced() {
+        return sHardwareEqualityEnforced;
+    }
+
     /**
      * Required for making Beacon parcelable
      * @param in parcel
      */
+    @Deprecated
     protected Beacon(Parcel in) {
         int size = in.readInt();
 
@@ -228,9 +236,6 @@ public class Beacon implements Parcelable {
             mDataFields.add(in.readLong());
         }
         int extraDataSize = in.readInt();
-        if (LogManager.isVerboseLoggingEnabled()) {
-            LogManager.d(TAG, "reading "+extraDataSize+" extra data fields from parcel");
-        }
         this.mExtraDataFields = new ArrayList<Long>(extraDataSize);
         for (int i = 0; i < extraDataSize; i++) {
             mExtraDataFields.add(in.readLong());
@@ -277,6 +282,27 @@ public class Beacon implements Parcelable {
     public void setRunningAverageRssi(double rssi) {
         mRunningAverageRssi = rssi;
         mDistance = null; // force calculation of accuracy and proximity next time they are requested
+    }
+
+    /**
+     * @deprecated To be removed in a future release. Use
+     * {@link org.altbeacon.beacon.Beacon#getRunningAverageRssi()}
+     * instead.
+     */
+    @Deprecated
+    public double getRunningAverageRssi(double rssi) {
+        return mRunningAverageRssi = rssi;
+    }
+
+    /**
+     * Returns the running average rssi
+     * @return double
+     */
+    public double getRunningAverageRssi() {
+        if (mRunningAverageRssi != null){
+            return mRunningAverageRssi;
+        }
+        return mRssi;
     }
 
     /**
@@ -525,6 +551,7 @@ public class Beacon implements Parcelable {
     /**
      * Required for making object Parcelable
      */
+    @Deprecated
     public int describeContents() {
         return 0;
     }
@@ -533,9 +560,9 @@ public class Beacon implements Parcelable {
      * Required for making object Parcelable.  If you override this class, you must override this
      * method if you add any additional fields.
      */
+    @Deprecated
     public void writeToParcel(Parcel out, int flags) {
         out.writeInt(mIdentifiers.size());
-        LogManager.d(TAG, "serializing identifiers of size %s", mIdentifiers.size());
         for (Identifier identifier: mIdentifiers) {
             out.writeString(identifier == null ? null : identifier.toString());
         }
@@ -548,9 +575,6 @@ public class Beacon implements Parcelable {
         out.writeInt(mDataFields.size());
         for (Long dataField: mDataFields) {
             out.writeLong(dataField);
-        }
-        if (LogManager.isVerboseLoggingEnabled()) {
-            LogManager.d(TAG, "writing "+mExtraDataFields.size()+" extra data fields to parcel");
         }
         out.writeInt(mExtraDataFields.size());
         for (Long dataField: mExtraDataFields) {
@@ -708,6 +732,16 @@ public class Beacon implements Parcelable {
         }
 
         /**
+         * @see Beacon#mRssi
+         * @param rssi
+         * @return builder
+         */
+        public Builder setRunningAverageRssi(double rssi) {
+            mBeacon.mRunningAverageRssi = rssi;
+            return this;
+        }
+
+        /**
          * @see Beacon#mTxPower
          * @param txPower
          * @return builder
@@ -806,6 +840,7 @@ public class Beacon implements Parcelable {
             mBeacon.mMultiFrameBeacon = multiFrameBeacon;
             return this;
         }
+
     }
 
 }

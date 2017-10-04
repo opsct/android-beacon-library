@@ -23,7 +23,6 @@
  */
 package com.connecthings.altbeacon.beacon;
 
-import android.annotation.TargetApi;
 import android.bluetooth.BluetoothDevice;
 
 /**
@@ -62,7 +61,6 @@ public class AltBeaconParser extends BeaconParser {
      * @param device The Bluetooth device that was detected
      * @return An instance of an <code>Beacon</code>
      */
-    @TargetApi(5)
     @Override
     public Beacon fromScanData(byte[] scanData, int rssi, BluetoothDevice device) {
         return fromScanData(scanData, rssi, device, new AltBeacon());

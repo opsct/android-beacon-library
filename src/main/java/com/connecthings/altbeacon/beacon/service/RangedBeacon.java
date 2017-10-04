@@ -6,9 +6,10 @@ import com.connecthings.altbeacon.beacon.Beacon;
 import com.connecthings.altbeacon.beacon.BeaconManager;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
 
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
-public class RangedBeacon {
+public class RangedBeacon implements Serializable {
 
     private static final String TAG = "RangedBeacon";
     public static final long DEFAULT_MAX_TRACKING_AGE = 5000; /* 5 Seconds */
@@ -19,18 +20,9 @@ public class RangedBeacon {
     private boolean mTracked = true;
     protected long lastTrackedTimeMillis = 0;
     Beacon mBeacon;
-    protected RssiFilter filter = null;
+    protected transient RssiFilter mFilter = null;
 
     public RangedBeacon(Beacon beacon) {
-        //set RSSI filter
-        try {
-            Constructor cons = BeaconManager.getRssiFilterImplClass().getConstructors()[0];
-            filter = (RssiFilter)cons.newInstance();
-        } catch (Exception e) {
-            LogManager.e(TAG, "Could not construct RssiFilterImplClass %s", BeaconManager.getRssiFilterImplClass().getName());
-        }
-
-        RunningAverageRssiFilter.setSampleExpirationMilliseconds(sampleExpirationMilliseconds);
         updateBeacon(beacon);
     }
 
@@ -53,10 +45,11 @@ public class RangedBeacon {
 
     // Done at the end of each cycle before data are sent to the client
     public void commitMeasurements() {
-        if (!filter.noMeasurementsAvailable()) {
-            double runningAverage = filter.calculateRssi();
-            mBeacon.setRunningAverageRssi(runningAverage);
-            LogManager.d(TAG, "calculated new runningAverageRssi: %s", runningAverage);
+        RunningAverageRssiFilter.setSampleExpirationMilliseconds(sampleExpirationMilliseconds);
+         if (!getFilter().noMeasurementsAvailable()) {
+             double runningAverage = getFilter().calculateRssi();
+             mBeacon.setRunningAverageRssi(runningAverage);
+             LogManager.d(TAG, "calculated new runningAverageRssi: %s", runningAverage);
         }
         else {
             LogManager.d(TAG, "No measurements available to calculate running average");
@@ -69,13 +62,14 @@ public class RangedBeacon {
         if (rssi != 127) {
             mTracked = true;
             lastTrackedTimeMillis = SystemClock.elapsedRealtime();
-            filter.addMeasurement(rssi);
+            getFilter().addMeasurement(rssi);
         }
     }
 
     //kept here for backward compatibility
     public static void setSampleExpirationMilliseconds(long milliseconds) {
         sampleExpirationMilliseconds = milliseconds;
+        RunningAverageRssiFilter.setSampleExpirationMilliseconds(sampleExpirationMilliseconds);
     }
 
     public static void setMaxTrackinAge(int maxTrackinAge) {
@@ -83,7 +77,7 @@ public class RangedBeacon {
     }
 
     public boolean noMeasurementsAvailable() {
-        return filter.noMeasurementsAvailable();
+        return getFilter().noMeasurementsAvailable();
     }
 
     public long getTrackingAge() {
@@ -92,6 +86,19 @@ public class RangedBeacon {
 
     public boolean isExpired() {
         return getTrackingAge() > maxTrackingAge;
+    }
+
+    private RssiFilter getFilter() {
+        if (mFilter == null) {
+            //set RSSI filter
+            try {
+            Constructor cons = BeaconManager.getRssiFilterImplClass().getConstructors()[0];
+                mFilter = (RssiFilter)cons.newInstance();
+            } catch (Exception e) {
+                LogManager.e(TAG, "Could not construct RssiFilterImplClass %s", BeaconManager.getRssiFilterImplClass().getName());
+            }
+        }
+        return mFilter;
     }
 
 }

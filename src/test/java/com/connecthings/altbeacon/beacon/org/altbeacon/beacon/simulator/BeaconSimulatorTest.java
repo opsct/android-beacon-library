@@ -1,4 +1,4 @@
-package com.connecthings.altbeacon.beacon.org.altbeacon.beacon.simulator;
+package com.connecthings.altbeacon.beacon.com.connecthings.altbeacon.beacon.simulator;
 
 
 import static org.junit.Assert.assertEquals;

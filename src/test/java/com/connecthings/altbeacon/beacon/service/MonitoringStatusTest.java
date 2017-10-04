@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.util.Log;
 
 import com.connecthings.altbeacon.beacon.BeaconManager;
 import com.connecthings.altbeacon.beacon.Region;
@@ -31,6 +32,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 18)
 public class MonitoringStatusTest {
+    private static final String TAG = MonitoringStatusTest.class.getSimpleName();
     @Before
     public void before() {
         org.robolectric.shadows.ShadowLog.stream = System.err;

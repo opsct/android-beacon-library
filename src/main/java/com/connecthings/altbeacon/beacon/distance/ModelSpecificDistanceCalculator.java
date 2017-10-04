@@ -190,8 +190,12 @@ public class ModelSpecificDistanceCalculator implements DistanceCalculator {
             buildModelMapWithLock(sb.toString());
             return true;
         } catch (JSONException e) {
-            LogManager.e(TAG, "Cannot update distance models from online database at %s with JSON",
-                    e, mRemoteUpdateUrlString, sb.toString());
+            LogManager.e(
+                    e,
+                    TAG,
+                    "Cannot update distance models from online database at %s with JSON: %s",
+                    mRemoteUpdateUrlString, sb.toString()
+            );
             return false;
         }
     }
@@ -266,7 +270,7 @@ public class ModelSpecificDistanceCalculator implements DistanceCalculator {
     }
 
     private void buildModelMap(String jsonString) throws JSONException {
-        mModelMap = new HashMap<AndroidModel, DistanceCalculator>();
+        HashMap<AndroidModel, DistanceCalculator> map = new HashMap<AndroidModel, DistanceCalculator>();
         JSONObject jsonObject = new JSONObject(jsonString);
         JSONArray array = jsonObject.getJSONArray("models");
         for (int i = 0; i < array.length(); i++) {
@@ -287,19 +291,20 @@ public class ModelSpecificDistanceCalculator implements DistanceCalculator {
                     new CurveFittedDistanceCalculator(coefficient1,coefficient2,coefficient3);
 
             AndroidModel androidModel = new AndroidModel(version, buildNumber, model, manufacturer);
-            mModelMap.put(androidModel, distanceCalculator);
+            map.put(androidModel, distanceCalculator);
             if (defaultFlag) {
                 mDefaultModel = androidModel;
             }
         }
+        mModelMap = map;
     }
 
     private void loadDefaultModelMap() {
-        mModelMap = new HashMap<AndroidModel, DistanceCalculator>();
         try {
             buildModelMap(stringFromFilePath(CONFIG_FILE));
         }
         catch (Exception e) {
+            mModelMap = new HashMap<AndroidModel, DistanceCalculator>();
             LogManager.e(e, TAG, "Cannot build model distance calculations");
         }
     }

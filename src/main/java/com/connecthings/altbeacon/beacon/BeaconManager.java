@@ -849,7 +849,7 @@ public class BeaconManager {
         if (determineIfCalledFromSeparateScannerProcess()) {
             return;
         }
-        if (!d()) {
+        if (!isAnyConsumerBound()) {
             LogManager.d(TAG, "Not synchronizing settings to service, as it has not started up yet");
         } else if (isScannerInDifferentProcess()) {
             LogManager.d(TAG, "Synchronizing settings to service");

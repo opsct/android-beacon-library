@@ -490,7 +490,7 @@ public class BeaconManager {
      */
     public boolean isAnyConsumerBound() {
         synchronized(consumers) {
-            return consumers.isEmpty() && (serviceMessenger != null);
+            return !consumers.isEmpty() && (serviceMessenger != null);
         }
     }
 
@@ -849,7 +849,7 @@ public class BeaconManager {
         if (determineIfCalledFromSeparateScannerProcess()) {
             return;
         }
-        if (!isAnyConsumerBound()) {
+        if (!d()) {
             LogManager.d(TAG, "Not synchronizing settings to service, as it has not started up yet");
         } else if (isScannerInDifferentProcess()) {
             LogManager.d(TAG, "Synchronizing settings to service");

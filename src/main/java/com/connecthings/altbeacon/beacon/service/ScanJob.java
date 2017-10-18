@@ -41,7 +41,7 @@ public class ScanJob extends JobService {
         a second immediate scan job to kick off when scanning gets started or settings changed.
         Once the periodic one gets run, the immediate is cancelled.
      */
-    public static final int IMMMEDIATE_SCAN_JOB_ID = 2;
+    public static final int IMMEDIATE_SCAN_JOB_ID = 2;
 
     private ScanState mScanState;
     private Handler mStopHandler = new Handler();
@@ -51,8 +51,8 @@ public class ScanJob extends JobService {
     @Override
     public boolean onStartJob(final JobParameters jobParameters) {
         mScanHelper = new ScanHelper(this);
-        if (jobParameters.getJobId() == IMMMEDIATE_SCAN_JOB_ID) {
-            LogManager.i(TAG, "Running immdiate scan job: instance is "+this);
+        if (jobParameters.getJobId() == IMMEDIATE_SCAN_JOB_ID) {
+            LogManager.i(TAG, "Running immediate scan job: instance is "+this);
         }
         else {
             LogManager.i(TAG, "Running periodic scan job: instance is "+this);
@@ -83,13 +83,19 @@ public class ScanJob extends JobService {
             mStopHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    LogManager.i(TAG, "Scan job runtime expired");
+                    LogManager.i(TAG, "Scan job runtime expired: " + ScanJob.this);
                     stopScanning();
                     mScanState.save();
-
-                    startPassiveScanIfNeeded();
-
                     ScanJob.this.jobFinished(jobParameters , false);
+
+                    // need to execute this after the current block or Android stops this job prematurely
+                    mStopHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            scheduleNextScan();
+                        }
+                    });
+
                 }
             }, mScanState.getScanJobRuntimeMillis());
         }
@@ -98,6 +104,16 @@ public class ScanJob extends JobService {
             ScanJob.this.jobFinished(jobParameters , false);
         }
         return true;
+    }
+
+    private void scheduleNextScan(){
+        if(!mScanState.getBackgroundMode()){
+            // immediately reschedule scan if running in foreground
+            LogManager.d(TAG, "In foreground mode, schedule next scan");
+            ScanJobScheduler.getInstance().forceScheduleNextScan(ScanJob.this);
+        } else {
+            startPassiveScanIfNeeded();
+        }
     }
 
     private void startPassiveScanIfNeeded() {
@@ -128,15 +144,16 @@ public class ScanJob extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         if (params.getJobId() == PERIODIC_SCAN_JOB_ID) {
-            LogManager.i(TAG, "onStopJob called for periodic scan");
+            LogManager.i(TAG, "onStopJob called for periodic scan " + this);
         }
         else {
-            LogManager.i(TAG, "onStopJob called for immediate scan");
+            LogManager.i(TAG, "onStopJob called for immediate scan " + this);
         }
         // Cancel the stop timer.  The OS is stopping prematurely
         mStopHandler.removeCallbacksAndMessages(null);
         stopScanning();
         startPassiveScanIfNeeded();
+
         return false;
     }
 

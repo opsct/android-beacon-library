@@ -1,6 +1,9 @@
-### Development
+### 2.12.3 / 2017-10-14
+
+[Full Changelog](https://github.com/AltBeacon/android-beacon-library/compare/2.12.2...2.12.3)
 
 Bug Fixes:
+ - Fix NullPointerException in ProcessUtils.  (#598, David G. Young)
  - Fix ConcurrentModificationException crashing app on Android 8 when monitored regions are
    changed at the same time the app shifts from active scanning to passive scanning. 
    (#578, David G. Young)

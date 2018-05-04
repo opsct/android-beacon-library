@@ -169,10 +169,11 @@ public class CycledLeScannerForLollipop extends CycledLeScanner {
         ScanSettings settings = null;
 
         if (!mMainScanCycleActive) {
-            LogManager.d(TAG, "starting filtered scan in SCAN_MODE_LOW_POWER");
+            LogManager.d(TAG, "InActive scan - waiting for the next active period");
+            /*LogManager.d(TAG, "starting filtered scan in SCAN_MODE_LOW_POWER");
             settings = (new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)).build();
             filters = new ScanFilterUtils().createScanFiltersForBeaconParsers(
-                          mBeaconManager.getBeaconParsers());
+                          mBeaconManager.getBeaconParsers());*/
         } else {
             LogManager.d(TAG, "starting non-filtered scan in SCAN_MODE_LOW_LATENCY");
             settings = (new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)).build();

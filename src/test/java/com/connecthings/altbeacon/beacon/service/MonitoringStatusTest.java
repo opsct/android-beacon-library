@@ -2,27 +2,21 @@ package com.connecthings.altbeacon.beacon.service;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.os.AsyncTask;
 import android.os.Build;
-import android.util.Log;
 
 import com.connecthings.altbeacon.beacon.BeaconManager;
 import com.connecthings.altbeacon.beacon.Region;
 import com.connecthings.altbeacon.beacon.logging.LogManager;
 import com.connecthings.altbeacon.beacon.logging.Loggers;
-import com.connecthings.altbeacon.beacon.service.MonitoringStatus;
-import com.connecthings.altbeacon.beacon.service.scanner.CycledLeScanCallback;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
-import org.robolectric.util.ServiceController;
 
 import java.util.Collection;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import static org.junit.Assert.assertEquals;
 
@@ -89,13 +83,15 @@ public class MonitoringStatusTest {
     @Test
     public void allowsAccessToRegionsAfterRestore() throws Exception {
         Context context = ShadowApplication.getInstance().getApplicationContext();
+        BeaconManager beaconManager = BeaconManager.getInstanceForApplication(context);
+        MonitoringStatus.getInstanceForApplication(context).clear();
         MonitoringStatus monitoringStatus = new MonitoringStatus(context);
         for (int i = 0; i < 50; i++) {
             Region region = new Region(""+i, null, null, null);
             monitoringStatus.addRegion(region, null);
         }
         monitoringStatus.saveMonitoringStatusIfOn();
-        BeaconManager beaconManager = BeaconManager.getInstanceForApplication(context);
+        MonitoringStatus.getInstanceForApplication(context).restoreMonitoringStatus();
         Collection<Region> regions = beaconManager.getMonitoredRegions();
         assertEquals("beaconManager should return restored regions", 50, regions.size());
     }

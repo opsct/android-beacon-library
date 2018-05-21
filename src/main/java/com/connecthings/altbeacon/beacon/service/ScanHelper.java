@@ -66,7 +66,10 @@ class ScanHelper {
     private MonitoringStatus mMonitoringStatus;
     private final Map<Region, RangeState> mRangedRegionState = new HashMap<>();
     private DistinctPacketDetector mDistinctPacketDetector = new DistinctPacketDetector();
-    private ExtraDataBeaconTracker mExtraDataBeaconTracker;
+
+    @NonNull
+    private ExtraDataBeaconTracker mExtraDataBeaconTracker = new ExtraDataBeaconTracker();
+
     private Set<BeaconParser> mBeaconParsers  = new HashSet<>();
     private List<Beacon> mSimulatedScanData = null;
     private Context mContext;
@@ -100,7 +103,7 @@ class ScanHelper {
         }
     }
 
-    void setExtraDataBeaconTracker(ExtraDataBeaconTracker extraDataBeaconTracker) {
+    void setExtraDataBeaconTracker(@NonNull ExtraDataBeaconTracker extraDataBeaconTracker) {
         mExtraDataBeaconTracker = extraDataBeaconTracker;
     }
 

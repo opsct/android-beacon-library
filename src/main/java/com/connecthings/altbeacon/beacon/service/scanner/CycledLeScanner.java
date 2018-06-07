@@ -48,6 +48,7 @@ public abstract class CycledLeScanner {
     private boolean mScanningEnabled = false;
     protected final Context mContext;
     private long mScanPeriod;
+    protected boolean mScanningFails = false;
     // indicates that we decided not to turn scanning off at the end of a scan cycle (e.g. to
     // avoid doing too many scans in a limited time on Android 7.0 or because we are capable of
     // multiple detections.  If true, it indicates scanning needs to be stopped when we finish.
@@ -129,7 +130,6 @@ public abstract class CycledLeScanner {
         if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             LogManager.i(TAG, "This is pre Android 5.0.  We are using old scanning APIs");
             useAndroidLScanner = false;
-
         }
         else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             if (BeaconManager.isAndroidLScanningDisabled()) {
@@ -296,6 +296,7 @@ public abstract class CycledLeScanner {
                 if (!mScanning || mScanningPaused || mRestartNeeded) {
                     mScanning = true;
                     mScanningPaused = false;
+                    mScanningFails = false;
                     try {
                         if (getBluetoothAdapter() != null) {
                             if (getBluetoothAdapter().isEnabled()) {
@@ -385,7 +386,9 @@ public abstract class CycledLeScanner {
     private void finishScanCycle() {
         LogManager.d(TAG, "Done with scan cycle");
         try {
-            mCycledLeScanCallback.onCycleEnd();
+            if (!mScanningFails) {
+                mCycledLeScanCallback.onCycleEnd();
+            }
             if (mScanning) {
                 if (getBluetoothAdapter() != null) {
                     if (getBluetoothAdapter().isEnabled()) {

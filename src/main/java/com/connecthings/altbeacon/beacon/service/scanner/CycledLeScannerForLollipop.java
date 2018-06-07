@@ -133,7 +133,9 @@ public class CycledLeScannerForLollipop extends CycledLeScanner {
                     else {
                         // report the results up the chain
                         LogManager.d(TAG, "Delivering Android L background scanning results");
-                        mCycledLeScanCallback.onCycleEnd();
+                        if (!mScanningFails) {
+                            mCycledLeScanCallback.onCycleEnd();
+                        }
                     }
                 }
             }
@@ -329,6 +331,7 @@ public class CycledLeScannerForLollipop extends CycledLeScanner {
                 @MainThread
                 @Override
                 public void onScanFailed(int errorCode) {
+                    mScanningFails = true;
                     Intent intent = new Intent("onScanFailed");
                     intent.putExtra("errorCode", errorCode);
                     LocalBroadcastManager.getInstance(CycledLeScannerForLollipop.this.mContext).sendBroadcast(intent);

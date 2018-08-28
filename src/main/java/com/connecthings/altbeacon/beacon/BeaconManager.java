@@ -40,7 +40,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.connecthings.altbeacon.beacon.logging.LogManager;
-import com.connecthings.altbeacon.beacon.logging.Loggers;
 import com.connecthings.altbeacon.beacon.service.BeaconService;
 import com.connecthings.altbeacon.beacon.service.Callback;
 import com.connecthings.altbeacon.beacon.service.MonitoringStatus;
@@ -317,8 +316,8 @@ public class BeaconManager {
     protected BeaconManager(@NonNull Context context) {
         mContext = context.getApplicationContext();
         checkIfMainProcess();
-        if (!sManifestCheckingDisabled) {
-           verifyServiceDeclaration();
+        if (!sManifestCheckingDisabled  && !verifyServiceDeclaration()) {
+           return;
          }
         this.beaconParsers.add(new AltBeaconParser());
         mScheduledScanJobsEnabled = android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
@@ -1214,15 +1213,18 @@ public class BeaconManager {
         }
     }
 
-    private void verifyServiceDeclaration() {
+    private boolean verifyServiceDeclaration() {
         final PackageManager packageManager = mContext.getPackageManager();
         final Intent intent = new Intent(mContext, BeaconService.class);
         List<ResolveInfo> resolveInfo =
                 packageManager.queryIntentServices(intent,
                         PackageManager.MATCH_DEFAULT_ONLY);
         if (resolveInfo != null && resolveInfo.isEmpty()) {
-            throw new ServiceNotDeclaredException();
+            LogManager.w(TAG, "The BeaconService is not properly declared in AndroidManifest.xml.  If using Eclipse," +
+                    " please verify that your project.properties has manifestmerger.enabled=true");
+            return false;
         }
+        return true;
     }
 
     private class ConsumerInfo {
@@ -1267,13 +1269,6 @@ public class BeaconManager {
         public void onServiceDisconnected(ComponentName className) {
             LogManager.e(TAG, "onServiceDisconnected");
             serviceMessenger = null;
-        }
-    }
-
-    public class ServiceNotDeclaredException extends RuntimeException {
-        public ServiceNotDeclaredException() {
-            super("The BeaconService is not properly declared in AndroidManifest.xml.  If using Eclipse," +
-                    " please verify that your project.properties has manifestmerger.enabled=true");
         }
     }
 

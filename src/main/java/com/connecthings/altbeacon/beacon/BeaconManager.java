@@ -40,6 +40,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.connecthings.altbeacon.beacon.logging.LogManager;
+import com.connecthings.altbeacon.beacon.logging.Loggers;
 import com.connecthings.altbeacon.beacon.service.BeaconService;
 import com.connecthings.altbeacon.beacon.service.Callback;
 import com.connecthings.altbeacon.beacon.service.MonitoringStatus;
